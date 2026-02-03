@@ -92,10 +92,7 @@ export function PendingList({ apps }: PendingListProps) {
                   )}
                   <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
                     by {app.owner.display_name || app.owner.username} ·{" "}
-                    <Link
-                      href={`/u/${app.owner.username}`}
-                      className="hover:underline"
-                    >
+                    <Link href={`/u/${app.owner.username}`} className="hover:underline">
                       @{app.owner.username}
                     </Link>
                   </p>
@@ -144,7 +141,11 @@ export function PendingList({ apps }: PendingListProps) {
                 disabled={!!pendingId}
                 className="rounded-lg border border-red-300 bg-white px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50 dark:border-red-800 dark:bg-zinc-900 dark:text-red-300 dark:hover:bg-red-900/20"
               >
-                {pendingId === app.id ? "…" : rejectingId === app.id ? "Reject (confirm)" : "Reject"}
+                {pendingId === app.id
+                  ? "…"
+                  : rejectingId === app.id
+                    ? "Reject (confirm)"
+                    : "Reject"}
               </button>
             </div>
           </li>

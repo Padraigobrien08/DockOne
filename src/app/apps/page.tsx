@@ -8,9 +8,7 @@ export default async function AppsPage() {
   return (
     <div className="py-8 sm:py-12">
       <Container>
-        <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
-          Apps
-        </h1>
+        <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">Apps</h1>
         <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
           Unfinished but functional. Search, filter by tag, or sort.
         </p>

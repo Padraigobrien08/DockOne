@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getIsAdmin } from "@/lib/profile";
+import { log } from "@/lib/logger";
 
 async function requireAdmin() {
   const supabase = await createClient();
@@ -25,6 +26,7 @@ export async function approveApp(appId: string) {
     .eq("id", appId);
 
   if (error) return { error: error.message };
+  log("app_approved", { app_id: appId });
   revalidatePath("/admin");
   revalidatePath("/apps");
   return {};
@@ -39,6 +41,7 @@ export async function rejectApp(appId: string, reason: string | null) {
     .eq("id", appId);
 
   if (error) return { error: error.message };
+  log("app_rejected", { app_id: appId });
   revalidatePath("/admin");
   revalidatePath("/apps");
   return {};

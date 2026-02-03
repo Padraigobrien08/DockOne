@@ -9,7 +9,8 @@ const valueProps = [
   },
   {
     title: "BYOK supported",
-    description: "Apps that use LLMs let you bring your own API key. Stored only in your browser, never on our servers.",
+    description:
+      "Apps that use LLMs let you bring your own API key. Stored only in your browser, never on our servers.",
   },
   {
     title: "No promises, just useful tools",
@@ -46,13 +47,14 @@ export default function Home() {
 
         <ul className="mx-auto mt-16 grid max-w-3xl gap-8 sm:mt-20 sm:gap-10" role="list">
           {valueProps.map((item) => (
-            <li key={item.title} className="border-b border-zinc-200 pb-8 last:border-0 last:pb-0 dark:border-zinc-800 sm:pb-10 sm:last:pb-0">
+            <li
+              key={item.title}
+              className="border-b border-zinc-200 pb-8 last:border-0 last:pb-0 dark:border-zinc-800 sm:pb-10 sm:last:pb-0"
+            >
               <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-50">
                 {item.title}
               </h2>
-              <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-                {item.description}
-              </p>
+              <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">{item.description}</p>
             </li>
           ))}
         </ul>

@@ -19,9 +19,7 @@ export function ReportButton({ appName }: ReportButtonProps) {
       >
         Report
       </button>
-      {open && (
-        <ReportModal appName={appName} onClose={() => setOpen(false)} />
-      )}
+      {open && <ReportModal appName={appName} onClose={() => setOpen(false)} />}
     </>
   );
 }

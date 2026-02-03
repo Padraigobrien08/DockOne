@@ -35,12 +35,9 @@ export default async function AppDetailPage({
   const app = await getAppBySlug(slug, user?.id);
   if (!app) notFound();
 
-  const showStatusBadge =
-    user &&
-    (user.id === app.owner.id || (await getIsAdmin(user.id)));
+  const showStatusBadge = user && (user.id === app.owner.id || (await getIsAdmin(user.id)));
   const isOwner = user?.id === app.owner.id;
-  const showPendingBanner =
-    app.status === "pending" && isOwner && pendingParam === "1";
+  const showPendingBanner = app.status === "pending" && isOwner && pendingParam === "1";
 
   const screenshots = app.media
     .filter((m) => m.kind === "screenshot")
@@ -54,7 +51,8 @@ export default async function AppDetailPage({
         <div className="mx-auto max-w-3xl">
           {showPendingBanner && (
             <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-200">
-              <strong>Pending approval.</strong> Your app is under review and will appear in the browse list once approved.
+              <strong>Pending approval.</strong> Your app is under review and will appear in the
+              browse list once approved.
             </div>
           )}
           {app.status === "rejected" && isOwner && app.rejection_reason && (
@@ -64,7 +62,8 @@ export default async function AppDetailPage({
           )}
           {app.byok_required && (
             <div className="mb-6 rounded-lg border border-violet-200 bg-violet-50 px-4 py-3 text-sm text-violet-800 dark:border-violet-800 dark:bg-violet-900/20 dark:text-violet-200">
-              <strong>BYOK compatible.</strong> This app uses an LLM. Add your OpenAI or Anthropic API key in{" "}
+              <strong>BYOK compatible.</strong> This app uses an LLM. Add your OpenAI or Anthropic
+              API key in{" "}
               <Link href="/settings" className="font-medium underline hover:no-underline">
                 Settings
               </Link>{" "}
@@ -77,9 +76,7 @@ export default async function AppDetailPage({
                 {app.name}
               </h1>
               {app.tagline && (
-                <p className="mt-1 text-lg text-zinc-600 dark:text-zinc-400">
-                  {app.tagline}
-                </p>
+                <p className="mt-1 text-lg text-zinc-600 dark:text-zinc-400">{app.tagline}</p>
               )}
             </div>
             {showStatusBadge && (
@@ -139,7 +136,12 @@ export default async function AppDetailPage({
                 >
                   Open app
                   <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                    />
                   </svg>
                 </a>
               )}
@@ -152,7 +154,12 @@ export default async function AppDetailPage({
                 >
                   Repo
                   <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                    />
                   </svg>
                 </a>
               )}
@@ -165,7 +172,12 @@ export default async function AppDetailPage({
                 >
                   Demo video
                   <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                    />
                   </svg>
                 </a>
               )}
@@ -180,9 +192,7 @@ export default async function AppDetailPage({
 
           {screenshots.length > 0 && (
             <div className="mt-10">
-              <h2 className="text-lg font-medium text-zinc-900 dark:text-zinc-50">
-                Screenshots
-              </h2>
+              <h2 className="text-lg font-medium text-zinc-900 dark:text-zinc-50">Screenshots</h2>
               <div className="mt-4">
                 <ScreenshotsCarousel images={screenshots} />
               </div>

@@ -10,9 +10,7 @@ export interface ProfilePublic {
 }
 
 /** Fetch public profile by username. Returns null if not found. */
-export async function getProfileByUsername(
-  username: string
-): Promise<ProfilePublic | null> {
+export async function getProfileByUsername(username: string): Promise<ProfilePublic | null> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("profiles")
@@ -36,9 +34,7 @@ export async function getIsAdmin(userId: string): Promise<boolean> {
 }
 
 /** Resolve owner snippet by id (for links). */
-export async function getOwnerById(
-  ownerId: string
-): Promise<AppOwner | null> {
+export async function getOwnerById(ownerId: string): Promise<AppOwner | null> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("profiles")

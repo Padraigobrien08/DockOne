@@ -3,90 +3,22 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { slugify, ensureUniqueSlug } from "@/lib/slug";
+import { log } from "@/lib/logger";
+import { submitFullSchema, submitFormFromFormData, zodFieldErrors } from "@/app/submit/schema";
 
-const NAME_MIN = 1;
-const NAME_MAX = 100;
-const TAGLINE_MAX = 200;
-const TAG_MAX = 30;
-const TAGS_MAX = 10;
-const DESCRIPTION_MAX = 10_000;
 const APP_MEDIA_MAX_BYTES = 5 * 1024 * 1024; // 5MB per file
 const SCREENSHOTS_MAX = 5;
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
-
-function isValidUrl(s: string): boolean {
-  try {
-    new URL(s);
-    return true;
-  } catch {
-    return false;
-  }
-}
+const SUBMIT_RATE_LIMIT_PER_HOUR = 10;
 
 export type SubmitState = {
   error?: string;
-  fieldErrors?: {
-    name?: string;
-    tagline?: string;
-    app_url?: string;
-    repo_url?: string;
-    tags?: string;
-    description?: string;
-    screenshots?: string;
-    logo?: string;
-  };
+  fieldErrors?: Record<string, string>;
   slug?: string;
 };
 
-export async function submitApp(
-  _prev: SubmitState,
-  formData: FormData
-): Promise<SubmitState> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/auth/sign-in");
-
-  const name = (formData.get("name") as string)?.trim() ?? "";
-  const tagline = (formData.get("tagline") as string)?.trim() ?? "";
-  const app_url = (formData.get("app_url") as string)?.trim() ?? "";
-  const repo_url = (formData.get("repo_url") as string)?.trim() ?? "";
-  const tagsRaw = (formData.get("tags") as string)?.trim() ?? "";
-  const description = (formData.get("description") as string)?.trim() ?? "";
-  const byokRequired = formData.get("byok_required") === "on" || formData.get("byok_required") === "true";
-  const screenshotFiles = formData.getAll("screenshots") as File[];
-  const logoFile = formData.get("logo") as File | null;
-
-  const fieldErrors: SubmitState["fieldErrors"] = {};
-
-  if (!name) fieldErrors.name = "Name is required.";
-  else if (name.length < NAME_MIN || name.length > NAME_MAX)
-    fieldErrors.name = `Name must be ${NAME_MIN}–${NAME_MAX} characters.`;
-
-  if (tagline.length > TAGLINE_MAX)
-    fieldErrors.tagline = `Tagline must be at most ${TAGLINE_MAX} characters.`;
-
-  if (!app_url) fieldErrors.app_url = "App URL is required.";
-  else if (!isValidUrl(app_url)) fieldErrors.app_url = "Enter a valid URL.";
-
-  if (repo_url && !isValidUrl(repo_url)) fieldErrors.repo_url = "Enter a valid URL.";
-
-  const tags = tagsRaw
-    ? tagsRaw.split(/[\s,]+/).map((t) => t.trim().toLowerCase()).filter(Boolean)
-    : [];
-  if (tags.length > TAGS_MAX)
-    fieldErrors.tags = `At most ${TAGS_MAX} tags.`;
-  for (const t of tags) {
-    if (t.length > TAG_MAX) {
-      fieldErrors.tags = `Each tag at most ${TAG_MAX} characters.`;
-      break;
-    }
-  }
-
-  if (description.length > DESCRIPTION_MAX)
-    fieldErrors.description = `Description must be at most ${DESCRIPTION_MAX} characters.`;
-
+function validateFiles(screenshotFiles: File[], logoFile: File | null): SubmitState["fieldErrors"] {
+  const fieldErrors: Record<string, string> = {};
   const screenshots = screenshotFiles.filter((f) => f.size > 0);
   if (screenshots.length > SCREENSHOTS_MAX)
     fieldErrors.screenshots = `At most ${SCREENSHOTS_MAX} screenshots.`;
@@ -100,15 +32,46 @@ export async function submitApp(
       break;
     }
   }
-
   if (logoFile && logoFile.size > 0) {
     if (!ALLOWED_IMAGE_TYPES.includes(logoFile.type))
       fieldErrors.logo = "Logo must be JPEG, PNG, or WebP.";
-    else if (logoFile.size > APP_MEDIA_MAX_BYTES)
-      fieldErrors.logo = "Logo must be 5MB or smaller.";
+    else if (logoFile.size > APP_MEDIA_MAX_BYTES) fieldErrors.logo = "Logo must be 5MB or smaller.";
+  }
+  return Object.keys(fieldErrors).length > 0 ? fieldErrors : undefined;
+}
+
+export async function submitApp(_prev: SubmitState, formData: FormData): Promise<SubmitState> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/auth/sign-in");
+
+  const screenshotFiles = formData.getAll("screenshots") as File[];
+  const logoFile = formData.get("logo") as File | null;
+
+  const raw = submitFormFromFormData(formData);
+  const parsed = submitFullSchema.safeParse(raw);
+  if (!parsed.success) {
+    return { fieldErrors: zodFieldErrors(parsed.error) };
   }
 
-  if (Object.keys(fieldErrors).length > 0) return { fieldErrors };
+  const fileErrors = validateFiles(screenshotFiles, logoFile);
+  if (fileErrors) return { fieldErrors: fileErrors };
+
+  const { name, tagline, app_url, repo_url, tags, description, byok_required } = parsed.data;
+
+  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+  const { count, error: countError } = await supabase
+    .from("apps")
+    .select("*", { count: "exact", head: true })
+    .eq("owner_id", user.id)
+    .gte("created_at", oneHourAgo);
+
+  if (!countError && count !== null && count !== undefined && count >= SUBMIT_RATE_LIMIT_PER_HOUR) {
+    log("submit_rate_limited", { count, limit: SUBMIT_RATE_LIMIT_PER_HOUR });
+    return { error: "Too many submissions. Try again in an hour." };
+  }
 
   const baseSlug = slugify(name);
   const slug = await ensureUniqueSlug(supabase, baseSlug);
@@ -124,23 +87,24 @@ export async function submitApp(
       status: "pending",
       app_url: app_url || null,
       repo_url: repo_url || null,
-      byok_required: byokRequired,
+      byok_required,
     })
     .select("id")
     .single();
 
   if (appError || !app) return { error: appError?.message ?? "Failed to create app." };
 
+  log("app_submitted", { app_id: app.id, slug });
+
   const appId = app.id;
 
   if (tags.length > 0) {
-    await supabase.from("app_tags").insert(
-      tags.map((tag) => ({ app_id: appId, tag }))
-    );
+    await supabase.from("app_tags").insert(tags.map((tag) => ({ app_id: appId, tag })));
   }
 
   const bucket = "app-media";
   const prefix = `${appId}/`;
+  const screenshots = screenshotFiles.filter((f) => f.size > 0);
 
   for (let i = 0; i < screenshots.length; i++) {
     const file = screenshots[i];
@@ -151,7 +115,9 @@ export async function submitApp(
       .from(bucket)
       .upload(path, buffer, { contentType: file.type, upsert: true });
     if (!upErr) {
-      const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(path);
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from(bucket).getPublicUrl(path);
       await supabase.from("app_media").insert({
         app_id: appId,
         kind: "screenshot",
@@ -169,7 +135,9 @@ export async function submitApp(
       .from(bucket)
       .upload(path, buffer, { contentType: logoFile.type, upsert: true });
     if (!upErr) {
-      const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(path);
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from(bucket).getPublicUrl(path);
       await supabase.from("app_media").insert({
         app_id: appId,
         kind: "logo",

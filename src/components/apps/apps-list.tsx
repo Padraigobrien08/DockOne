@@ -33,9 +33,13 @@ function sortApps(apps: AppListItem[], sort: SortKey): AppListItem[] {
   const copy = [...apps];
   switch (sort) {
     case "newest":
-      return copy.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      return copy.sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
     case "trending":
-      return copy.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      return copy.sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
     case "alphabetical":
       return copy.sort((a, b) => a.name.localeCompare(b.name, "en", { sensitivity: "base" }));
     default:

@@ -10,7 +10,12 @@ type Row = {
   created_at: string;
   owner_id: string;
   byok_required: boolean;
-  profiles: { id: string; username: string; display_name: string | null; avatar_url: string | null } | null;
+  profiles: {
+    id: string;
+    username: string;
+    display_name: string | null;
+    avatar_url: string | null;
+  } | null;
   app_tags: { tag: string }[];
   app_media: { url: string; sort_order: number; kind: string }[];
 };
@@ -30,7 +35,12 @@ type DetailRow = {
   updated_at: string;
   owner_id: string;
   slug: string;
-  profiles: { id: string; username: string; display_name: string | null; avatar_url: string | null } | null;
+  profiles: {
+    id: string;
+    username: string;
+    display_name: string | null;
+    avatar_url: string | null;
+  } | null;
   app_tags: { tag: string }[];
   app_media: { id: string; url: string; sort_order: number; kind: string }[];
 };
@@ -138,9 +148,7 @@ export async function getAppBySlug(
 }
 
 /** Fetch approved apps by owner (for /u/[username] profile). */
-export async function getApprovedAppsByOwnerId(
-  ownerId: string
-): Promise<AppListItem[]> {
+export async function getApprovedAppsByOwnerId(ownerId: string): Promise<AppListItem[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("apps")

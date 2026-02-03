@@ -51,9 +51,7 @@ export function AppCard({ app }: AppCardProps) {
             ) : (
               <span className="h-5 w-5 rounded-full bg-zinc-300 dark:bg-zinc-600" />
             )}
-            <span className="text-xs text-zinc-500 dark:text-zinc-400">
-              {displayName}
-            </span>
+            <span className="text-xs text-zinc-500 dark:text-zinc-400">{displayName}</span>
           </div>
         </div>
         <div className="mt-2 flex flex-wrap items-center gap-1.5">

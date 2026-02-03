@@ -26,9 +26,7 @@ export default async function MePage() {
     <div className="py-12 sm:py-16">
       <Container>
         <div className="mx-auto max-w-xl">
-          <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
-            Edit profile
-          </h1>
+          <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">Edit profile</h1>
           <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
             Your profile is public. Username is used in your profile URL.
           </p>

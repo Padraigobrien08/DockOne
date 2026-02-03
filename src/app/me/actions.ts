@@ -101,12 +101,10 @@ export async function uploadAvatar(
 
   const buffer = Buffer.from(await file.arrayBuffer());
 
-  const { error: uploadError } = await supabase.storage
-    .from("avatars")
-    .upload(path, buffer, {
-      contentType: file.type,
-      upsert: true,
-    });
+  const { error: uploadError } = await supabase.storage.from("avatars").upload(path, buffer, {
+    contentType: file.type,
+    upsert: true,
+  });
 
   if (uploadError) {
     return { error: uploadError.message };

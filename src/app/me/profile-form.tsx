@@ -17,22 +17,14 @@ export function ProfileForm({
   initialBio: string;
   avatarUrl: string | null;
 }) {
-  const [profileState, profileFormAction] = useActionState(
-    updateProfile,
-    initialState
-  );
-  const [avatarState, avatarFormAction] = useActionState(
-    uploadAvatar,
-    initialState
-  );
+  const [profileState, profileFormAction] = useActionState(updateProfile, initialState);
+  const [avatarState, avatarFormAction] = useActionState(uploadAvatar, initialState);
 
   return (
     <div className="mt-8 space-y-8">
       {/* Avatar */}
       <section>
-        <h2 className="text-sm font-medium text-zinc-900 dark:text-zinc-50">
-          Photo
-        </h2>
+        <h2 className="text-sm font-medium text-zinc-900 dark:text-zinc-50">Photo</h2>
         <div className="mt-3 flex items-center gap-4">
           {avatarUrl ? (
             <Image
@@ -56,13 +48,9 @@ export function ProfileForm({
               accept="image/jpeg,image/png,image/webp"
               className="text-sm text-zinc-600 dark:text-zinc-400 file:mr-2 file:rounded-lg file:border-0 file:bg-zinc-200 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-zinc-900 dark:file:bg-zinc-700 dark:file:text-zinc-50"
             />
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">
-              JPEG, PNG or WebP. Max 2MB.
-            </p>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">JPEG, PNG or WebP. Max 2MB.</p>
             {avatarState?.error && (
-              <p className="text-sm text-red-600 dark:text-red-400">
-                {avatarState.error}
-              </p>
+              <p className="text-sm text-red-600 dark:text-red-400">{avatarState.error}</p>
             )}
             <button
               type="submit"
@@ -77,9 +65,7 @@ export function ProfileForm({
       {/* Profile fields */}
       <form action={profileFormAction} className="space-y-6">
         {profileState?.error && (
-          <p className="text-sm text-red-600 dark:text-red-400">
-            {profileState.error}
-          </p>
+          <p className="text-sm text-red-600 dark:text-red-400">{profileState.error}</p>
         )}
 
         <div>
@@ -153,9 +139,7 @@ export function ProfileForm({
               {profileState.fieldErrors.bio}
             </p>
           )}
-          <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-            Max 500 characters.
-          </p>
+          <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Max 500 characters.</p>
         </div>
 
         <button

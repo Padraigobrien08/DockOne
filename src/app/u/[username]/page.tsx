@@ -37,25 +37,17 @@ export default async function UserProfilePage({
               <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
                 {displayName}
               </h1>
-              <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                @{profile.username}
-              </p>
+              <p className="text-sm text-zinc-500 dark:text-zinc-400">@{profile.username}</p>
               {profile.bio && (
-                <p className="mt-2 text-zinc-600 dark:text-zinc-400">
-                  {profile.bio}
-                </p>
+                <p className="mt-2 text-zinc-600 dark:text-zinc-400">{profile.bio}</p>
               )}
             </div>
           </div>
 
           <section className="mt-10">
-            <h2 className="text-lg font-medium text-zinc-900 dark:text-zinc-50">
-              Apps
-            </h2>
+            <h2 className="text-lg font-medium text-zinc-900 dark:text-zinc-50">Apps</h2>
             {apps.length === 0 ? (
-              <p className="mt-4 text-sm text-zinc-500 dark:text-zinc-400">
-                No approved apps yet.
-              </p>
+              <p className="mt-4 text-sm text-zinc-500 dark:text-zinc-400">No approved apps yet.</p>
             ) : (
               <ul className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {apps.map((app) => (

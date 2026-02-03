@@ -32,15 +32,24 @@ body {
 .prose p + p {
   margin-top: 0.75em;
 }
-.prose h1, .prose h2, .prose h3 {
+.prose h1,
+.prose h2,
+.prose h3 {
   font-weight: 600;
   margin-top: 1.25em;
   margin-bottom: 0.5em;
 }
-.prose h1 { font-size: 1.5rem; }
-.prose h2 { font-size: 1.25rem; }
-.prose h3 { font-size: 1.125rem; }
-.prose ul, .prose ol {
+.prose h1 {
+  font-size: 1.5rem;
+}
+.prose h2 {
+  font-size: 1.25rem;
+}
+.prose h3 {
+  font-size: 1.125rem;
+}
+.prose ul,
+.prose ol {
   margin-top: 0.5em;
   padding-left: 1.5em;
 }

@@ -11,7 +11,5 @@ export async function GET(request: Request) {
   if (code) params.set("code", code);
   if (next !== "/") params.set("next", next);
   const qs = params.toString();
-  return NextResponse.redirect(
-    new URL(`/auth/callback${qs ? `?${qs}` : ""}`, request.url)
-  );
+  return NextResponse.redirect(new URL(`/auth/callback${qs ? `?${qs}` : ""}`, request.url));
 }

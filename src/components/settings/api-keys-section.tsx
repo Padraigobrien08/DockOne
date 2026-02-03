@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
 import { getApiKey, setApiKey, BYOK_PROVIDERS, type ByokProvider } from "@/lib/byok";
 
 export function ApiKeysSection() {
@@ -9,15 +8,14 @@ export function ApiKeysSection() {
   const [anthropic, setAnthropic] = useState("");
   const [mounted, setMounted] = useState(false);
 
+  // Hydrate from localStorage after mount to avoid SSR mismatch (keys never sent to server).
   useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect -- intentional: hydrate from localStorage after mount */
     setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (!mounted) return;
     setOpenai(getApiKey("openai") ?? "");
     setAnthropic(getApiKey("anthropic") ?? "");
-  }, [mounted]);
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, []);
 
   function handleChange(provider: ByokProvider, value: string) {
     if (provider === "openai") setOpenai(value);
@@ -37,11 +35,15 @@ export function ApiKeysSection() {
   return (
     <div className="space-y-4">
       <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-200">
-        Keys stay in your browser. We never send them to our server. Clearing site data or storage removes them.
+        Keys stay in your browser. We never send them to our server. Clearing site data or storage
+        removes them.
       </div>
       {BYOK_PROVIDERS.map(({ id, label }) => (
         <div key={id}>
-          <label htmlFor={`byok-${id}`} className="block text-sm font-medium text-zinc-900 dark:text-zinc-50">
+          <label
+            htmlFor={`byok-${id}`}
+            className="block text-sm font-medium text-zinc-900 dark:text-zinc-50"
+          >
             {label} API key
           </label>
           <input
