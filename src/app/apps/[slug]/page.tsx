@@ -24,10 +24,13 @@ const STATUS_CLASS: Record<AppDetail["status"], string> = {
 
 export default async function AppDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ pending?: string }>;
 }) {
   const { slug } = await params;
+  const { pending: pendingParam } = await searchParams;
   const user = await getUser();
   const app = await getAppBySlug(slug, user?.id);
   if (!app) notFound();
@@ -35,6 +38,9 @@ export default async function AppDetailPage({
   const showStatusBadge =
     user &&
     (user.id === app.owner.id || (await getIsAdmin(user.id)));
+  const isOwner = user?.id === app.owner.id;
+  const showPendingBanner =
+    app.status === "pending" && isOwner && pendingParam === "1";
 
   const screenshots = app.media
     .filter((m) => m.kind === "screenshot")
@@ -46,6 +52,11 @@ export default async function AppDetailPage({
     <div className="py-8 sm:py-12">
       <Container>
         <div className="mx-auto max-w-3xl">
+          {showPendingBanner && (
+            <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-200">
+              <strong>Pending approval.</strong> Your app is under review and will appear in the browse list once approved.
+            </div>
+          )}
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50 sm:text-3xl">

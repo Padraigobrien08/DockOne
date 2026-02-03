@@ -1,14 +1,25 @@
-/**
- * Submit an app (authenticated).
- * Will show login prompt if not signed in.
- */
-export default function SubmitAppPage() {
+import { redirect } from "next/navigation";
+import { getUser } from "@/lib/supabase/server";
+import { Container } from "@/components/ui/container";
+import { SubmitForm } from "@/components/submit/submit-form";
+
+export default async function SubmitPage() {
+  const user = await getUser();
+  if (!user) redirect("/auth/sign-in");
+
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold">Submit an app</h1>
-      <p className="text-zinc-600 dark:text-zinc-400 mt-2">
-        Auth-gated form; new submissions start as pending.
-      </p>
+    <div className="py-8 sm:py-12">
+      <Container>
+        <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
+          Submit an app
+        </h1>
+        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+          New submissions start as pending until approved. Step 1: basics. Step 2: description and media.
+        </p>
+        <div className="mt-8">
+          <SubmitForm />
+        </div>
+      </Container>
     </div>
   );
 }
