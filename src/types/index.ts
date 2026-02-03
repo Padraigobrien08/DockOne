@@ -43,6 +43,31 @@ export interface AppWithOwner extends App {
   owner: AppOwner;
 }
 
+/** Media row for detail: url + kind for carousel (screenshots). */
+export interface AppMediaItem {
+  id: string;
+  url: string;
+  kind: "screenshot" | "logo";
+  sort_order: number;
+}
+
+/** Full app for detail page: description, links, all media. */
+export interface AppDetail {
+  id: string;
+  name: string;
+  tagline: string | null;
+  description: string | null;
+  status: AppStatus;
+  app_url: string | null;
+  repo_url: string | null;
+  demo_video_url: string | null;
+  created_at: string;
+  updated_at: string;
+  owner: AppOwner;
+  tags: string[];
+  media: AppMediaItem[];
+}
+
 export interface Creator {
   id: string;
   username: string;

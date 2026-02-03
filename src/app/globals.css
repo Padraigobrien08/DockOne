@@ -24,3 +24,58 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Markdown / prose (app detail description) */
+.prose {
+  line-height: 1.7;
+}
+.prose p + p {
+  margin-top: 0.75em;
+}
+.prose h1, .prose h2, .prose h3 {
+  font-weight: 600;
+  margin-top: 1.25em;
+  margin-bottom: 0.5em;
+}
+.prose h1 { font-size: 1.5rem; }
+.prose h2 { font-size: 1.25rem; }
+.prose h3 { font-size: 1.125rem; }
+.prose ul, .prose ol {
+  margin-top: 0.5em;
+  padding-left: 1.5em;
+}
+.prose li + li {
+  margin-top: 0.25em;
+}
+.prose a {
+  color: #3b82f6;
+  text-decoration: underline;
+}
+.prose a:hover {
+  opacity: 0.9;
+}
+.prose code {
+  font-size: 0.9em;
+  padding: 0.15em 0.35em;
+  border-radius: 0.25rem;
+  background: #f4f4f5;
+}
+:root.dark .prose code,
+.dark .prose code {
+  background: #27272a;
+}
+.prose pre {
+  overflow-x: auto;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  background: #f4f4f5;
+  margin-top: 0.5em;
+}
+:root.dark .prose pre,
+.dark .prose pre {
+  background: #27272a;
+}
+.prose pre code {
+  padding: 0;
+  background: none;
+}
