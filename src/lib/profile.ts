@@ -24,15 +24,15 @@ export async function getProfileByUsername(
   return data as ProfilePublic;
 }
 
-/** Check if user is admin (for status badge, etc.). */
+/** Check if user is in admins table (for /admin access, status updates). */
 export async function getIsAdmin(userId: string): Promise<boolean> {
   const supabase = await createClient();
   const { data } = await supabase
-    .from("profiles")
-    .select("is_admin")
-    .eq("id", userId)
-    .single();
-  return data?.is_admin === true;
+    .from("admins")
+    .select("user_id")
+    .eq("user_id", userId)
+    .maybeSingle();
+  return !!data;
 }
 
 /** Resolve owner snippet by id (for links). */

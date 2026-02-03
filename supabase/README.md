@@ -24,7 +24,7 @@ Migrations run in order; already-applied migrations are skipped.
 ## Post-migration
 
 - **Profiles** are not auto-created. Your app should create a row in `public.profiles` on first sign-in (e.g. in the auth callback or a “complete profile” flow), with `id = auth.uid()` and a unique `username`.
-- **Admins**: Table-based admin is `profiles.is_admin`. Set `is_admin = true` for a user in the Dashboard (**Table Editor** → `profiles` → edit row) or via SQL: `update public.profiles set is_admin = true where id = 'user-uuid';`. Only those users can change `apps.status`.
+- **Admins**: Admin access is gated by the `admins` table (migration `004_admins_and_rejection.sql`). Add a user via SQL: `insert into public.admins (user_id) values ('user-uuid');`. Only users in `admins` can access `/admin` and change `apps.status`. Existing `profiles.is_admin = true` users are migrated into `admins` when you run the migration.
 - **Votes**: The `votes` table and RLS are in place but policies currently deny all access. When you’re ready, add SELECT/INSERT/DELETE policies and remove the “no access” policies.
 - **Storage**: After running migrations, create these buckets in the Dashboard (**Storage** → **New bucket**), then run the corresponding migration (or `supabase db push`):
   - `avatars`: Public on. RLS in `002_storage_avatars.sql` — users upload under `avatars/{user_id}/`.

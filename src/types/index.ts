@@ -34,6 +34,7 @@ export interface App {
   status: AppStatus;
   app_url: string | null;
   repo_url: string | null;
+  rejection_reason: string | null;
   created_at: string;
   updated_at: string;
   owner_id: string;
@@ -61,6 +62,7 @@ export interface AppDetail {
   app_url: string | null;
   repo_url: string | null;
   demo_video_url: string | null;
+  rejection_reason: string | null;
   created_at: string;
   updated_at: string;
   owner: AppOwner;

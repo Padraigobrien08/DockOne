@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { getIsAdmin } from "@/lib/profile";
 import type { AppListItem, AppDetail } from "@/types";
 
 type Row = {
@@ -22,6 +23,7 @@ type DetailRow = {
   app_url: string | null;
   repo_url: string | null;
   demo_video_url: string | null;
+  rejection_reason: string | null;
   created_at: string;
   updated_at: string;
   owner_id: string;
@@ -80,10 +82,10 @@ export async function getAppBySlug(
   userId?: string | null
 ): Promise<AppDetail | null> {
   const supabase = await createClient();
-  let query = supabase
+  const query = supabase
     .from("apps")
     .select(
-      "id, name, tagline, description, status, app_url, repo_url, demo_video_url, created_at, updated_at, owner_id, slug, profiles!owner_id(id, username, display_name, avatar_url), app_tags(tag), app_media(id, url, sort_order, kind)"
+      "id, name, tagline, description, status, app_url, repo_url, demo_video_url, rejection_reason, created_at, updated_at, owner_id, slug, profiles!owner_id(id, username, display_name, avatar_url), app_tags(tag), app_media(id, url, sort_order, kind)"
     )
     .eq("slug", slug);
 
@@ -94,9 +96,7 @@ export async function getAppBySlug(
   const status = row.status as AppDetail["status"];
   const isApproved = status === "approved";
   const isOwner = userId && row.owner_id === userId;
-  const isAdmin = userId
-    ? (await supabase.from("profiles").select("is_admin").eq("id", userId).single().then((r) => r.data?.is_admin === true))
-    : false;
+  const isAdmin = userId ? await getIsAdmin(userId) : false;
   if (!isApproved && !isOwner && !isAdmin) return null;
 
   const media = (row.app_media ?? [])
@@ -117,6 +117,7 @@ export async function getAppBySlug(
     app_url: row.app_url,
     repo_url: row.repo_url,
     demo_video_url: row.demo_video_url,
+    rejection_reason: row.rejection_reason ?? null,
     created_at: row.created_at,
     updated_at: row.updated_at,
     owner: row.profiles
@@ -144,6 +145,39 @@ export async function getApprovedAppsByOwnerId(
     )
     .eq("owner_id", ownerId)
     .eq("status", "approved")
+    .order("created_at", { ascending: false });
+
+  if (error) return [];
+
+  const rows = (data ?? []) as unknown as Row[];
+  return rows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    tagline: row.tagline,
+    slug: row.slug,
+    created_at: row.created_at,
+    owner: row.profiles
+      ? {
+          id: row.profiles.id,
+          username: row.profiles.username,
+          display_name: row.profiles.display_name,
+          avatar_url: row.profiles.avatar_url,
+        }
+      : { id: row.owner_id, username: "unknown", display_name: null, avatar_url: null },
+    tags: (row.app_tags ?? []).map((t) => t.tag),
+    primary_image_url: primaryImageUrl(row.app_media ?? []),
+  }));
+}
+
+/** Fetch pending apps for admin moderation. */
+export async function getPendingApps(): Promise<AppListItem[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("apps")
+    .select(
+      "id, name, tagline, slug, created_at, owner_id, profiles!owner_id(id, username, display_name, avatar_url), app_tags(tag), app_media(url, sort_order, kind)"
+    )
+    .eq("status", "pending")
     .order("created_at", { ascending: false });
 
   if (error) return [];

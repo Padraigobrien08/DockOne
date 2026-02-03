@@ -57,6 +57,11 @@ export default async function AppDetailPage({
               <strong>Pending approval.</strong> Your app is under review and will appear in the browse list once approved.
             </div>
           )}
+          {app.status === "rejected" && isOwner && app.rejection_reason && (
+            <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-900/20 dark:text-red-200">
+              <strong>Rejection reason:</strong> {app.rejection_reason}
+            </div>
+          )}
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50 sm:text-3xl">
