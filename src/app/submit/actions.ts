@@ -54,6 +54,7 @@ export async function submitApp(
   const repo_url = (formData.get("repo_url") as string)?.trim() ?? "";
   const tagsRaw = (formData.get("tags") as string)?.trim() ?? "";
   const description = (formData.get("description") as string)?.trim() ?? "";
+  const byokRequired = formData.get("byok_required") === "on" || formData.get("byok_required") === "true";
   const screenshotFiles = formData.getAll("screenshots") as File[];
   const logoFile = formData.get("logo") as File | null;
 
@@ -123,6 +124,7 @@ export async function submitApp(
       status: "pending",
       app_url: app_url || null,
       repo_url: repo_url || null,
+      byok_required: byokRequired,
     })
     .select("id")
     .single();

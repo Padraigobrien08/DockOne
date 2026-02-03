@@ -56,18 +56,21 @@ export function AppCard({ app }: AppCardProps) {
             </span>
           </div>
         </div>
-        {app.tags.length > 0 && (
-          <ul className="mt-2 flex flex-wrap gap-1.5">
-            {app.tags.slice(0, 5).map((tag) => (
-              <li
-                key={tag}
-                className="rounded bg-zinc-100 px-1.5 py-0.5 text-xs text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300"
-              >
-                {tag}
-              </li>
-            ))}
-          </ul>
-        )}
+        <div className="mt-2 flex flex-wrap items-center gap-1.5">
+          {app.byok_required && (
+            <span className="rounded bg-violet-100 px-1.5 py-0.5 text-xs font-medium text-violet-700 dark:bg-violet-900/30 dark:text-violet-300">
+              BYOK
+            </span>
+          )}
+          {app.tags.slice(0, 5).map((tag) => (
+            <span
+              key={tag}
+              className="rounded bg-zinc-100 px-1.5 py-0.5 text-xs text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300"
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
       </div>
     </Link>
   );

@@ -9,6 +9,7 @@ type Row = {
   slug: string;
   created_at: string;
   owner_id: string;
+  byok_required: boolean;
   profiles: { id: string; username: string; display_name: string | null; avatar_url: string | null } | null;
   app_tags: { tag: string }[];
   app_media: { url: string; sort_order: number; kind: string }[];
@@ -24,6 +25,7 @@ type DetailRow = {
   repo_url: string | null;
   demo_video_url: string | null;
   rejection_reason: string | null;
+  byok_required: boolean;
   created_at: string;
   updated_at: string;
   owner_id: string;
@@ -49,7 +51,7 @@ export async function getApprovedApps(): Promise<AppListItem[]> {
   const { data, error } = await supabase
     .from("apps")
     .select(
-      "id, name, tagline, slug, created_at, owner_id, profiles!owner_id(id, username, display_name, avatar_url), app_tags(tag), app_media(url, sort_order, kind)"
+      "id, name, tagline, slug, created_at, owner_id, byok_required, profiles!owner_id(id, username, display_name, avatar_url), app_tags(tag), app_media(url, sort_order, kind)"
     )
     .eq("status", "approved")
     .order("created_at", { ascending: false });
@@ -73,6 +75,7 @@ export async function getApprovedApps(): Promise<AppListItem[]> {
       : { id: row.owner_id, username: "unknown", display_name: null, avatar_url: null },
     tags: (row.app_tags ?? []).map((t) => t.tag),
     primary_image_url: primaryImageUrl(row.app_media ?? []),
+    byok_required: row.byok_required ?? false,
   }));
 }
 
@@ -85,7 +88,7 @@ export async function getAppBySlug(
   const query = supabase
     .from("apps")
     .select(
-      "id, name, tagline, description, status, app_url, repo_url, demo_video_url, rejection_reason, created_at, updated_at, owner_id, slug, profiles!owner_id(id, username, display_name, avatar_url), app_tags(tag), app_media(id, url, sort_order, kind)"
+      "id, name, tagline, description, status, app_url, repo_url, demo_video_url, rejection_reason, byok_required, created_at, updated_at, owner_id, slug, profiles!owner_id(id, username, display_name, avatar_url), app_tags(tag), app_media(id, url, sort_order, kind)"
     )
     .eq("slug", slug);
 
@@ -118,6 +121,7 @@ export async function getAppBySlug(
     repo_url: row.repo_url,
     demo_video_url: row.demo_video_url,
     rejection_reason: row.rejection_reason ?? null,
+    byok_required: row.byok_required ?? false,
     created_at: row.created_at,
     updated_at: row.updated_at,
     owner: row.profiles
@@ -141,7 +145,7 @@ export async function getApprovedAppsByOwnerId(
   const { data, error } = await supabase
     .from("apps")
     .select(
-      "id, name, tagline, slug, created_at, owner_id, profiles!owner_id(id, username, display_name, avatar_url), app_tags(tag), app_media(url, sort_order, kind)"
+      "id, name, tagline, slug, created_at, owner_id, byok_required, profiles!owner_id(id, username, display_name, avatar_url), app_tags(tag), app_media(url, sort_order, kind)"
     )
     .eq("owner_id", ownerId)
     .eq("status", "approved")
@@ -166,6 +170,7 @@ export async function getApprovedAppsByOwnerId(
       : { id: row.owner_id, username: "unknown", display_name: null, avatar_url: null },
     tags: (row.app_tags ?? []).map((t) => t.tag),
     primary_image_url: primaryImageUrl(row.app_media ?? []),
+    byok_required: row.byok_required ?? false,
   }));
 }
 
@@ -175,7 +180,7 @@ export async function getPendingApps(): Promise<AppListItem[]> {
   const { data, error } = await supabase
     .from("apps")
     .select(
-      "id, name, tagline, slug, created_at, owner_id, profiles!owner_id(id, username, display_name, avatar_url), app_tags(tag), app_media(url, sort_order, kind)"
+      "id, name, tagline, slug, created_at, owner_id, byok_required, profiles!owner_id(id, username, display_name, avatar_url), app_tags(tag), app_media(url, sort_order, kind)"
     )
     .eq("status", "pending")
     .order("created_at", { ascending: false });
@@ -199,5 +204,6 @@ export async function getPendingApps(): Promise<AppListItem[]> {
       : { id: row.owner_id, username: "unknown", display_name: null, avatar_url: null },
     tags: (row.app_tags ?? []).map((t) => t.tag),
     primary_image_url: primaryImageUrl(row.app_media ?? []),
+    byok_required: row.byok_required ?? false,
   }));
 }

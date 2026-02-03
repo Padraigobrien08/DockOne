@@ -20,6 +20,7 @@ export function SubmitForm() {
   const [appUrl, setAppUrl] = useState("");
   const [repoUrl, setRepoUrl] = useState("");
   const [tags, setTags] = useState("");
+  const [byokRequired, setByokRequired] = useState(false);
   const [description, setDescription] = useState("");
 
   const canProceedStep1 =
@@ -155,6 +156,20 @@ export function SubmitForm() {
               <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Up to 10 tags.</p>
             </div>
 
+            <div className="flex items-start gap-3">
+              <input
+                id="byok_required"
+                name="byok_required"
+                type="checkbox"
+                checked={byokRequired}
+                onChange={(e) => setByokRequired(e.target.checked)}
+                className="mt-1 h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-900 dark:checked:bg-zinc-100"
+              />
+              <label htmlFor="byok_required" className="text-sm text-zinc-700 dark:text-zinc-300">
+                BYOK required — app uses an LLM and needs users to add API keys in Settings (OpenAI / Anthropic).
+              </label>
+            </div>
+
             <div className="flex gap-3">
               <button
                 type="submit"
@@ -174,6 +189,7 @@ export function SubmitForm() {
             <input type="hidden" name="app_url" value={appUrl} />
             <input type="hidden" name="repo_url" value={repoUrl} />
             <input type="hidden" name="tags" value={tags} />
+            <input type="hidden" name="byok_required" value={byokRequired ? "on" : ""} />
 
             <div>
               <label htmlFor="description" className="block text-sm font-medium text-zinc-900 dark:text-zinc-50">

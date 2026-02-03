@@ -62,6 +62,15 @@ export default async function AppDetailPage({
               <strong>Rejection reason:</strong> {app.rejection_reason}
             </div>
           )}
+          {app.byok_required && (
+            <div className="mb-6 rounded-lg border border-violet-200 bg-violet-50 px-4 py-3 text-sm text-violet-800 dark:border-violet-800 dark:bg-violet-900/20 dark:text-violet-200">
+              <strong>BYOK compatible.</strong> This app uses an LLM. Add your OpenAI or Anthropic API key in{" "}
+              <Link href="/settings" className="font-medium underline hover:no-underline">
+                Settings
+              </Link>{" "}
+              so the app can use it. Keys stay in your browser and are never sent to our server.
+            </div>
+          )}
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50 sm:text-3xl">
@@ -100,6 +109,11 @@ export default async function AppDetailPage({
               )}
               <span>{displayName}</span>
             </Link>
+            {app.byok_required && (
+              <span className="rounded bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-700 dark:bg-violet-900/30 dark:text-violet-300">
+                BYOK
+              </span>
+            )}
             {app.tags.length > 0 && (
               <ul className="flex flex-wrap gap-1.5">
                 {app.tags.map((tag) => (

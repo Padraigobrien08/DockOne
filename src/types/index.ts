@@ -23,6 +23,7 @@ export interface AppListItem {
   owner: AppOwner;
   tags: string[];
   primary_image_url: string | null;
+  byok_required: boolean;
 }
 
 export interface App {
@@ -35,6 +36,7 @@ export interface App {
   app_url: string | null;
   repo_url: string | null;
   rejection_reason: string | null;
+  byok_required: boolean;
   created_at: string;
   updated_at: string;
   owner_id: string;
@@ -63,6 +65,7 @@ export interface AppDetail {
   repo_url: string | null;
   demo_video_url: string | null;
   rejection_reason: string | null;
+  byok_required: boolean;
   created_at: string;
   updated_at: string;
   owner: AppOwner;
