@@ -11,6 +11,7 @@ type Row = {
   owner_id: string;
   byok_required: boolean;
   lifecycle: string;
+  visibility?: string;
   profiles: {
     id: string;
     username: string;
@@ -30,6 +31,7 @@ type DetailRow = {
   description: string | null;
   status: string;
   lifecycle: string;
+  visibility?: string;
   app_url: string | null;
   repo_url: string | null;
   demo_video_url: string | null;
@@ -82,15 +84,16 @@ async function getVoteCountsByAppIds(
   return counts;
 }
 
-/** Fetch approved apps for the list: name, tagline, slug, owner, tags, primary image, vote count. */
+/** Fetch approved apps for the list (public only). */
 export async function getApprovedApps(): Promise<AppListItem[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("apps")
     .select(
-      "id, name, tagline, slug, created_at, owner_id, byok_required, lifecycle, profiles!owner_id(id, username, display_name, avatar_url, subscription_tier, pro_until), app_tags(tag), app_media(url, sort_order, kind)"
+      "id, name, tagline, slug, created_at, owner_id, byok_required, lifecycle, visibility, profiles!owner_id(id, username, display_name, avatar_url, subscription_tier, pro_until), app_tags(tag), app_media(url, sort_order, kind)"
     )
     .eq("status", "approved")
+    .eq("visibility", "public")
     .order("created_at", { ascending: false });
 
   if (error) return [];
@@ -126,7 +129,58 @@ export async function getApprovedApps(): Promise<AppListItem[]> {
     vote_count: voteCounts.get(row.id) ?? 0,
     trending_score: trendingByAppId.get(row.id) ?? 0,
     lifecycle: (row.lifecycle ?? "wip") as AppListItem["lifecycle"],
+    visibility: (row.visibility ?? "public") as AppListItem["visibility"],
   }));
+}
+
+/** Fetch approved public apps by ids (for collections). Order of result follows order of appIds. */
+export async function getApprovedAppsByIds(appIds: string[]): Promise<AppListItem[]> {
+  if (appIds.length === 0) return [];
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("apps")
+    .select(
+      "id, name, tagline, slug, created_at, owner_id, byok_required, lifecycle, visibility, profiles!owner_id(id, username, display_name, avatar_url, subscription_tier, pro_until), app_tags(tag), app_media(url, sort_order, kind)"
+    )
+    .eq("status", "approved")
+    .eq("visibility", "public")
+    .in("id", appIds);
+
+  if (error) return [];
+  const rows = (data ?? []) as unknown as Row[];
+  const ids = rows.map((r) => r.id);
+  const [voteCounts, trendingRows] = await Promise.all([
+    getVoteCountsByAppIds(supabase, ids),
+    supabase.rpc("get_approved_apps_trending_score", { p_decay: 0.5 }),
+  ]);
+  const trendingByAppId = new Map(
+    ((trendingRows.data ?? []) as { app_id: string; score: number }[]).map((r) => [r.app_id, r.score])
+  );
+  const list = rows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    tagline: row.tagline,
+    slug: row.slug,
+    created_at: row.created_at,
+    owner: row.profiles
+      ? {
+          id: row.profiles.id,
+          username: row.profiles.username,
+          display_name: row.profiles.display_name,
+          avatar_url: row.profiles.avatar_url,
+          isPro: ownerIsPro(row.profiles),
+        }
+      : { id: row.owner_id, username: "unknown", display_name: null, avatar_url: null, isPro: false },
+    tags: (row.app_tags ?? []).map((t) => t.tag),
+    primary_image_url: primaryImageUrl(row.app_media ?? []),
+    byok_required: row.byok_required ?? false,
+    vote_count: voteCounts.get(row.id) ?? 0,
+    trending_score: trendingByAppId.get(row.id) ?? 0,
+    lifecycle: (row.lifecycle ?? "wip") as AppListItem["lifecycle"],
+    visibility: (row.visibility ?? "public") as AppListItem["visibility"],
+  }));
+  const byId = new Map(list.map((a) => [a.id, a]));
+  return appIds.map((id) => byId.get(id)).filter(Boolean) as AppListItem[];
 }
 
 /** Fetch app by slug. Approved only, or pending/rejected if current user is owner or admin. */
@@ -138,7 +192,7 @@ export async function getAppBySlug(
   const query = supabase
     .from("apps")
     .select(
-      "id, name, tagline, description, status, lifecycle, app_url, repo_url, demo_video_url, rejection_reason, byok_required, created_at, updated_at, owner_id, slug, profiles!owner_id(id, username, display_name, avatar_url, subscription_tier, pro_until), app_tags(tag), app_media(id, url, sort_order, kind)"
+      "id, name, tagline, description, status, lifecycle, visibility, app_url, repo_url, demo_video_url, rejection_reason, byok_required, created_at, updated_at, owner_id, slug, profiles!owner_id(id, username, display_name, avatar_url, subscription_tier, pro_until), app_tags(tag), app_media(id, url, sort_order, kind)"
     )
     .eq("slug", slug);
 
@@ -196,20 +250,28 @@ export async function getAppBySlug(
     vote_count: voteCounts.get(row.id) ?? 0,
     user_has_voted: !!userVote.data,
     lifecycle: (row.lifecycle ?? "wip") as AppDetail["lifecycle"],
+    visibility: (row.visibility ?? "public") as AppDetail["visibility"],
   };
 }
 
-/** Fetch approved apps by owner (for /u/[username] profile). */
-export async function getApprovedAppsByOwnerId(ownerId: string): Promise<AppListItem[]> {
+/** Fetch approved apps by owner (for /u/[username] profile). When viewerId !== ownerId, only public apps. */
+export async function getApprovedAppsByOwnerId(
+  ownerId: string,
+  viewerId?: string | null
+): Promise<AppListItem[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase
+  const query = supabase
     .from("apps")
     .select(
-      "id, name, tagline, slug, created_at, owner_id, byok_required, lifecycle, profiles!owner_id(id, username, display_name, avatar_url, subscription_tier, pro_until), app_tags(tag), app_media(url, sort_order, kind)"
+      "id, name, tagline, slug, created_at, owner_id, byok_required, lifecycle, visibility, profiles!owner_id(id, username, display_name, avatar_url, subscription_tier, pro_until), app_tags(tag), app_media(url, sort_order, kind)"
     )
     .eq("owner_id", ownerId)
     .eq("status", "approved")
     .order("created_at", { ascending: false });
+  if (viewerId !== ownerId) {
+    query.eq("visibility", "public");
+  }
+  const { data, error } = await query;
 
   if (error) return [];
 
@@ -238,6 +300,7 @@ export async function getApprovedAppsByOwnerId(ownerId: string): Promise<AppList
     vote_count: voteCounts.get(row.id) ?? 0,
     trending_score: 0,
     lifecycle: (row.lifecycle ?? "wip") as AppListItem["lifecycle"],
+    visibility: (row.visibility ?? "public") as AppListItem["visibility"],
   }));
 }
 
@@ -247,7 +310,7 @@ export async function getPendingApps(): Promise<AppListItem[]> {
   const { data, error } = await supabase
     .from("apps")
     .select(
-      "id, name, tagline, slug, created_at, owner_id, byok_required, lifecycle, profiles!owner_id(id, username, display_name, avatar_url, subscription_tier, pro_until), app_tags(tag), app_media(url, sort_order, kind)"
+      "id, name, tagline, slug, created_at, owner_id, byok_required, lifecycle, visibility, profiles!owner_id(id, username, display_name, avatar_url, subscription_tier, pro_until), app_tags(tag), app_media(url, sort_order, kind)"
     )
     .eq("status", "pending")
     .order("created_at", { ascending: false });
@@ -276,6 +339,7 @@ export async function getPendingApps(): Promise<AppListItem[]> {
     vote_count: 0,
     trending_score: 0,
     lifecycle: (row.lifecycle ?? "wip") as AppListItem["lifecycle"],
+    visibility: (row.visibility ?? "public") as AppListItem["visibility"],
   }));
   // Priority queue: Pro creators first, then newest
   list.sort(

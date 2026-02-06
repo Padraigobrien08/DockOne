@@ -7,9 +7,11 @@ interface AppCardProps {
   app: AppListItem;
   /** Creator reputation stats; when present and risingCreator, show badge. */
   creatorStats?: CreatorStats | null;
+  /** True if app has an active boost (amplifies trending score). */
+  isBoosted?: boolean;
 }
 
-export function AppCard({ app, creatorStats }: AppCardProps) {
+export function AppCard({ app, creatorStats, isBoosted }: AppCardProps) {
   const displayName = app.owner.display_name || app.owner.username;
 
   return (
@@ -80,6 +82,16 @@ export function AppCard({ app, creatorStats }: AppCardProps) {
           <span className="rounded border border-zinc-200 bg-zinc-50 px-1.5 py-0.5 text-xs text-zinc-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400">
             {APP_LIFECYCLE_LABELS[app.lifecycle]}
           </span>
+          {isBoosted && (
+            <span className="rounded bg-sky-100 px-1.5 py-0.5 text-xs font-medium text-sky-800 dark:bg-sky-900/40 dark:text-sky-200">
+              Boosted
+            </span>
+          )}
+          {app.visibility === "unlisted" && (
+            <span className="rounded bg-zinc-200 px-1.5 py-0.5 text-xs font-medium text-zinc-700 dark:bg-zinc-600 dark:text-zinc-200">
+              Unlisted
+            </span>
+          )}
           {app.byok_required && (
             <span className="rounded bg-violet-100 px-1.5 py-0.5 text-xs font-medium text-violet-700 dark:bg-violet-900/30 dark:text-violet-300">
               BYOK

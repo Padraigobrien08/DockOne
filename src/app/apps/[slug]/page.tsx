@@ -16,8 +16,25 @@ import { recordPageView, getAppAnalytics } from "@/lib/analytics";
 import { TrackedLink } from "@/components/apps/tracked-link";
 import { AppAnalyticsSection } from "@/components/apps/app-analytics-section";
 import { FeaturedButton } from "@/components/apps/featured-button";
+import { BoostButton } from "@/components/apps/boost-button";
+import { getActiveBoosts, countActiveBoosts, MAX_ACTIVE_BOOSTS } from "@/lib/boosts";
+import type { Metadata } from "next";
 import { APP_LIFECYCLE_LABELS } from "@/types";
 import type { AppDetail } from "@/types";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const app = await getAppBySlug(slug);
+  if (!app) return {};
+  if (app.visibility === "unlisted") {
+    return { robots: { index: false, follow: true } };
+  }
+  return {};
+}
 
 const STATUS_LABEL: Record<AppDetail["status"], string> = {
   pending: "Pending",
@@ -50,7 +67,7 @@ export default async function AppDetailPage({
 
   if (!isOwner) void recordPageView(app.id);
 
-  const [feedbackCounts, currentUserFeedback, creatorStats, analytics, featuredTokenUsed] =
+  const [feedbackCounts, currentUserFeedback, creatorStats, analytics, featuredTokenUsed, boostMap, activeBoostCount] =
     await Promise.all([
       getFeedbackCountsForOwner(app.id, app.owner.id, user?.id ?? null),
       getCurrentUserFeedback(app.id, user?.id ?? null),
@@ -59,8 +76,12 @@ export default async function AppDetailPage({
       isOwner && app.owner.isPro
         ? hasUsedFeaturedTokenThisMonth(app.owner.id)
         : Promise.resolve(true),
+      getActiveBoosts(),
+      isOwner && app.owner.isPro ? countActiveBoosts() : Promise.resolve(MAX_ACTIVE_BOOSTS),
     ]);
   const featuredTokenAvailable = isOwner && app.owner.isPro && !featuredTokenUsed;
+  const isBoosted = boostMap.has(app.id);
+  const canBoost = isOwner && app.owner.isPro && activeBoostCount < MAX_ACTIVE_BOOSTS && !isBoosted;
 
   const screenshots = app.media
     .filter((m) => m.kind === "screenshot")
@@ -106,6 +127,16 @@ export default async function AppDetailPage({
               <span className="rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-sm font-medium text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
                 {APP_LIFECYCLE_LABELS[app.lifecycle]}
               </span>
+              {isBoosted && (
+                <span className="rounded-full bg-sky-100 px-3 py-1 text-sm font-medium text-sky-800 dark:bg-sky-900/40 dark:text-sky-200">
+                  Boosted
+                </span>
+              )}
+              {app.visibility === "unlisted" && (
+                <span className="rounded-full bg-zinc-200 px-3 py-1 text-sm font-medium text-zinc-700 dark:bg-zinc-600 dark:text-zinc-200">
+                  Unlisted — shareable link
+                </span>
+              )}
               {showStatusBadge && (
                 <span
                   className={`rounded-full px-3 py-1 text-sm font-medium ${STATUS_CLASS[app.status]}`}
@@ -249,6 +280,10 @@ export default async function AppDetailPage({
 
           {featuredTokenAvailable && (
             <FeaturedButton appId={app.id} slug={app.slug} className="mt-6" />
+          )}
+
+          {canBoost && (
+            <BoostButton appId={app.id} slug={app.slug} className="mt-6" />
           )}
 
           <div className="mt-10 space-y-6 border-t border-zinc-200 pt-6 dark:border-zinc-800">

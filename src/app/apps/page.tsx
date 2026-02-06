@@ -2,11 +2,16 @@ import Link from "next/link";
 import { Container } from "@/components/ui/container";
 import { getApprovedApps, getFeaturedApps } from "@/lib/apps";
 import { computeCreatorStatsMap } from "@/lib/creator-stats";
+import { getActiveBoosts } from "@/lib/boosts";
 import { AppsList } from "@/components/apps/apps-list";
 import { AppCard } from "@/components/apps/app-card";
 
 export default async function AppsPage() {
-  const [apps, featured] = await Promise.all([getApprovedApps(), getFeaturedApps()]);
+  const [apps, featured, boostMap] = await Promise.all([
+    getApprovedApps(),
+    getFeaturedApps(),
+    getActiveBoosts(),
+  ]);
   const creatorStatsMap = computeCreatorStatsMap(apps);
 
   return (
@@ -25,7 +30,11 @@ export default async function AppsPage() {
             <ul className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {featured.map((app) => (
                 <li key={app.id}>
-                  <AppCard app={app} creatorStats={creatorStatsMap.get(app.owner.id)} />
+                  <AppCard
+                    app={app}
+                    creatorStats={creatorStatsMap.get(app.owner.id)}
+                    isBoosted={boostMap.has(app.id)}
+                  />
                 </li>
               ))}
             </ul>
@@ -33,7 +42,11 @@ export default async function AppsPage() {
         )}
 
         <div className={featured.length > 0 ? "mt-10" : "mt-8"}>
-          <AppsList apps={apps} creatorStatsMap={creatorStatsMap} />
+          <AppsList
+            apps={apps}
+            creatorStatsMap={creatorStatsMap}
+            boostMap={boostMap}
+          />
         </div>
       </Container>
     </div>

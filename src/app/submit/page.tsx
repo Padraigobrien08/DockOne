@@ -1,11 +1,13 @@
 import { redirect } from "next/navigation";
 import { getUser } from "@/lib/supabase/server";
 import { Container } from "@/components/ui/container";
+import { getIsPro } from "@/lib/profile";
 import { SubmitForm } from "@/components/submit/submit-form";
 
 export default async function SubmitPage() {
   const user = await getUser();
   if (!user) redirect("/auth/sign-in");
+  const isPro = await getIsPro(user.id);
 
   return (
     <div className="py-8 sm:py-12">
@@ -16,7 +18,7 @@ export default async function SubmitPage() {
           media.
         </p>
         <div className="mt-8">
-          <SubmitForm />
+          <SubmitForm isPro={isPro} />
         </div>
       </Container>
     </div>

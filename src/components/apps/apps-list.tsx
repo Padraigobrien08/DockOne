@@ -48,19 +48,31 @@ function filterApps(
   return out;
 }
 
-function sortApps(apps: AppListItem[], sort: SortKey): AppListItem[] {
+/** Boost amplifies score: display_score = trending_score * (1 + multiplier). */
+function boostedScore(score: number, multiplier: number): number {
+  return score * (1 + multiplier);
+}
+
+function sortApps(
+  apps: AppListItem[],
+  sort: SortKey,
+  boostMap?: Map<string, number>
+): AppListItem[] {
   const copy = [...apps];
   switch (sort) {
     case "newest":
       return copy.sort(
         (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
-    case "trending":
-      return copy.sort(
-        (a, b) =>
-          (b.trending_score ?? 0) - (a.trending_score ?? 0) ||
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      );
+    case "trending": {
+      return copy.sort((a, b) => {
+        const aBoost = boostMap?.get(a.id) ?? 0;
+        const bBoost = boostMap?.get(b.id) ?? 0;
+        const aScore = boostedScore(a.trending_score ?? 0, aBoost);
+        const bScore = boostedScore(b.trending_score ?? 0, bBoost);
+        return bScore - aScore || new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      });
+    }
     case "alphabetical":
       return copy.sort((a, b) => a.name.localeCompare(b.name, "en", { sensitivity: "base" }));
     default:
@@ -85,17 +97,19 @@ interface AppsListProps {
   apps: AppListItem[];
   /** Map of owner id → creator stats; used to show Rising creator on cards. */
   creatorStatsMap?: Map<string, CreatorStats>;
+  /** Map of app id → boost multiplier; used for trending sort and Boosted badge. */
+  boostMap?: Map<string, number>;
 }
 
-export function AppsList({ apps, creatorStatsMap }: AppsListProps) {
+export function AppsList({ apps, creatorStatsMap, boostMap }: AppsListProps) {
   const [query, setQuery] = useState("");
   const [tagFilter, setTagFilter] = useState<string | null>(null);
   const [lifecycleFilter, setLifecycleFilter] = useState<AppLifecycle | null>(null);
   const [sort, setSort] = useState<SortKey>("newest");
 
   const filtered = useMemo(
-    () => sortApps(filterApps(apps, query, tagFilter, lifecycleFilter), sort),
-    [apps, query, tagFilter, lifecycleFilter, sort]
+    () => sortApps(filterApps(apps, query, tagFilter, lifecycleFilter), sort, boostMap),
+    [apps, query, tagFilter, lifecycleFilter, sort, boostMap]
   );
   const tags = useMemo(() => topTags(apps, 16), [apps]);
 
@@ -180,6 +194,7 @@ export function AppsList({ apps, creatorStatsMap }: AppsListProps) {
               <AppCard
                 app={app}
                 creatorStats={creatorStatsMap?.get(app.owner.id)}
+                isBoosted={boostMap?.has(app.id)}
               />
             </li>
           ))}

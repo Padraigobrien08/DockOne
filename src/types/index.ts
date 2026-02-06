@@ -48,6 +48,24 @@ export interface AppOwner {
   isPro?: boolean;
 }
 
+export type AppVisibility = "public" | "unlisted";
+
+/** Collection (staff or community). owner_id null = staff-only editable. */
+export interface Collection {
+  id: string;
+  slug: string;
+  name: string;
+  description: string | null;
+  owner_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/** Collection with its apps (approved public only). */
+export interface CollectionWithApps extends Collection {
+  apps: AppListItem[];
+}
+
 /** Single app row for the /apps list: name, tagline, slug, owner, tags, primary image. */
 export interface AppListItem {
   id: string;
@@ -63,6 +81,8 @@ export interface AppListItem {
   /** Time-decayed trending score (excludes self-votes, boosts recent activity). Used for Trending sort. */
   trending_score: number;
   lifecycle: AppLifecycle;
+  /** public = in browse; unlisted = direct link only (Pro). */
+  visibility: AppVisibility;
 }
 
 export interface App {
@@ -73,6 +93,7 @@ export interface App {
   description: string | null;
   status: AppStatus;
   lifecycle: AppLifecycle;
+  visibility: AppVisibility;
   app_url: string | null;
   repo_url: string | null;
   rejection_reason: string | null;
@@ -102,6 +123,7 @@ export interface AppDetail {
   tagline: string | null;
   description: string | null;
   status: AppStatus;
+  visibility: AppVisibility;
   app_url: string | null;
   repo_url: string | null;
   demo_video_url: string | null;

@@ -28,6 +28,8 @@ const lifecycleEnum = z.enum([
   "shipped_elsewhere",
 ]);
 
+const visibilityEnum = z.enum(["public", "unlisted"]);
+
 export const submitBasicsSchema = z.object({
   name: z.string().min(1, "Name is required.").max(100, "Name must be 1–100 characters."),
   tagline: z
@@ -40,6 +42,7 @@ export const submitBasicsSchema = z.object({
   tags: tagsStringSchema,
   byok_required: z.boolean().default(false),
   lifecycle: lifecycleEnum.default("wip"),
+  visibility: visibilityEnum.default("public"),
 });
 
 export const submitFullSchema = submitBasicsSchema.extend({
@@ -67,6 +70,10 @@ export function submitFormFromFormData(formData: FormData): z.input<typeof submi
   const lifecycle = lifecycleEnum.safeParse(lifecycleRaw).success
     ? (lifecycleRaw as z.infer<typeof lifecycleEnum>)
     : "wip";
+  const visibilityRaw = (formData.get("visibility") as string)?.trim() || "public";
+  const visibility = visibilityEnum.safeParse(visibilityRaw).success
+    ? (visibilityRaw as z.infer<typeof visibilityEnum>)
+    : "public";
 
   return {
     name,
@@ -77,6 +84,7 @@ export function submitFormFromFormData(formData: FormData): z.input<typeof submi
     description: description || undefined,
     byok_required,
     lifecycle,
+    visibility,
   };
 }
 

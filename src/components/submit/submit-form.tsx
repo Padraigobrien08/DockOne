@@ -4,6 +4,7 @@ import { useState, useActionState } from "react";
 import { Container } from "@/components/ui/container";
 import { submitApp, type SubmitState } from "@/app/submit/actions";
 import { APP_LIFECYCLE_LABELS, type AppLifecycle } from "@/types";
+import type { AppVisibility } from "@/types";
 
 const SCREENSHOTS_MAX = 5;
 const ALLOWED_IMAGE_TYPES = "image/jpeg,image/png,image/webp";
@@ -12,7 +13,12 @@ type Step = 1 | 2;
 
 const initialState: SubmitState = {};
 
-export function SubmitForm() {
+interface SubmitFormProps {
+  /** Pro creators can submit unlisted apps (shareable link only). */
+  isPro?: boolean;
+}
+
+export function SubmitForm({ isPro }: SubmitFormProps = {}) {
   const [step, setStep] = useState<Step>(1);
   const [state, formAction, isPending] = useActionState(submitApp, initialState);
 
@@ -23,6 +29,7 @@ export function SubmitForm() {
   const [tags, setTags] = useState("");
   const [byokRequired, setByokRequired] = useState(false);
   const [lifecycle, setLifecycle] = useState<AppLifecycle>("wip");
+  const [visibility, setVisibility] = useState<AppVisibility>("public");
   const [description, setDescription] = useState("");
 
   const canProceedStep1 =
@@ -212,6 +219,30 @@ export function SubmitForm() {
               </p>
             </div>
 
+            {isPro && (
+              <div>
+                <label
+                  htmlFor="visibility"
+                  className="block text-sm font-medium text-zinc-900 dark:text-zinc-50"
+                >
+                  Visibility
+                </label>
+                <select
+                  id="visibility"
+                  name="visibility"
+                  value={visibility}
+                  onChange={(e) => setVisibility(e.target.value as AppVisibility)}
+                  className="mt-1.5 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-50"
+                >
+                  <option value="public">Listed — appears in browse</option>
+                  <option value="unlisted">Unlisted — shareable link only (investors, testers, hiring)</option>
+                </select>
+                <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                  Unlisted apps don’t appear in the catalog; share the direct link with anyone.
+                </p>
+              </div>
+            )}
+
             <div className="flex items-start gap-3">
               <input
                 id="byok_required"
@@ -248,6 +279,7 @@ export function SubmitForm() {
             <input type="hidden" name="tags" value={tags} />
             <input type="hidden" name="byok_required" value={byokRequired ? "on" : ""} />
             <input type="hidden" name="lifecycle" value={lifecycle} />
+            <input type="hidden" name="visibility" value={visibility} />
 
             <div>
               <label

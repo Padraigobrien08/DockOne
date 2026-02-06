@@ -1,11 +1,23 @@
 import { redirect } from "next/navigation";
 import { getUser } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { Container } from "@/components/ui/container";
 import { ApiKeysSection } from "@/components/settings/api-keys-section";
+import { DigestSection } from "@/components/settings/digest-section";
 
 export default async function SettingsPage() {
   const user = await getUser();
   if (!user) redirect("/auth/sign-in");
+
+  const supabase = await createClient();
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("email, digest_opted_in")
+    .eq("id", user.id)
+    .single();
+
+  const hasEmail = Boolean(profile?.email?.trim());
+  const digestOptedIn = Boolean(profile?.digest_opted_in);
 
   return (
     <div className="py-8 sm:py-12">
@@ -26,6 +38,8 @@ export default async function SettingsPage() {
               <ApiKeysSection />
             </div>
           </section>
+
+          <DigestSection digestOptedIn={digestOptedIn} hasEmail={hasEmail} />
         </div>
       </Container>
     </div>

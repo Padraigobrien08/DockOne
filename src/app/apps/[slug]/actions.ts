@@ -2,8 +2,14 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
-import { getIsPro } from "@/lib/profile";
-import { hasUsedFeaturedTokenThisMonth } from "@/lib/profile";
+import { getIsPro, hasUsedFeaturedTokenThisMonth } from "@/lib/profile";
+import {
+  MAX_ACTIVE_BOOSTS,
+  BOOST_DURATION_HOURS,
+  BOOST_MULTIPLIER_DEFAULT,
+  countActiveBoosts,
+  appHasActiveBoost,
+} from "@/lib/boosts";
 import type { FeedbackKind } from "@/types";
 
 export async function setAppFeedback(
@@ -107,6 +113,44 @@ export async function useFeaturedToken(appId: string, slug: string): Promise<{ e
     app_id: appId,
     featured_at: now.toISOString(),
     expires_at: expiresAt.toISOString(),
+  });
+  if (error) return { error: error.message };
+  revalidatePath("/apps");
+  revalidatePath(`/apps/${slug}`);
+  return {};
+}
+
+/** Use a boost slot (Pro only). Boosts amplify trending score for 24h; limited slots per day. */
+export async function useBoost(appId: string, slug: string): Promise<{ error?: string }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Sign in to boost" };
+
+  const isPro = await getIsPro(user.id);
+  if (!isPro) return { error: "Creator Pro required to boost apps" };
+
+  const { data: app } = await supabase
+    .from("apps")
+    .select("owner_id")
+    .eq("id", appId)
+    .single();
+  if (!app || app.owner_id !== user.id) return { error: "You can only boost your own apps" };
+
+  const [activeCount, alreadyBoosted] = await Promise.all([
+    countActiveBoosts(),
+    appHasActiveBoost(appId),
+  ]);
+  if (activeCount >= MAX_ACTIVE_BOOSTS)
+    return { error: "Boost slots are full for today. Try again when a slot frees up." };
+  if (alreadyBoosted) return { error: "This app is already boosted" };
+
+  const now = new Date();
+  const endsAt = new Date(now.getTime() + BOOST_DURATION_HOURS * 60 * 60 * 1000);
+  const { error } = await supabase.from("app_boosts").insert({
+    app_id: appId,
+    starts_at: now.toISOString(),
+    ends_at: endsAt.toISOString(),
+    multiplier: BOOST_MULTIPLIER_DEFAULT,
   });
   if (error) return { error: error.message };
   revalidatePath("/apps");

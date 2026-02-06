@@ -5,6 +5,10 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getIsAdmin } from "@/lib/profile";
 import { log } from "@/lib/logger";
+import {
+  addAppToCollectionBySlug as addBySlug,
+  removeAppFromCollection as removeFromCollection,
+} from "@/lib/collections";
 
 async function requireAdmin() {
   const supabase = await createClient();
@@ -45,4 +49,32 @@ export async function rejectApp(appId: string, reason: string | null) {
   revalidatePath("/admin");
   revalidatePath("/apps");
   return {};
+}
+
+export async function addAppToCollectionBySlug(
+  collectionId: string,
+  appSlug: string
+): Promise<{ error?: string }> {
+  await requireAdmin();
+  const result = await addBySlug(collectionId, appSlug);
+  if (!result.error) {
+    revalidatePath("/admin");
+    revalidatePath("/collections");
+    revalidatePath("/collections/[slug]", "page");
+  }
+  return result;
+}
+
+export async function removeAppFromCollection(
+  collectionId: string,
+  appId: string
+): Promise<{ error?: string }> {
+  await requireAdmin();
+  const result = await removeFromCollection(collectionId, appId);
+  if (!result.error) {
+    revalidatePath("/admin");
+    revalidatePath("/collections");
+    revalidatePath("/collections/[slug]", "page");
+  }
+  return result;
 }

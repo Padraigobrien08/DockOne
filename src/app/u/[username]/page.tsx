@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import { Container } from "@/components/ui/container";
+import { getUser } from "@/lib/supabase/server";
 import { getProfileByUsername } from "@/lib/profile";
 import { getApprovedAppsByOwnerId } from "@/lib/apps";
 import { getCreatorStats } from "@/lib/creator-stats";
@@ -16,8 +17,9 @@ export default async function UserProfilePage({
   const profile = await getProfileByUsername(username);
   if (!profile) notFound();
 
+  const user = await getUser();
   const [apps, stats] = await Promise.all([
-    getApprovedAppsByOwnerId(profile.id),
+    getApprovedAppsByOwnerId(profile.id, user?.id ?? null),
     getCreatorStats(profile.id),
   ]);
   const displayName = profile.display_name || profile.username;

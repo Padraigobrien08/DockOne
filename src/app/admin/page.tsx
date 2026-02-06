@@ -3,9 +3,12 @@ import { getUser } from "@/lib/supabase/server";
 import { getIsAdmin } from "@/lib/profile";
 import { getPendingApps } from "@/lib/apps";
 import { getReportsForAdmin } from "@/lib/reports";
+import { getCollections } from "@/lib/collections";
+import { getCollectionBySlug } from "@/lib/collections";
 import { Container } from "@/components/ui/container";
 import { PendingList } from "./pending-list";
 import { ReportsList } from "./reports-list";
+import { AdminCollectionsList } from "./admin-collections-list";
 
 export default async function AdminPage() {
   const user = await getUser();
@@ -14,17 +17,22 @@ export default async function AdminPage() {
   const isAdmin = await getIsAdmin(user.id);
   if (!isAdmin) redirect("/");
 
-  const [pendingApps, reports] = await Promise.all([
+  const [pendingApps, reports, collections] = await Promise.all([
     getPendingApps(),
     getReportsForAdmin(),
+    getCollections(),
   ]);
+  const staffCollections = collections.filter((c) => !c.owner_id);
+  const staffWithApps = await Promise.all(
+    staffCollections.map((c) => getCollectionBySlug(c.slug))
+  );
 
   return (
     <div className="py-8 sm:py-12">
       <Container>
         <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">Moderation</h1>
         <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-          Pending apps and user reports.
+          Pending apps, reports, and staff collections.
         </p>
 
         <section className="mt-10">
@@ -48,6 +56,18 @@ export default async function AdminPage() {
           </p>
           <div className="mt-4">
             <ReportsList reports={reports} />
+          </div>
+        </section>
+
+        <section className="mt-12">
+          <h2 className="text-lg font-medium text-zinc-900 dark:text-zinc-50">
+            Staff collections
+          </h2>
+          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+            Curate Staff picks, Best BYOK tools, Best dev utilities. Add or remove apps by slug.
+          </p>
+          <div className="mt-4">
+            <AdminCollectionsList collections={staffWithApps.filter(Boolean)} />
           </div>
         </section>
       </Container>
