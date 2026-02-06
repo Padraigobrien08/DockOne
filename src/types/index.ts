@@ -156,5 +156,16 @@ export interface AppFeedbackCounts {
   needs_work: number;
 }
 
+/** Private analytics for app owner: page views, clicks, conversion, feedback. */
+export interface AppAnalytics {
+  pageViews: number;
+  demoClicks: number;
+  repoClicks: number;
+  voteCount: number;
+  /** Vote conversion rate (votes / page views * 100); 0 if no page views. */
+  voteConversionRate: number;
+  feedbackBreakdown: AppFeedbackCounts;
+}
+
 /** BYOK: keys live only in localStorage; never sent to server. */
 export type LlmProviderKeyId = string;

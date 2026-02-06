@@ -12,6 +12,9 @@ import { UpvoteButton } from "@/components/apps/upvote-button";
 import { FeedbackButtons } from "@/components/apps/feedback-buttons";
 import { getFeedbackCountsForOwner, getCurrentUserFeedback } from "@/lib/feedback";
 import { getCreatorStats } from "@/lib/creator-stats";
+import { recordPageView, getAppAnalytics } from "@/lib/analytics";
+import { TrackedLink } from "@/components/apps/tracked-link";
+import { AppAnalyticsSection } from "@/components/apps/app-analytics-section";
 import { APP_LIFECYCLE_LABELS } from "@/types";
 import type { AppDetail } from "@/types";
 
@@ -44,10 +47,13 @@ export default async function AppDetailPage({
   const isOwner = user?.id === app.owner.id;
   const showPendingBanner = app.status === "pending" && isOwner && pendingParam === "1";
 
-  const [feedbackCounts, currentUserFeedback, creatorStats] = await Promise.all([
+  if (!isOwner) void recordPageView(app.id);
+
+  const [feedbackCounts, currentUserFeedback, creatorStats, analytics] = await Promise.all([
     getFeedbackCountsForOwner(app.id, app.owner.id, user?.id ?? null),
     getCurrentUserFeedback(app.id, user?.id ?? null),
     getCreatorStats(app.owner.id),
+    isOwner ? getAppAnalytics(app.id, app.owner.id, user?.id ?? null) : Promise.resolve(null),
   ]);
 
   const screenshots = app.media
@@ -149,10 +155,10 @@ export default async function AppDetailPage({
           {(app.app_url || app.repo_url || app.demo_video_url) && (
             <div className="mt-6 flex flex-wrap gap-3">
               {app.app_url && (
-                <a
+                <TrackedLink
+                  appId={app.id}
+                  eventType="demo_click"
                   href={app.app_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
                 >
                   Open app
@@ -164,13 +170,13 @@ export default async function AppDetailPage({
                       d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
                     />
                   </svg>
-                </a>
+                </TrackedLink>
               )}
               {app.repo_url && (
-                <a
+                <TrackedLink
+                  appId={app.id}
+                  eventType="repo_click"
                   href={app.repo_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
                 >
                   Repo
@@ -182,7 +188,7 @@ export default async function AppDetailPage({
                       d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
                     />
                   </svg>
-                </a>
+                </TrackedLink>
               )}
               {app.demo_video_url && (
                 <a
@@ -218,6 +224,10 @@ export default async function AppDetailPage({
                 <ScreenshotsCarousel images={screenshots} />
               </div>
             </div>
+          )}
+
+          {analytics && (
+            <AppAnalyticsSection analytics={analytics} className="mt-10 border-t border-zinc-200 pt-6 dark:border-zinc-800" />
           )}
 
           <div className="mt-10 space-y-6 border-t border-zinc-200 pt-6 dark:border-zinc-800">

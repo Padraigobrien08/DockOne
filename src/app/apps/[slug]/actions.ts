@@ -66,3 +66,15 @@ export async function unvoteApp(appId: string, slug: string): Promise<{ error?: 
   revalidatePath(`/apps/${slug}`);
   return {};
 }
+
+/** Record a link click (demo/repo) for private analytics. No auth required. */
+export async function recordAppEvent(
+  appId: string,
+  eventType: "demo_click" | "repo_click"
+): Promise<void> {
+  const supabase = await createClient();
+  await supabase.from("app_analytics_events").insert({
+    app_id: appId,
+    event_type: eventType,
+  });
+}
