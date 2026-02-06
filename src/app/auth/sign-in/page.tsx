@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
+import { createClientAsync } from "@/lib/supabase/client";
 import { Container } from "@/components/ui/container";
 
 export default function SignInPage() {
@@ -15,7 +15,7 @@ export default function SignInPage() {
     e.preventDefault();
     setError(null);
     setLoading(true);
-    const supabase = createClient();
+    const supabase = await createClientAsync();
     const { error: err } = await supabase.auth.signInWithOtp({
       email: email.trim(),
       options: {

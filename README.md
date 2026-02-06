@@ -23,9 +23,11 @@ A hub where creators post unfinished but functional apps.
 
 ```bash
 npm install
-cp .env.example .env.local   # add Supabase vars when ready
+cp .env.example .env   # add Supabase vars when ready
 npm run dev
 ```
+
+For Supabase (project, migrations, storage, auth), follow **[supabase/SETUP.md](supabase/SETUP.md)** step by step.
 
 ## Project structure
 

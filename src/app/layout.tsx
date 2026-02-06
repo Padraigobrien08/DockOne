@@ -25,11 +25,20 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const supabaseEnv = {
+    url: process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
+    key: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "",
+  };
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50`}
       >
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.__SUPABASE_ENV__=JSON.parse(${JSON.stringify(JSON.stringify(supabaseEnv))});`,
+          }}
+        />
         <Header />
         <main className="flex-1">{children}</main>
         <Footer />

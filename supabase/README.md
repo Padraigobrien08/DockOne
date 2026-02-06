@@ -1,5 +1,9 @@
 # Supabase migrations
 
+**New to this project?** Use **[SETUP.md](./SETUP.md)** for a full step-by-step Supabase setup (project, env vars, migrations, storage, auth, seed).
+
+---
+
 ## Applying the initial schema
 
 ### Option A: Supabase Dashboard (SQL Editor)
@@ -18,6 +22,20 @@ If anything already exists (e.g. you re-run), you’ll get errors. Use a fresh p
 3. Run migrations: `supabase db push`.
 
 Migrations run in order; already-applied migrations are skipped.
+
+---
+
+## Seed data (demo apps)
+
+To see the browse list, app cards, and detail pages with real data:
+
+1. Run all migrations (001 through 005).
+2. Sign in at least once (e.g. `/auth/sign-in` with magic link) so a profile exists.
+3. In the Supabase **SQL Editor**, open `supabase/seed.sql`, copy its contents, and run it.
+
+The seed adds three approved apps for your profile: **Hello World**, **Todo WIP**, and **BYOK Demo** (with tags and placeholder images). It’s idempotent — safe to run again; existing slugs are skipped.
+
+With the Supabase CLI and local DB: after `supabase db reset` (which runs migrations), sign in once in the app, then run `supabase db execute -f supabase/seed.sql` (or paste `seed.sql` into the SQL Editor in the local Studio).
 
 ---
 
