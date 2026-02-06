@@ -1,9 +1,11 @@
 import { Container } from "@/components/ui/container";
 import { getApprovedApps } from "@/lib/apps";
+import { computeCreatorStatsMap } from "@/lib/creator-stats";
 import { AppsList } from "@/components/apps/apps-list";
 
 export default async function AppsPage() {
   const apps = await getApprovedApps();
+  const creatorStatsMap = computeCreatorStatsMap(apps);
 
   return (
     <div className="py-8 sm:py-12">
@@ -13,7 +15,7 @@ export default async function AppsPage() {
           Unfinished but functional. Search, filter by tag, or sort.
         </p>
         <div className="mt-8">
-          <AppsList apps={apps} />
+          <AppsList apps={apps} creatorStatsMap={creatorStatsMap} />
         </div>
       </Container>
     </div>

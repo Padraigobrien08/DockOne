@@ -5,9 +5,10 @@ import { ReportModal } from "./report-modal";
 
 interface ReportButtonProps {
   appName: string;
+  appId: string;
 }
 
-export function ReportButton({ appName }: ReportButtonProps) {
+export function ReportButton({ appName, appId }: ReportButtonProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -19,7 +20,13 @@ export function ReportButton({ appName }: ReportButtonProps) {
       >
         Report
       </button>
-      {open && <ReportModal appName={appName} onClose={() => setOpen(false)} />}
+      {open && (
+        <ReportModal
+          appName={appName}
+          appId={appId}
+          onClose={() => setOpen(false)}
+        />
+      )}
     </>
   );
 }

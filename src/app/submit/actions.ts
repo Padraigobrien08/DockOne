@@ -59,7 +59,8 @@ export async function submitApp(_prev: SubmitState, formData: FormData): Promise
   const fileErrors = validateFiles(screenshotFiles, logoFile);
   if (fileErrors) return { fieldErrors: fileErrors };
 
-  const { name, tagline, app_url, repo_url, tags, description, byok_required } = parsed.data;
+  const { name, tagline, app_url, repo_url, tags, description, byok_required, lifecycle } =
+    parsed.data;
 
   const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
   const { count, error: countError } = await supabase
@@ -85,6 +86,7 @@ export async function submitApp(_prev: SubmitState, formData: FormData): Promise
       tagline: tagline || null,
       description: description || null,
       status: "pending",
+      lifecycle: lifecycle ?? "wip",
       app_url: app_url || null,
       repo_url: repo_url || null,
       byok_required,

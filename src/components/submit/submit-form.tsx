@@ -3,6 +3,7 @@
 import { useState, useActionState } from "react";
 import { Container } from "@/components/ui/container";
 import { submitApp, type SubmitState } from "@/app/submit/actions";
+import { APP_LIFECYCLE_LABELS, type AppLifecycle } from "@/types";
 
 const SCREENSHOTS_MAX = 5;
 const ALLOWED_IMAGE_TYPES = "image/jpeg,image/png,image/webp";
@@ -21,6 +22,7 @@ export function SubmitForm() {
   const [repoUrl, setRepoUrl] = useState("");
   const [tags, setTags] = useState("");
   const [byokRequired, setByokRequired] = useState(false);
+  const [lifecycle, setLifecycle] = useState<AppLifecycle>("wip");
   const [description, setDescription] = useState("");
 
   const canProceedStep1 =
@@ -183,6 +185,33 @@ export function SubmitForm() {
               <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Up to 10 tags.</p>
             </div>
 
+            <div>
+              <label
+                htmlFor="lifecycle"
+                className="block text-sm font-medium text-zinc-900 dark:text-zinc-50"
+              >
+                Status
+              </label>
+              <select
+                id="lifecycle"
+                name="lifecycle"
+                value={lifecycle}
+                onChange={(e) => setLifecycle(e.target.value as AppLifecycle)}
+                className="mt-1.5 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-50"
+              >
+                {(Object.entries(APP_LIFECYCLE_LABELS) as [AppLifecycle, string][]).map(
+                  ([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  )
+                )}
+              </select>
+              <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                Helps others know what you’re looking for (feedback, users, etc.).
+              </p>
+            </div>
+
             <div className="flex items-start gap-3">
               <input
                 id="byok_required"
@@ -218,6 +247,7 @@ export function SubmitForm() {
             <input type="hidden" name="repo_url" value={repoUrl} />
             <input type="hidden" name="tags" value={tags} />
             <input type="hidden" name="byok_required" value={byokRequired ? "on" : ""} />
+            <input type="hidden" name="lifecycle" value={lifecycle} />
 
             <div>
               <label

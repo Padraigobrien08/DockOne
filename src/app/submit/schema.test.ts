@@ -61,4 +61,25 @@ describe("submitFullSchema", () => {
       expect(result.data.tags).toEqual(["foo", "bar"]);
     }
   });
+
+  it("defaults lifecycle to wip and accepts lifecycle values", () => {
+    const without = submitFullSchema.safeParse({
+      name: "App",
+      app_url: "https://example.com",
+      tags: undefined,
+      byok_required: false,
+    });
+    expect(without.success).toBe(true);
+    if (without.success) expect(without.data.lifecycle).toBe("wip");
+
+    const withLifecycle = submitFullSchema.safeParse({
+      name: "App",
+      app_url: "https://example.com",
+      tags: undefined,
+      byok_required: false,
+      lifecycle: "looking_for_feedback",
+    });
+    expect(withLifecycle.success).toBe(true);
+    if (withLifecycle.success) expect(withLifecycle.data.lifecycle).toBe("looking_for_feedback");
+  });
 });

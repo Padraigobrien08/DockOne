@@ -43,7 +43,7 @@ With the Supabase CLI and local DB: after `supabase db reset` (which runs migrat
 
 - **Profiles** are not auto-created. Your app should create a row in `public.profiles` on first sign-in (e.g. in the auth callback or a “complete profile” flow), with `id = auth.uid()` and a unique `username`.
 - **Admins**: Admin access is gated by the `admins` table (migration `004_admins_and_rejection.sql`). Add a user via SQL: `insert into public.admins (user_id) values ('user-uuid');`. Only users in `admins` can access `/admin` and change `apps.status`. Existing `profiles.is_admin = true` users are migrated into `admins` when you run the migration.
-- **Votes**: The `votes` table and RLS are in place but policies currently deny all access. When you’re ready, add SELECT/INSERT/DELETE policies and remove the “no access” policies.
+- **Votes**: Migration `006_votes_rls.sql` enables SELECT (for counts), INSERT/DELETE for authenticated users (own vote). **Reports**: Migration `007_reports.sql` adds `reports` table; authenticated users can insert, admins can select.
 - **Storage**: After running migrations, create these buckets in the Dashboard (**Storage** → **New bucket**), then run the corresponding migration (or `supabase db push`):
   - `avatars`: Public on. RLS in `002_storage_avatars.sql` — users upload under `avatars/{user_id}/`.
   - `app-media`: Public on. RLS in `003_storage_app_media.sql` — app owners upload under `app-media/{app_id}/`.

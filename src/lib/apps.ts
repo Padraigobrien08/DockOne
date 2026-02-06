@@ -10,6 +10,7 @@ type Row = {
   created_at: string;
   owner_id: string;
   byok_required: boolean;
+  lifecycle: string;
   profiles: {
     id: string;
     username: string;
@@ -26,6 +27,7 @@ type DetailRow = {
   tagline: string | null;
   description: string | null;
   status: string;
+  lifecycle: string;
   app_url: string | null;
   repo_url: string | null;
   demo_video_url: string | null;
@@ -55,13 +57,27 @@ function primaryImageUrl(media: Row["app_media"]): string | null {
   return sorted[0].url;
 }
 
-/** Fetch approved apps for the list: name, tagline, slug, owner, tags, primary image. */
+async function getVoteCountsByAppIds(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  appIds: string[]
+): Promise<Map<string, number>> {
+  if (appIds.length === 0) return new Map();
+  const { data } = await supabase.from("votes").select("app_id").in("app_id", appIds);
+  const rows = (data ?? []) as { app_id: string }[];
+  const counts = new Map<string, number>();
+  for (const row of rows) {
+    counts.set(row.app_id, (counts.get(row.app_id) ?? 0) + 1);
+  }
+  return counts;
+}
+
+/** Fetch approved apps for the list: name, tagline, slug, owner, tags, primary image, vote count. */
 export async function getApprovedApps(): Promise<AppListItem[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("apps")
     .select(
-      "id, name, tagline, slug, created_at, owner_id, byok_required, profiles!owner_id(id, username, display_name, avatar_url), app_tags(tag), app_media(url, sort_order, kind)"
+      "id, name, tagline, slug, created_at, owner_id, byok_required, lifecycle, profiles!owner_id(id, username, display_name, avatar_url), app_tags(tag), app_media(url, sort_order, kind)"
     )
     .eq("status", "approved")
     .order("created_at", { ascending: false });
@@ -69,6 +85,15 @@ export async function getApprovedApps(): Promise<AppListItem[]> {
   if (error) return [];
 
   const rows = (data ?? []) as unknown as Row[];
+  const appIds = rows.map((r) => r.id);
+  const [voteCounts, trendingRows] = await Promise.all([
+    getVoteCountsByAppIds(supabase, appIds),
+    supabase.rpc("get_approved_apps_trending_score", { p_decay: 0.5 }),
+  ]);
+  const trendingByAppId = new Map(
+    ((trendingRows.data ?? []) as { app_id: string; score: number }[]).map((r) => [r.app_id, r.score])
+  );
+
   return rows.map((row) => ({
     id: row.id,
     name: row.name,
@@ -86,6 +111,9 @@ export async function getApprovedApps(): Promise<AppListItem[]> {
     tags: (row.app_tags ?? []).map((t) => t.tag),
     primary_image_url: primaryImageUrl(row.app_media ?? []),
     byok_required: row.byok_required ?? false,
+    vote_count: voteCounts.get(row.id) ?? 0,
+    trending_score: trendingByAppId.get(row.id) ?? 0,
+    lifecycle: (row.lifecycle ?? "wip") as AppListItem["lifecycle"],
   }));
 }
 
@@ -98,7 +126,7 @@ export async function getAppBySlug(
   const query = supabase
     .from("apps")
     .select(
-      "id, name, tagline, description, status, app_url, repo_url, demo_video_url, rejection_reason, byok_required, created_at, updated_at, owner_id, slug, profiles!owner_id(id, username, display_name, avatar_url), app_tags(tag), app_media(id, url, sort_order, kind)"
+      "id, name, tagline, description, status, lifecycle, app_url, repo_url, demo_video_url, rejection_reason, byok_required, created_at, updated_at, owner_id, slug, profiles!owner_id(id, username, display_name, avatar_url), app_tags(tag), app_media(id, url, sort_order, kind)"
     )
     .eq("slug", slug);
 
@@ -121,8 +149,16 @@ export async function getAppBySlug(
       sort_order: m.sort_order,
     }));
 
+  const [voteCounts, userVote] = await Promise.all([
+    getVoteCountsByAppIds(supabase, [row.id]),
+    userId
+      ? supabase.from("votes").select("app_id").eq("app_id", row.id).eq("user_id", userId).maybeSingle()
+      : Promise.resolve({ data: null }),
+  ]);
+
   return {
     id: row.id,
+    slug: row.slug,
     name: row.name,
     tagline: row.tagline,
     description: row.description,
@@ -144,6 +180,9 @@ export async function getAppBySlug(
       : { id: row.owner_id, username: "unknown", display_name: null, avatar_url: null },
     tags: (row.app_tags ?? []).map((t) => t.tag),
     media,
+    vote_count: voteCounts.get(row.id) ?? 0,
+    user_has_voted: !!userVote.data,
+    lifecycle: (row.lifecycle ?? "wip") as AppDetail["lifecycle"],
   };
 }
 
@@ -153,7 +192,7 @@ export async function getApprovedAppsByOwnerId(ownerId: string): Promise<AppList
   const { data, error } = await supabase
     .from("apps")
     .select(
-      "id, name, tagline, slug, created_at, owner_id, byok_required, profiles!owner_id(id, username, display_name, avatar_url), app_tags(tag), app_media(url, sort_order, kind)"
+      "id, name, tagline, slug, created_at, owner_id, byok_required, lifecycle, profiles!owner_id(id, username, display_name, avatar_url), app_tags(tag), app_media(url, sort_order, kind)"
     )
     .eq("owner_id", ownerId)
     .eq("status", "approved")
@@ -162,6 +201,9 @@ export async function getApprovedAppsByOwnerId(ownerId: string): Promise<AppList
   if (error) return [];
 
   const rows = (data ?? []) as unknown as Row[];
+  const appIds = rows.map((r) => r.id);
+  const voteCounts = await getVoteCountsByAppIds(supabase, appIds);
+
   return rows.map((row) => ({
     id: row.id,
     name: row.name,
@@ -179,6 +221,9 @@ export async function getApprovedAppsByOwnerId(ownerId: string): Promise<AppList
     tags: (row.app_tags ?? []).map((t) => t.tag),
     primary_image_url: primaryImageUrl(row.app_media ?? []),
     byok_required: row.byok_required ?? false,
+    vote_count: voteCounts.get(row.id) ?? 0,
+    trending_score: 0,
+    lifecycle: (row.lifecycle ?? "wip") as AppListItem["lifecycle"],
   }));
 }
 
@@ -188,7 +233,7 @@ export async function getPendingApps(): Promise<AppListItem[]> {
   const { data, error } = await supabase
     .from("apps")
     .select(
-      "id, name, tagline, slug, created_at, owner_id, byok_required, profiles!owner_id(id, username, display_name, avatar_url), app_tags(tag), app_media(url, sort_order, kind)"
+      "id, name, tagline, slug, created_at, owner_id, byok_required, lifecycle, profiles!owner_id(id, username, display_name, avatar_url), app_tags(tag), app_media(url, sort_order, kind)"
     )
     .eq("status", "pending")
     .order("created_at", { ascending: false });
@@ -213,5 +258,8 @@ export async function getPendingApps(): Promise<AppListItem[]> {
     tags: (row.app_tags ?? []).map((t) => t.tag),
     primary_image_url: primaryImageUrl(row.app_media ?? []),
     byok_required: row.byok_required ?? false,
+    vote_count: 0,
+    trending_score: 0,
+    lifecycle: (row.lifecycle ?? "wip") as AppListItem["lifecycle"],
   }));
 }

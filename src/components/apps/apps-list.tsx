@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { AppListItem } from "@/types";
+import type { AppListItem, AppLifecycle } from "@/types";
+import type { CreatorStats } from "@/types";
 import { AppCard } from "./app-card";
 
 type SortKey = "newest" | "trending" | "alphabetical";
@@ -12,7 +13,22 @@ const SORT_OPTIONS: { value: SortKey; label: string }[] = [
   { value: "alphabetical", label: "A–Z" },
 ];
 
-function filterApps(apps: AppListItem[], query: string, tagFilter: string | null): AppListItem[] {
+const LIFECYCLE_FILTER_OPTIONS: { value: AppLifecycle | ""; label: string }[] = [
+  { value: "", label: "Any status" },
+  { value: "wip", label: "WIP" },
+  { value: "actively_building", label: "Actively building" },
+  { value: "looking_for_feedback", label: "Looking for feedback" },
+  { value: "looking_for_users", label: "Looking for users" },
+  { value: "dormant", label: "Dormant" },
+  { value: "shipped_elsewhere", label: "Shipped elsewhere" },
+];
+
+function filterApps(
+  apps: AppListItem[],
+  query: string,
+  tagFilter: string | null,
+  lifecycleFilter: AppLifecycle | null
+): AppListItem[] {
   const q = query.trim().toLowerCase();
   let out = apps;
   if (q) {
@@ -26,6 +42,9 @@ function filterApps(apps: AppListItem[], query: string, tagFilter: string | null
   if (tagFilter) {
     out = out.filter((app) => app.tags.includes(tagFilter));
   }
+  if (lifecycleFilter) {
+    out = out.filter((app) => app.lifecycle === lifecycleFilter);
+  }
   return out;
 }
 
@@ -38,7 +57,9 @@ function sortApps(apps: AppListItem[], sort: SortKey): AppListItem[] {
       );
     case "trending":
       return copy.sort(
-        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        (a, b) =>
+          (b.trending_score ?? 0) - (a.trending_score ?? 0) ||
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
     case "alphabetical":
       return copy.sort((a, b) => a.name.localeCompare(b.name, "en", { sensitivity: "base" }));
@@ -62,16 +83,19 @@ function topTags(apps: AppListItem[], limit: number): string[] {
 
 interface AppsListProps {
   apps: AppListItem[];
+  /** Map of owner id → creator stats; used to show Rising creator on cards. */
+  creatorStatsMap?: Map<string, CreatorStats>;
 }
 
-export function AppsList({ apps }: AppsListProps) {
+export function AppsList({ apps, creatorStatsMap }: AppsListProps) {
   const [query, setQuery] = useState("");
   const [tagFilter, setTagFilter] = useState<string | null>(null);
+  const [lifecycleFilter, setLifecycleFilter] = useState<AppLifecycle | null>(null);
   const [sort, setSort] = useState<SortKey>("newest");
 
   const filtered = useMemo(
-    () => sortApps(filterApps(apps, query, tagFilter), sort),
-    [apps, query, tagFilter, sort]
+    () => sortApps(filterApps(apps, query, tagFilter, lifecycleFilter), sort),
+    [apps, query, tagFilter, lifecycleFilter, sort]
   );
   const tags = useMemo(() => topTags(apps, 16), [apps]);
 
@@ -86,22 +110,43 @@ export function AppsList({ apps }: AppsListProps) {
           className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-500 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-50 dark:placeholder-zinc-400 sm:max-w-xs"
           aria-label="Search apps"
         />
-        <div className="flex items-center gap-2">
-          <label htmlFor="sort" className="text-sm text-zinc-500 dark:text-zinc-400">
-            Sort:
-          </label>
-          <select
-            id="sort"
-            value={sort}
-            onChange={(e) => setSort(e.target.value as SortKey)}
-            className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-50"
-          >
-            {SORT_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2">
+            <label htmlFor="lifecycle" className="text-sm text-zinc-500 dark:text-zinc-400">
+              Status:
+            </label>
+            <select
+              id="lifecycle"
+              value={lifecycleFilter ?? ""}
+              onChange={(e) =>
+                setLifecycleFilter((e.target.value as AppLifecycle | "") || null)
+              }
+              className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-50"
+            >
+              {LIFECYCLE_FILTER_OPTIONS.map((opt) => (
+                <option key={opt.value || "any"} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex items-center gap-2">
+            <label htmlFor="sort" className="text-sm text-zinc-500 dark:text-zinc-400">
+              Sort:
+            </label>
+            <select
+              id="sort"
+              value={sort}
+              onChange={(e) => setSort(e.target.value as SortKey)}
+              className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-50"
+            >
+              {SORT_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
@@ -132,7 +177,10 @@ export function AppsList({ apps }: AppsListProps) {
         <ul className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((app) => (
             <li key={app.id}>
-              <AppCard app={app} />
+              <AppCard
+                app={app}
+                creatorStats={creatorStatsMap?.get(app.owner.id)}
+              />
             </li>
           ))}
         </ul>

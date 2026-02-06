@@ -19,6 +19,15 @@ const tagsStringSchema = z
       .max(TAGS_MAX, `At most ${TAGS_MAX} tags.`)
   );
 
+const lifecycleEnum = z.enum([
+  "wip",
+  "actively_building",
+  "looking_for_feedback",
+  "looking_for_users",
+  "dormant",
+  "shipped_elsewhere",
+]);
+
 export const submitBasicsSchema = z.object({
   name: z.string().min(1, "Name is required.").max(100, "Name must be 1–100 characters."),
   tagline: z
@@ -30,6 +39,7 @@ export const submitBasicsSchema = z.object({
   repo_url: z.string().url("Enter a valid URL.").optional().or(z.literal("")),
   tags: tagsStringSchema,
   byok_required: z.boolean().default(false),
+  lifecycle: lifecycleEnum.default("wip"),
 });
 
 export const submitFullSchema = submitBasicsSchema.extend({
@@ -53,6 +63,10 @@ export function submitFormFromFormData(formData: FormData): z.input<typeof submi
   const description = (formData.get("description") as string)?.trim() ?? "";
   const byok_required =
     formData.get("byok_required") === "on" || formData.get("byok_required") === "true";
+  const lifecycleRaw = (formData.get("lifecycle") as string)?.trim() || "wip";
+  const lifecycle = lifecycleEnum.safeParse(lifecycleRaw).success
+    ? (lifecycleRaw as z.infer<typeof lifecycleEnum>)
+    : "wip";
 
   return {
     name,
@@ -62,6 +76,7 @@ export function submitFormFromFormData(formData: FormData): z.input<typeof submi
     tags: tagsRaw || undefined,
     description: description || undefined,
     byok_required,
+    lifecycle,
   };
 }
 

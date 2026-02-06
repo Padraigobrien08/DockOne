@@ -8,6 +8,11 @@ import { getUser } from "@/lib/supabase/server";
 import { getIsAdmin } from "@/lib/profile";
 import { ScreenshotsCarousel } from "@/components/apps/screenshots-carousel";
 import { ReportButton } from "@/components/apps/report-button";
+import { UpvoteButton } from "@/components/apps/upvote-button";
+import { FeedbackButtons } from "@/components/apps/feedback-buttons";
+import { getFeedbackCountsForOwner, getCurrentUserFeedback } from "@/lib/feedback";
+import { getCreatorStats } from "@/lib/creator-stats";
+import { APP_LIFECYCLE_LABELS } from "@/types";
 import type { AppDetail } from "@/types";
 
 const STATUS_LABEL: Record<AppDetail["status"], string> = {
@@ -38,6 +43,12 @@ export default async function AppDetailPage({
   const showStatusBadge = user && (user.id === app.owner.id || (await getIsAdmin(user.id)));
   const isOwner = user?.id === app.owner.id;
   const showPendingBanner = app.status === "pending" && isOwner && pendingParam === "1";
+
+  const [feedbackCounts, currentUserFeedback, creatorStats] = await Promise.all([
+    getFeedbackCountsForOwner(app.id, app.owner.id, user?.id ?? null),
+    getCurrentUserFeedback(app.id, user?.id ?? null),
+    getCreatorStats(app.owner.id),
+  ]);
 
   const screenshots = app.media
     .filter((m) => m.kind === "screenshot")
@@ -79,13 +90,18 @@ export default async function AppDetailPage({
                 <p className="mt-1 text-lg text-zinc-600 dark:text-zinc-400">{app.tagline}</p>
               )}
             </div>
-            {showStatusBadge && (
-              <span
-                className={`rounded-full px-3 py-1 text-sm font-medium ${STATUS_CLASS[app.status]}`}
-              >
-                {STATUS_LABEL[app.status]}
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-sm font-medium text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+                {APP_LIFECYCLE_LABELS[app.lifecycle]}
               </span>
-            )}
+              {showStatusBadge && (
+                <span
+                  className={`rounded-full px-3 py-1 text-sm font-medium ${STATUS_CLASS[app.status]}`}
+                >
+                  {STATUS_LABEL[app.status]}
+                </span>
+              )}
+            </div>
           </div>
 
           <div className="mt-4 flex flex-wrap items-center gap-3 text-sm">
@@ -106,6 +122,11 @@ export default async function AppDetailPage({
               )}
               <span>{displayName}</span>
             </Link>
+            {creatorStats.risingCreator && (
+              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">
+                Rising creator
+              </span>
+            )}
             {app.byok_required && (
               <span className="rounded bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-700 dark:bg-violet-900/30 dark:text-violet-300">
                 BYOK
@@ -199,8 +220,23 @@ export default async function AppDetailPage({
             </div>
           )}
 
-          <div className="mt-10 flex items-center gap-4 border-t border-zinc-200 pt-6 dark:border-zinc-800">
-            <ReportButton appName={app.name} />
+          <div className="mt-10 space-y-6 border-t border-zinc-200 pt-6 dark:border-zinc-800">
+            <FeedbackButtons
+              appId={app.id}
+              slug={app.slug}
+              isOwner={!!isOwner}
+              counts={feedbackCounts}
+              currentUserKind={currentUserFeedback}
+            />
+            <div className="flex flex-wrap items-center gap-4">
+              <UpvoteButton
+                appId={app.id}
+                slug={app.slug}
+                voteCount={app.vote_count}
+                userHasVoted={app.user_has_voted}
+              />
+              <ReportButton appName={app.name} appId={app.id} />
+            </div>
           </div>
         </div>
       </Container>
