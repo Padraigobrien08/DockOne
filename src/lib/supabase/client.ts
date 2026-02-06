@@ -17,16 +17,29 @@ let client: SupabaseClient | undefined;
 function mockBrowserClient(): SupabaseClient {
   const noop = () => Promise.resolve({ data: { user: null }, error: null });
   const noopSub = () => ({ data: { subscription: { unsubscribe: () => {} } } });
+  const emptyRes = () => Promise.resolve({ data: [] as unknown[], error: null });
+  const mockFrom = () => ({
+    select: () => ({ eq: emptyRes, gte: emptyRes, order: emptyRes }),
+  });
   return {
     auth: {
       getUser: noop,
       getSession: noop,
       onAuthStateChange: () => noopSub(),
-      signInWithOtp: () => Promise.resolve({ data: { user: null, session: null }, error: { message: "Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local" } }),
+      signInWithOtp: () =>
+        Promise.resolve({
+          data: { user: null, session: null },
+          error: { message: "Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local" },
+        }),
       signOut: () => Promise.resolve({ error: null }),
     },
-    from: () => ({ select: () => ({ eq: () => Promise.resolve({ data: [], error: null }) } }) },
-    storage: { from: () => ({ upload: () => Promise.resolve({ error: null }), getPublicUrl: () => ({ data: { publicUrl: "" } }) }) },
+    from: mockFrom,
+    storage: {
+      from: () => ({
+        upload: () => Promise.resolve({ error: null }),
+        getPublicUrl: () => ({ data: { publicUrl: "" } }),
+      }),
+    },
   } as unknown as SupabaseClient;
 }
 
