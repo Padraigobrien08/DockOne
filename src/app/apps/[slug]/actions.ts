@@ -2,6 +2,8 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { getIsPro } from "@/lib/profile";
+import { hasUsedFeaturedTokenThisMonth } from "@/lib/profile";
 import type { FeedbackKind } from "@/types";
 
 export async function setAppFeedback(
@@ -77,4 +79,37 @@ export async function recordAppEvent(
     app_id: appId,
     event_type: eventType,
   });
+}
+
+/** Use Pro "Featured for 24h" token (1/month). Creator must be Pro and app owner. */
+export async function useFeaturedToken(appId: string, slug: string): Promise<{ error?: string }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Sign in to feature" };
+
+  const isPro = await getIsPro(user.id);
+  if (!isPro) return { error: "Creator Pro required to feature apps" };
+
+  const { data: app } = await supabase
+    .from("apps")
+    .select("owner_id")
+    .eq("id", appId)
+    .single();
+  if (!app || app.owner_id !== user.id) return { error: "You can only feature your own apps" };
+
+  const used = await hasUsedFeaturedTokenThisMonth(user.id);
+  if (used) return { error: "You already used your featured token this month" };
+
+  const now = new Date();
+  const expiresAt = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+  const { error } = await supabase.from("pro_featured_uses").insert({
+    user_id: user.id,
+    app_id: appId,
+    featured_at: now.toISOString(),
+    expires_at: expiresAt.toISOString(),
+  });
+  if (error) return { error: error.message };
+  revalidatePath("/apps");
+  revalidatePath(`/apps/${slug}`);
+  return {};
 }

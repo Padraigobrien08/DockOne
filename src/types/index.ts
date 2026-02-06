@@ -44,6 +44,8 @@ export interface AppOwner {
   username: string;
   display_name: string | null;
   avatar_url: string | null;
+  /** True if creator has active Pro subscription. */
+  isPro?: boolean;
 }
 
 /** Single app row for the /apps list: name, tagline, slug, owner, tags, primary image. */
@@ -165,6 +167,8 @@ export interface AppAnalytics {
   /** Vote conversion rate (votes / page views * 100); 0 if no page views. */
   voteConversionRate: number;
   feedbackBreakdown: AppFeedbackCounts;
+  /** Pro: page views in last 7 days. */
+  pageViewsLast7Days?: number;
 }
 
 /** BYOK: keys live only in localStorage; never sent to server. */

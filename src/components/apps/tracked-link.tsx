@@ -10,10 +10,19 @@ interface TrackedLinkProps {
   href: string;
   children: React.ReactNode;
   className?: string;
+  /** Pro: highlight external link (accent ring). */
+  highlightPro?: boolean;
 }
 
 /** Records a click for private analytics, then opens the link. */
-export function TrackedLink({ appId, eventType, href, children, className }: TrackedLinkProps) {
+export function TrackedLink({
+  appId,
+  eventType,
+  href,
+  children,
+  className = "",
+  highlightPro,
+}: TrackedLinkProps) {
   function handleClick(e: React.MouseEvent) {
     e.preventDefault();
     recordAppEvent(appId, eventType).finally(() => {
@@ -21,13 +30,17 @@ export function TrackedLink({ appId, eventType, href, children, className }: Tra
     });
   }
 
+  const linkClass = highlightPro
+    ? `${className} ring-2 ring-emerald-500 ring-offset-2 dark:ring-offset-zinc-900`
+    : className;
+
   return (
     <a
       href={href}
       target="_blank"
       rel="noopener noreferrer"
       onClick={handleClick}
-      className={className}
+      className={linkClass}
     >
       {children}
     </a>

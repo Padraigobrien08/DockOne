@@ -21,12 +21,19 @@ export async function getAppAnalytics(
 ): Promise<AppAnalytics | null> {
   if (!viewerId || viewerId !== ownerId) return null;
 
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
   const supabase = await createClient();
-  const [eventsRes, voteCountRes, feedbackCounts] = await Promise.all([
+  const [eventsRes, eventsLast7Res, voteCountRes, feedbackCounts] = await Promise.all([
     supabase
       .from("app_analytics_events")
       .select("event_type")
       .eq("app_id", appId),
+    supabase
+      .from("app_analytics_events")
+      .select("event_type")
+      .eq("app_id", appId)
+      .eq("event_type", "page_view")
+      .gte("created_at", sevenDaysAgo),
     supabase.from("votes").select("app_id", { count: "exact", head: true }).eq("app_id", appId),
     getFeedbackCountsForOwner(appId, ownerId, viewerId),
   ]);
@@ -40,6 +47,7 @@ export async function getAppAnalytics(
     else if (row.event_type === "demo_click") demoClicks++;
     else if (row.event_type === "repo_click") repoClicks++;
   }
+  const pageViewsLast7Days = (eventsLast7Res.data ?? []).length;
 
   const voteCount = voteCountRes.count ?? 0;
   const voteConversionRate =
@@ -58,5 +66,6 @@ export async function getAppAnalytics(
     voteCount,
     voteConversionRate,
     feedbackBreakdown,
+    pageViewsLast7Days,
   };
 }

@@ -5,7 +5,7 @@ import ReactMarkdown from "react-markdown";
 import { Container } from "@/components/ui/container";
 import { getAppBySlug } from "@/lib/apps";
 import { getUser } from "@/lib/supabase/server";
-import { getIsAdmin } from "@/lib/profile";
+import { getIsAdmin, hasUsedFeaturedTokenThisMonth } from "@/lib/profile";
 import { ScreenshotsCarousel } from "@/components/apps/screenshots-carousel";
 import { ReportButton } from "@/components/apps/report-button";
 import { UpvoteButton } from "@/components/apps/upvote-button";
@@ -15,6 +15,7 @@ import { getCreatorStats } from "@/lib/creator-stats";
 import { recordPageView, getAppAnalytics } from "@/lib/analytics";
 import { TrackedLink } from "@/components/apps/tracked-link";
 import { AppAnalyticsSection } from "@/components/apps/app-analytics-section";
+import { FeaturedButton } from "@/components/apps/featured-button";
 import { APP_LIFECYCLE_LABELS } from "@/types";
 import type { AppDetail } from "@/types";
 
@@ -49,12 +50,17 @@ export default async function AppDetailPage({
 
   if (!isOwner) void recordPageView(app.id);
 
-  const [feedbackCounts, currentUserFeedback, creatorStats, analytics] = await Promise.all([
-    getFeedbackCountsForOwner(app.id, app.owner.id, user?.id ?? null),
-    getCurrentUserFeedback(app.id, user?.id ?? null),
-    getCreatorStats(app.owner.id),
-    isOwner ? getAppAnalytics(app.id, app.owner.id, user?.id ?? null) : Promise.resolve(null),
-  ]);
+  const [feedbackCounts, currentUserFeedback, creatorStats, analytics, featuredTokenUsed] =
+    await Promise.all([
+      getFeedbackCountsForOwner(app.id, app.owner.id, user?.id ?? null),
+      getCurrentUserFeedback(app.id, user?.id ?? null),
+      getCreatorStats(app.owner.id),
+      isOwner ? getAppAnalytics(app.id, app.owner.id, user?.id ?? null) : Promise.resolve(null),
+      isOwner && app.owner.isPro
+        ? hasUsedFeaturedTokenThisMonth(app.owner.id)
+        : Promise.resolve(true),
+    ]);
+  const featuredTokenAvailable = isOwner && app.owner.isPro && !featuredTokenUsed;
 
   const screenshots = app.media
     .filter((m) => m.kind === "screenshot")
@@ -128,6 +134,11 @@ export default async function AppDetailPage({
               )}
               <span>{displayName}</span>
             </Link>
+            {app.owner.isPro && (
+              <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200">
+                Pro
+              </span>
+            )}
             {creatorStats.risingCreator && (
               <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">
                 Rising creator
@@ -159,6 +170,7 @@ export default async function AppDetailPage({
                   appId={app.id}
                   eventType="demo_click"
                   href={app.app_url}
+                  highlightPro={!!app.owner.isPro}
                   className="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
                 >
                   Open app
@@ -177,6 +189,7 @@ export default async function AppDetailPage({
                   appId={app.id}
                   eventType="repo_click"
                   href={app.repo_url}
+                  highlightPro={!!app.owner.isPro}
                   className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
                 >
                   Repo
@@ -227,7 +240,15 @@ export default async function AppDetailPage({
           )}
 
           {analytics && (
-            <AppAnalyticsSection analytics={analytics} className="mt-10 border-t border-zinc-200 pt-6 dark:border-zinc-800" />
+            <AppAnalyticsSection
+              analytics={analytics}
+              isPro={!!app.owner.isPro}
+              className="mt-10 border-t border-zinc-200 pt-6 dark:border-zinc-800"
+            />
+          )}
+
+          {featuredTokenAvailable && (
+            <FeaturedButton appId={app.id} slug={app.slug} className="mt-6" />
           )}
 
           <div className="mt-10 space-y-6 border-t border-zinc-200 pt-6 dark:border-zinc-800">

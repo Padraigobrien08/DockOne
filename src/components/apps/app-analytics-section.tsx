@@ -11,11 +11,17 @@ const FEEDBACK_LABELS: Record<keyof AppAnalytics["feedbackBreakdown"], string> =
 
 interface AppAnalyticsSectionProps {
   analytics: AppAnalytics;
+  /** Pro: show advanced analytics (7-day views). */
+  isPro?: boolean;
   className?: string;
 }
 
 /** Private analytics for app owner: page views, clicks, conversion, feedback. */
-export function AppAnalyticsSection({ analytics, className = "" }: AppAnalyticsSectionProps) {
+export function AppAnalyticsSection({
+  analytics,
+  isPro,
+  className = "",
+}: AppAnalyticsSectionProps) {
   const {
     pageViews,
     demoClicks,
@@ -23,6 +29,7 @@ export function AppAnalyticsSection({ analytics, className = "" }: AppAnalyticsS
     voteCount,
     voteConversionRate,
     feedbackBreakdown,
+    pageViewsLast7Days,
   } = analytics;
   const totalFeedback = Object.values(feedbackBreakdown).reduce((a, b) => a + b, 0);
 
@@ -67,6 +74,22 @@ export function AppAnalyticsSection({ analytics, className = "" }: AppAnalyticsS
             )}
           </ul>
         </div>
+      )}
+
+      {isPro && typeof pageViewsLast7Days === "number" && (
+        <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50/50 p-4 dark:border-emerald-800 dark:bg-emerald-950/20">
+          <p className="text-sm font-medium text-emerald-800 dark:text-emerald-200">Advanced (Pro)</p>
+          <p className="mt-1 text-2xl font-semibold text-emerald-900 dark:text-emerald-100">
+            {pageViewsLast7Days}
+          </p>
+          <p className="text-sm text-emerald-700 dark:text-emerald-300">Page views (last 7 days)</p>
+        </div>
+      )}
+      {!isPro && (
+        <p className="mt-4 text-sm text-zinc-500 dark:text-zinc-400">
+          Upgrade to <span className="font-medium text-zinc-700 dark:text-zinc-300">Creator Pro</span> for
+          advanced analytics (7-day breakdown, priority review, featured token, profile branding).
+        </p>
       )}
     </section>
   );

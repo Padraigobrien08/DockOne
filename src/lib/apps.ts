@@ -16,6 +16,8 @@ type Row = {
     username: string;
     display_name: string | null;
     avatar_url: string | null;
+    subscription_tier?: string | null;
+    pro_until?: string | null;
   } | null;
   app_tags: { tag: string }[];
   app_media: { url: string; sort_order: number; kind: string }[];
@@ -42,10 +44,19 @@ type DetailRow = {
     username: string;
     display_name: string | null;
     avatar_url: string | null;
+    subscription_tier?: string | null;
+    pro_until?: string | null;
   } | null;
   app_tags: { tag: string }[];
   app_media: { id: string; url: string; sort_order: number; kind: string }[];
 };
+
+function ownerIsPro(p: Row["profiles"]): boolean {
+  if (!p) return false;
+  if (p.subscription_tier !== "pro") return false;
+  if (!p.pro_until) return true;
+  return new Date(p.pro_until) > new Date();
+}
 
 function primaryImageUrl(media: Row["app_media"]): string | null {
   if (!media?.length) return null;
@@ -77,7 +88,7 @@ export async function getApprovedApps(): Promise<AppListItem[]> {
   const { data, error } = await supabase
     .from("apps")
     .select(
-      "id, name, tagline, slug, created_at, owner_id, byok_required, lifecycle, profiles!owner_id(id, username, display_name, avatar_url), app_tags(tag), app_media(url, sort_order, kind)"
+      "id, name, tagline, slug, created_at, owner_id, byok_required, lifecycle, profiles!owner_id(id, username, display_name, avatar_url, subscription_tier, pro_until), app_tags(tag), app_media(url, sort_order, kind)"
     )
     .eq("status", "approved")
     .order("created_at", { ascending: false });
@@ -106,8 +117,9 @@ export async function getApprovedApps(): Promise<AppListItem[]> {
           username: row.profiles.username,
           display_name: row.profiles.display_name,
           avatar_url: row.profiles.avatar_url,
+          isPro: ownerIsPro(row.profiles),
         }
-      : { id: row.owner_id, username: "unknown", display_name: null, avatar_url: null },
+      : { id: row.owner_id, username: "unknown", display_name: null, avatar_url: null, isPro: false },
     tags: (row.app_tags ?? []).map((t) => t.tag),
     primary_image_url: primaryImageUrl(row.app_media ?? []),
     byok_required: row.byok_required ?? false,
@@ -126,7 +138,7 @@ export async function getAppBySlug(
   const query = supabase
     .from("apps")
     .select(
-      "id, name, tagline, description, status, lifecycle, app_url, repo_url, demo_video_url, rejection_reason, byok_required, created_at, updated_at, owner_id, slug, profiles!owner_id(id, username, display_name, avatar_url), app_tags(tag), app_media(id, url, sort_order, kind)"
+      "id, name, tagline, description, status, lifecycle, app_url, repo_url, demo_video_url, rejection_reason, byok_required, created_at, updated_at, owner_id, slug, profiles!owner_id(id, username, display_name, avatar_url, subscription_tier, pro_until), app_tags(tag), app_media(id, url, sort_order, kind)"
     )
     .eq("slug", slug);
 
@@ -176,8 +188,9 @@ export async function getAppBySlug(
           username: row.profiles.username,
           display_name: row.profiles.display_name,
           avatar_url: row.profiles.avatar_url,
+          isPro: ownerIsPro(row.profiles),
         }
-      : { id: row.owner_id, username: "unknown", display_name: null, avatar_url: null },
+      : { id: row.owner_id, username: "unknown", display_name: null, avatar_url: null, isPro: false },
     tags: (row.app_tags ?? []).map((t) => t.tag),
     media,
     vote_count: voteCounts.get(row.id) ?? 0,
@@ -192,7 +205,7 @@ export async function getApprovedAppsByOwnerId(ownerId: string): Promise<AppList
   const { data, error } = await supabase
     .from("apps")
     .select(
-      "id, name, tagline, slug, created_at, owner_id, byok_required, lifecycle, profiles!owner_id(id, username, display_name, avatar_url), app_tags(tag), app_media(url, sort_order, kind)"
+      "id, name, tagline, slug, created_at, owner_id, byok_required, lifecycle, profiles!owner_id(id, username, display_name, avatar_url, subscription_tier, pro_until), app_tags(tag), app_media(url, sort_order, kind)"
     )
     .eq("owner_id", ownerId)
     .eq("status", "approved")
@@ -216,8 +229,9 @@ export async function getApprovedAppsByOwnerId(ownerId: string): Promise<AppList
           username: row.profiles.username,
           display_name: row.profiles.display_name,
           avatar_url: row.profiles.avatar_url,
+          isPro: ownerIsPro(row.profiles),
         }
-      : { id: row.owner_id, username: "unknown", display_name: null, avatar_url: null },
+      : { id: row.owner_id, username: "unknown", display_name: null, avatar_url: null, isPro: false },
     tags: (row.app_tags ?? []).map((t) => t.tag),
     primary_image_url: primaryImageUrl(row.app_media ?? []),
     byok_required: row.byok_required ?? false,
@@ -233,7 +247,7 @@ export async function getPendingApps(): Promise<AppListItem[]> {
   const { data, error } = await supabase
     .from("apps")
     .select(
-      "id, name, tagline, slug, created_at, owner_id, byok_required, lifecycle, profiles!owner_id(id, username, display_name, avatar_url), app_tags(tag), app_media(url, sort_order, kind)"
+      "id, name, tagline, slug, created_at, owner_id, byok_required, lifecycle, profiles!owner_id(id, username, display_name, avatar_url, subscription_tier, pro_until), app_tags(tag), app_media(url, sort_order, kind)"
     )
     .eq("status", "pending")
     .order("created_at", { ascending: false });
@@ -241,7 +255,7 @@ export async function getPendingApps(): Promise<AppListItem[]> {
   if (error) return [];
 
   const rows = (data ?? []) as unknown as Row[];
-  return rows.map((row) => ({
+  const list = rows.map((row) => ({
     id: row.id,
     name: row.name,
     tagline: row.tagline,
@@ -253,8 +267,9 @@ export async function getPendingApps(): Promise<AppListItem[]> {
           username: row.profiles.username,
           display_name: row.profiles.display_name,
           avatar_url: row.profiles.avatar_url,
+          isPro: ownerIsPro(row.profiles),
         }
-      : { id: row.owner_id, username: "unknown", display_name: null, avatar_url: null },
+      : { id: row.owner_id, username: "unknown", display_name: null, avatar_url: null, isPro: false },
     tags: (row.app_tags ?? []).map((t) => t.tag),
     primary_image_url: primaryImageUrl(row.app_media ?? []),
     byok_required: row.byok_required ?? false,
@@ -262,4 +277,33 @@ export async function getPendingApps(): Promise<AppListItem[]> {
     trending_score: 0,
     lifecycle: (row.lifecycle ?? "wip") as AppListItem["lifecycle"],
   }));
+  // Priority queue: Pro creators first, then newest
+  list.sort(
+    (a, b) =>
+      (a.owner.isPro ? 0 : 1) - (b.owner.isPro ? 0 : 1) ||
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  );
+  return list;
+}
+
+/** Fetch apps currently featured (Pro "Featured for 24h" active). */
+export async function getFeaturedApps(): Promise<AppListItem[]> {
+  const supabase = await createClient();
+  const now = new Date().toISOString();
+  const { data: featuredRows, error } = await supabase
+    .from("pro_featured_uses")
+    .select("app_id")
+    .gt("expires_at", now)
+    .order("featured_at", { ascending: false });
+
+  if (error || !featuredRows?.length) return [];
+  const featuredIds = (featuredRows as { app_id: string }[]).map((r) => r.app_id);
+  const all = await getApprovedApps();
+  const byId = new Map(all.map((a) => [a.id, a]));
+  const ordered: AppListItem[] = [];
+  for (const id of featuredIds) {
+    const app = byId.get(id);
+    if (app) ordered.push(app);
+  }
+  return ordered;
 }

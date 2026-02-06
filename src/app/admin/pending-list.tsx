@@ -90,11 +90,18 @@ export function PendingList({ apps }: PendingListProps) {
                       {app.tagline}
                     </p>
                   )}
-                  <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                    by {app.owner.display_name || app.owner.username} ·{" "}
-                    <Link href={`/u/${app.owner.username}`} className="hover:underline">
-                      @{app.owner.username}
-                    </Link>
+                  <p className="mt-1 flex flex-wrap items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
+                    <span>
+                      by {app.owner.display_name || app.owner.username} ·{" "}
+                      <Link href={`/u/${app.owner.username}`} className="hover:underline">
+                        @{app.owner.username}
+                      </Link>
+                    </span>
+                    {app.owner.isPro && (
+                      <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-xs font-medium text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200">
+                        Pro
+                      </span>
+                    )}
                   </p>
                   {app.tags.length > 0 && (
                     <div className="mt-2 flex flex-wrap gap-1">

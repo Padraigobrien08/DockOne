@@ -26,7 +26,9 @@ export default async function UserProfilePage({
     <div className="py-8 sm:py-12">
       <Container>
         <div className="mx-auto max-w-3xl">
-          <div className="flex flex-col items-start gap-6 sm:flex-row sm:items-center">
+          <div
+            className={`flex flex-col items-start gap-6 sm:flex-row sm:items-center ${profile.isPro ? "rounded-xl border-l-4 border-emerald-500 bg-emerald-50/50 pl-4 dark:bg-emerald-950/20" : ""}`}
+          >
             {profile.avatar_url ? (
               <Image
                 src={profile.avatar_url}
@@ -43,6 +45,11 @@ export default async function UserProfilePage({
                 <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
                   {displayName}
                 </h1>
+                {profile.isPro && (
+                  <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200">
+                    Pro
+                  </span>
+                )}
                 {stats.risingCreator && (
                   <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">
                     Rising creator
