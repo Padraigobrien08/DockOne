@@ -15,12 +15,12 @@ const SORT_OPTIONS: { value: SortKey; label: string }[] = [
 
 const LIFECYCLE_FILTER_OPTIONS: { value: AppLifecycle | ""; label: string }[] = [
   { value: "", label: "Any status" },
-  { value: "wip", label: "WIP" },
+  { value: "wip", label: "Active" },
   { value: "actively_building", label: "Actively building" },
-  { value: "looking_for_feedback", label: "Looking for feedback" },
+  { value: "looking_for_feedback", label: "Seeking feedback" },
   { value: "looking_for_users", label: "Looking for users" },
-  { value: "dormant", label: "Dormant" },
-  { value: "shipped_elsewhere", label: "Shipped elsewhere" },
+  { value: "dormant", label: "Archived" },
+  { value: "shipped_elsewhere", label: "Graduated" },
 ];
 
 function filterApps(

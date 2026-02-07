@@ -15,12 +15,12 @@ export type AppLifecycle =
   | "shipped_elsewhere";
 
 export const APP_LIFECYCLE_LABELS: Record<AppLifecycle, string> = {
-  wip: "WIP",
+  wip: "Active",
   actively_building: "Actively building",
-  looking_for_feedback: "Looking for feedback",
+  looking_for_feedback: "Seeking feedback",
   looking_for_users: "Looking for users",
-  dormant: "Dormant",
-  shipped_elsewhere: "Shipped elsewhere",
+  dormant: "Archived",
+  shipped_elsewhere: "Graduated",
 };
 
 /** Creator reputation stats (approved apps only). */
