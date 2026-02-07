@@ -26,6 +26,9 @@ export default async function AppsPage() {
             Staff picks and community collections
           </Link>
         </p>
+        <p className="mt-3 text-xs text-zinc-500 dark:text-zinc-500">
+          Filter by status to find demos, works in progress, or tools you can use now.
+        </p>
 
         {featured.length > 0 && (
           <section className="mt-8" aria-labelledby="featured">
@@ -53,6 +56,9 @@ export default async function AppsPage() {
             boostMap={boostMap}
           />
         </div>
+        <p className="mt-12 text-center text-xs text-zinc-500 dark:text-zinc-500">
+          Real submissions. Real scope. No pitch required.
+        </p>
       </Container>
     </div>
   );

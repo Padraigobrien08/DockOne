@@ -114,20 +114,26 @@ export function AppsList({ apps, creatorStatsMap, boostMap }: AppsListProps) {
   const tags = useMemo(() => topTags(apps, 16), [apps]);
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <input
-          type="search"
-          placeholder="Search by name, tagline, or tag…"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-500 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-50 dark:placeholder-zinc-400 sm:max-w-xs"
-          aria-label="Search projects"
-        />
-        <div className="flex flex-wrap items-center gap-3">
+    <div className="space-y-5">
+      {/* Primary: search */}
+      <input
+        type="search"
+        placeholder="Search by name, tagline, or tag…"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        className="w-full max-w-xl rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-base text-zinc-900 placeholder-zinc-500 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-50 dark:placeholder-zinc-400"
+        aria-label="Search projects"
+      />
+
+      {/* Secondary: refine by — optional filters */}
+      <div className="space-y-3">
+        <p className="text-xs font-medium uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+          Refine by
+        </p>
+        <div className="flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-2">
-            <label htmlFor="lifecycle" className="text-sm text-zinc-500 dark:text-zinc-400">
-              Status:
+            <label htmlFor="lifecycle" className="text-xs text-zinc-500 dark:text-zinc-500">
+              Status
             </label>
             <select
               id="lifecycle"
@@ -135,7 +141,7 @@ export function AppsList({ apps, creatorStatsMap, boostMap }: AppsListProps) {
               onChange={(e) =>
                 setLifecycleFilter((e.target.value as AppLifecycle | "") || null)
               }
-              className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-50"
+              className="rounded-md border border-zinc-200 bg-white px-2.5 py-1.5 text-xs text-zinc-600 focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400 dark:focus:border-zinc-600 dark:focus:ring-zinc-600"
             >
               {LIFECYCLE_FILTER_OPTIONS.map((opt) => (
                 <option key={opt.value || "any"} value={opt.value}>
@@ -145,14 +151,14 @@ export function AppsList({ apps, creatorStatsMap, boostMap }: AppsListProps) {
             </select>
           </div>
           <div className="flex items-center gap-2">
-            <label htmlFor="sort" className="text-sm text-zinc-500 dark:text-zinc-400">
-              Sort:
+            <label htmlFor="sort" className="text-xs text-zinc-500 dark:text-zinc-500">
+              Sort
             </label>
             <select
               id="sort"
               value={sort}
               onChange={(e) => setSort(e.target.value as SortKey)}
-              className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-50"
+              className="rounded-md border border-zinc-200 bg-white px-2.5 py-1.5 text-xs text-zinc-600 focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400 dark:focus:border-zinc-600 dark:focus:ring-zinc-600"
             >
               {SORT_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -161,27 +167,26 @@ export function AppsList({ apps, creatorStatsMap, boostMap }: AppsListProps) {
               ))}
             </select>
           </div>
+          {tags.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {tags.map((tag) => (
+              <button
+                key={tag}
+                type="button"
+                onClick={() => setTagFilter(tagFilter === tag ? null : tag)}
+                className={`rounded-full px-2.5 py-1 text-xs transition ${
+                  tagFilter === tag
+                    ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
+                    : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-600"
+                }`}
+              >
+                {tag}
+              </button>
+            ))}
+            </div>
+          )}
         </div>
       </div>
-
-      {tags.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {tags.map((tag) => (
-            <button
-              key={tag}
-              type="button"
-              onClick={() => setTagFilter(tagFilter === tag ? null : tag)}
-              className={`rounded-full px-3 py-1 text-sm transition ${
-                tagFilter === tag
-                  ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
-                  : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-600"
-              }`}
-            >
-              {tag}
-            </button>
-          ))}
-        </div>
-      )}
 
       {filtered.length === 0 ? (
         <p className="py-8 text-center text-zinc-500 dark:text-zinc-400">

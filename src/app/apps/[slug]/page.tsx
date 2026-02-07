@@ -4,6 +4,7 @@ import Image from "next/image";
 import ReactMarkdown from "react-markdown";
 import { Container } from "@/components/ui/container";
 import { getAppBySlug } from "@/lib/apps";
+import { getTagVariant } from "@/lib/tag-variants";
 import { getUser } from "@/lib/supabase/server";
 import { getIsAdmin, hasUsedFeaturedTokenThisMonth } from "@/lib/profile";
 import { ScreenshotsCarousel } from "@/components/apps/screenshots-carousel";
@@ -190,14 +191,26 @@ export default async function AppDetailPage({
                   ·
                 </span>
                 <ul className="flex flex-wrap gap-1.5">
-                  {app.tags.map((tag) => (
-                    <li
-                      key={tag}
-                      className="rounded bg-zinc-100 px-2 py-0.5 text-xs text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300"
-                    >
-                      {tag}
-                    </li>
-                  ))}
+                  {app.tags.map((tag) => {
+                    const variant = getTagVariant(tag);
+                    const stateClass =
+                      "rounded-sm border-l-2 border-zinc-400/40 pl-1.5 pr-2 py-0.5 dark:border-zinc-500/40 text-xs text-zinc-600 dark:text-zinc-400";
+                    const requirementClass =
+                      "rounded-sm bg-violet-50/70 dark:bg-violet-950/25 px-2 py-0.5 text-xs text-violet-700/90 dark:text-violet-300/90";
+                    const defaultClass =
+                      "rounded-sm bg-zinc-100/90 dark:bg-zinc-800/70 px-2 py-0.5 text-xs text-zinc-600 dark:text-zinc-400";
+                    const className =
+                      variant === "state"
+                        ? stateClass
+                        : variant === "requirement"
+                          ? requirementClass
+                          : defaultClass;
+                    return (
+                      <li key={tag} className={className}>
+                        {tag}
+                      </li>
+                    );
+                  })}
                 </ul>
               </>
             )}

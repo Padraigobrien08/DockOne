@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { getTagVariant } from "@/lib/tag-variants";
 import { APP_LIFECYCLE_LABELS, APP_LIFECYCLE_CARD_CLASS } from "@/types";
 import type { AppListItem, AppLifecycle, CreatorStats } from "@/types";
 
@@ -107,47 +108,47 @@ export function AppCard({ app, creatorStats, isBoosted, headingLevel = 2, overri
             </span>
           )}
         </div>
-        <div className="p-4">
-          <HeadingTag className="text-lg font-bold tracking-tight text-zinc-900 dark:text-zinc-50 group-hover:underline">
+        <div className="p-4 pb-3">
+          <HeadingTag className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 group-hover:underline">
             {app.name}
           </HeadingTag>
           {app.tagline && (
-            <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
+            <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
               {app.tagline}
             </p>
           )}
         </div>
       </Link>
-      <div className="flex flex-1 flex-col px-4 pb-4">
+      <div className="flex flex-1 flex-col border-t border-zinc-100 px-4 py-3 pb-4 dark:border-zinc-800">
         <div className="flex flex-wrap items-center gap-2">
           <Link
             href={`/u/${app.owner.username}`}
             className={
               effectiveMetadataStyle === "landing"
                 ? "flex items-center gap-1.5 text-[11px] text-zinc-500 hover:text-zinc-400 dark:text-zinc-600 dark:hover:text-zinc-500"
-                : "flex items-center gap-1.5 text-xs text-zinc-400 hover:text-zinc-600 dark:text-zinc-500 dark:hover:text-zinc-300"
+                : "flex items-center gap-1.5 text-[11px] text-zinc-500 hover:text-zinc-600 dark:text-zinc-500 dark:hover:text-zinc-400"
             }
           >
             {app.owner.avatar_url ? (
               <Image
                 src={app.owner.avatar_url}
                 alt=""
-                width={effectiveMetadataStyle === "landing" ? 16 : 18}
-                height={effectiveMetadataStyle === "landing" ? 16 : 18}
+                width={effectiveMetadataStyle === "landing" ? 16 : 16}
+                height={effectiveMetadataStyle === "landing" ? 16 : 16}
                 className="rounded-full"
               />
             ) : (
-              <span className={effectiveMetadataStyle === "landing" ? "h-4 w-4 rounded-full bg-zinc-300 dark:bg-zinc-600" : "h-[18px] w-[18px] rounded-full bg-zinc-300 dark:bg-zinc-600"} />
+              <span className="h-4 w-4 rounded-full bg-zinc-300 dark:bg-zinc-600" />
             )}
             <span>{displayName}</span>
           </Link>
           {app.owner.isPro && (
-            <span className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[11px] font-medium text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200">
+            <span className="rounded-full bg-emerald-100/80 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300">
               Pro
             </span>
           )}
           {creatorStats?.risingCreator && (
-            <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[11px] font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">
+            <span className="rounded-full bg-amber-100/80 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 dark:bg-amber-900/50 dark:text-amber-300">
               Rising
             </span>
           )}
@@ -159,32 +160,43 @@ export function AppCard({ app, creatorStats, isBoosted, headingLevel = 2, overri
         </div>
         <div className="mt-2 flex flex-wrap items-center gap-1.5">
           {isBoosted && (
-            <span className="rounded bg-sky-100 px-1.5 py-0.5 text-xs font-medium text-sky-800 dark:bg-sky-900/40 dark:text-sky-200">
+            <span className="rounded bg-sky-100/80 px-1.5 py-0.5 text-[11px] font-medium text-sky-700 dark:bg-sky-900/50 dark:text-sky-200">
               Boosted
             </span>
           )}
           {app.visibility === "unlisted" && (
-            <span className="rounded bg-zinc-200 px-1.5 py-0.5 text-xs font-medium text-zinc-700 dark:bg-zinc-600 dark:text-zinc-200">
+            <span className="rounded bg-zinc-200/80 px-1.5 py-0.5 text-[11px] font-medium text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300">
               Unlisted
             </span>
           )}
           {app.byok_required && (
-            <span className="rounded bg-violet-100 px-1.5 py-0.5 text-xs font-medium text-violet-700 dark:bg-violet-900/30 dark:text-violet-300">
+            <span className="rounded bg-violet-100/80 px-1.5 py-0.5 text-[11px] font-medium text-violet-700 dark:bg-violet-900/40 dark:text-violet-300">
               BYOK
             </span>
           )}
-          {app.tags.slice(0, 5).map((tag) => (
-            <span
-              key={tag}
-              className={
-                effectiveTagsStyle === "subtle"
-                  ? "rounded bg-zinc-100/90 px-1 py-0.5 text-[11px] text-zinc-500 dark:bg-zinc-800/80 dark:text-zinc-500"
-                  : "rounded bg-zinc-100 px-1.5 py-0.5 text-xs text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300"
-              }
-            >
-              {tag}
-            </span>
-          ))}
+          {app.tags.slice(0, 5).map((tag) => {
+            const variant = getTagVariant(tag);
+            const subtle = effectiveTagsStyle === "subtle";
+            const base = subtle ? "text-[11px] px-1 py-0.5" : "text-xs px-1.5 py-0.5";
+            const stateClass =
+              "rounded-sm border-l-2 border-zinc-400/40 pl-1.5 pr-1.5 dark:border-zinc-500/40 text-zinc-600 dark:text-zinc-400";
+            const requirementClass =
+              "rounded-sm bg-violet-50/70 dark:bg-violet-950/25 text-violet-700/90 dark:text-violet-300/90";
+            const defaultClass =
+              "rounded-sm bg-zinc-100/90 dark:bg-zinc-800/70 text-zinc-600 dark:text-zinc-400";
+            const variantClass =
+              variant === "state"
+                ? stateClass
+                : variant === "requirement"
+                  ? requirementClass
+                  : defaultClass;
+            const mutedDefault = subtle && variant === "default" ? "text-zinc-500 dark:text-zinc-500" : "";
+            return (
+              <span key={tag} className={[base, variantClass, mutedDefault].filter(Boolean).join(" ").trim()}>
+                {tag}
+              </span>
+            );
+          })}
         </div>
       </div>
     </div>
