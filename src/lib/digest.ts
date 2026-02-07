@@ -4,30 +4,73 @@ import type { AppListItem } from "@/types";
 
 export interface DigestData {
   risingApps: AppListItem[];
+  newProjects: AppListItem[];
   newCreators: { id: string; username: string; display_name: string | null }[];
+  graduations: { slug: string; name: string; graduated_url: string | null }[];
   trendingTags: { tag: string; count: number }[];
 }
 
-/** Data for "This week on DockOne": rising apps, new creators, trending tags. */
+/** Data for "This week on DockOne": new projects, rising creators, graduations, rising apps, trending tags. */
 export async function getDigestData(): Promise<DigestData> {
   const supabase = await createClient();
   const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
-  const [allApps, newCreatorsRes, tagsRes] = await Promise.all([
+  const [allApps, newCreatorsRes, tagsRes, graduationsRes] = await Promise.all([
     getApprovedApps(),
     getNewCreators(supabase, weekAgo),
     getTrendingTags(supabase, weekAgo),
+    getGraduations(supabase, weekAgo),
   ]);
 
   const risingApps = [...allApps]
     .sort((a, b) => (b.trending_score ?? 0) - (a.trending_score ?? 0))
     .slice(0, 5);
 
+  const newProjects = [...allApps]
+    .filter((a) => a.created_at >= weekAgo)
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .slice(0, 5);
+
   return {
     risingApps,
+    newProjects,
     newCreators: newCreatorsRes,
+    graduations: graduationsRes,
     trendingTags: tagsRes,
   };
+}
+
+async function getGraduations(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  weekAgo: string
+): Promise<{ slug: string; name: string; graduated_url: string | null }[]> {
+  const { data: thisWeek } = await supabase
+    .from("apps")
+    .select("slug, name, graduated_url")
+    .eq("status", "approved")
+    .eq("lifecycle", "shipped_elsewhere")
+    .gte("updated_at", weekAgo)
+    .order("updated_at", { ascending: false })
+    .limit(5);
+
+  if (thisWeek?.length) {
+    return (thisWeek as { slug: string; name: string; graduated_url: string | null }[]).map(
+      (r) => ({ slug: r.slug, name: r.name, graduated_url: r.graduated_url ?? null })
+    );
+  }
+
+  const { data: recent } = await supabase
+    .from("apps")
+    .select("slug, name, graduated_url")
+    .eq("status", "approved")
+    .eq("lifecycle", "shipped_elsewhere")
+    .order("updated_at", { ascending: false })
+    .limit(5);
+
+  if (!recent?.length) return [];
+  return (recent as { slug: string; name: string; graduated_url: string | null }[]).map(
+    (r) => ({ slug: r.slug, name: r.name, graduated_url: r.graduated_url ?? null })
+  );
 }
 
 async function getNewCreators(
@@ -127,9 +170,36 @@ export function buildDigestHtml(data: DigestData, baseUrl: string): string {
   const link = (href: string, text: string) =>
     `<a href="${escape(href)}" style="color:#2563eb;text-decoration:underline">${escape(text)}</a>`;
 
-  const rising =
+  const newProjectsHtml =
+    data.newProjects.length === 0
+      ? "<p>No new projects this week.</p>"
+      : `<ul style="margin:0;padding-left:1.2em">${data.newProjects
+          .map(
+            (a) =>
+              `<li>${link(`${baseUrl}/apps/${a.slug}`, a.name)}${a.tagline ? ` — ${escape(a.tagline)}` : ""}</li>`
+          )
+          .join("")}</ul>`;
+
+  const risingCreatorsHtml =
+    data.newCreators.length === 0
+      ? "<p>No rising creators this week.</p>"
+      : `<ul style="margin:0;padding-left:1.2em">${data.newCreators
+          .map((c) => `<li>${link(`${baseUrl}/u/${c.username}`, c.display_name || c.username)}</li>`)
+          .join("")}</ul>`;
+
+  const graduationsHtml =
+    data.graduations.length === 0
+      ? "<p>No graduations this week.</p>"
+      : `<ul style="margin:0;padding-left:1.2em">${data.graduations
+          .map((g) => {
+            const href = g.graduated_url || `${baseUrl}/apps/${g.slug}`;
+            return `<li>${link(href, g.name)}</li>`;
+          })
+          .join("")}</ul>`;
+
+  const risingHtml =
     data.risingApps.length === 0
-      ? "<p>No rising apps this week.</p>"
+      ? "<p>No rising projects this week.</p>"
       : `<ul style="margin:0;padding-left:1.2em">${data.risingApps
           .map(
             (a) =>
@@ -137,14 +207,7 @@ export function buildDigestHtml(data: DigestData, baseUrl: string): string {
           )
           .join("")}</ul>`;
 
-  const creators =
-    data.newCreators.length === 0
-      ? "<p>No new creators this week.</p>"
-      : `<ul style="margin:0;padding-left:1.2em">${data.newCreators
-          .map((c) => `<li>${link(`${baseUrl}/u/${c.username}`, c.display_name || c.username)}</li>`)
-          .join("")}</ul>`;
-
-  const tags =
+  const tagsHtml =
     data.trendingTags.length === 0
       ? "<p>No trending tags this week.</p>"
       : `<p style="margin:0">${data.trendingTags
@@ -157,16 +220,22 @@ export function buildDigestHtml(data: DigestData, baseUrl: string): string {
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="font-family:system-ui,sans-serif;max-width:560px;margin:0 auto;padding:24px;color:#18181b;line-height:1.6">
   <h1 style="font-size:1.5rem;margin:0 0 8px">This week on DockOne</h1>
-  <p style="color:#71717a;margin:0 0 24px">Your weekly digest of rising apps, new creators, and trending tags.</p>
+  <p style="color:#71717a;margin:0 0 24px">Your weekly digest: new projects, rising creators, graduations. Build the habit.</p>
 
-  <h2 style="font-size:1.1rem;margin:24px 0 8px">Rising apps</h2>
-  ${rising}
+  <h2 style="font-size:1.1rem;margin:24px 0 8px">New projects</h2>
+  ${newProjectsHtml}
 
-  <h2 style="font-size:1.1rem;margin:24px 0 8px">New creators</h2>
-  ${creators}
+  <h2 style="font-size:1.1rem;margin:24px 0 8px">Rising creators</h2>
+  ${risingCreatorsHtml}
+
+  <h2 style="font-size:1.1rem;margin:24px 0 8px">Graduations</h2>
+  ${graduationsHtml}
+
+  <h2 style="font-size:1.1rem;margin:24px 0 8px">Rising projects</h2>
+  ${risingHtml}
 
   <h2 style="font-size:1.1rem;margin:24px 0 8px">Trending tags</h2>
-  ${tags}
+  ${tagsHtml}
 
   <p style="margin:32px 0 0;padding-top:16px;border-top:1px solid #e4e4e7;color:#71717a;font-size:0.875rem">
     You're receiving this because you opted in to the weekly digest. 

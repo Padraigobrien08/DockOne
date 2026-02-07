@@ -139,6 +139,8 @@ export interface AppDetail {
   app_url: string | null;
   repo_url: string | null;
   demo_video_url: string | null;
+  /** When lifecycle = shipped_elsewhere: optional "Where it went" link (GitHub, product, startup). */
+  graduated_url: string | null;
   rejection_reason: string | null;
   byok_required: boolean;
   created_at: string;

@@ -36,6 +36,7 @@ type DetailRow = {
   app_url: string | null;
   repo_url: string | null;
   demo_video_url: string | null;
+  graduated_url: string | null;
   rejection_reason: string | null;
   byok_required: boolean;
   created_at: string;
@@ -212,7 +213,7 @@ export async function getAppBySlug(
   const query = supabase
     .from("apps")
     .select(
-      "id, name, tagline, description, status, lifecycle, visibility, app_url, repo_url, demo_video_url, rejection_reason, byok_required, created_at, updated_at, owner_id, slug, profiles!owner_id(id, username, display_name, avatar_url, subscription_tier, pro_until), app_tags(tag), app_media(id, url, sort_order, kind)"
+      "id, name, tagline, description, status, lifecycle, visibility, app_url, repo_url, demo_video_url, graduated_url, rejection_reason, byok_required, created_at, updated_at, owner_id, slug, profiles!owner_id(id, username, display_name, avatar_url, subscription_tier, pro_until), app_tags(tag), app_media(id, url, sort_order, kind)"
     )
     .eq("slug", slug);
 
@@ -252,6 +253,7 @@ export async function getAppBySlug(
     app_url: row.app_url,
     repo_url: row.repo_url,
     demo_video_url: row.demo_video_url,
+    graduated_url: row.graduated_url ?? null,
     rejection_reason: row.rejection_reason ?? null,
     byok_required: row.byok_required ?? false,
     created_at: row.created_at,

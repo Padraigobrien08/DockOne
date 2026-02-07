@@ -19,12 +19,17 @@ export default async function AppsPage() {
       <Container>
         <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">Projects</h1>
         <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-          A home for software projects that work — without the pressure to productise. Search, filter by tag, or sort.
+          Projects worth exploring. A home for software projects that work — without the pressure to productise.
+        </p>
+        <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
+          <Link href="/collections" className="underline hover:no-underline">
+            Staff picks and community collections
+          </Link>
         </p>
 
         {featured.length > 0 && (
-          <section className="mt-8">
-            <h2 className="text-lg font-medium text-zinc-900 dark:text-zinc-50">
+          <section className="mt-8" aria-labelledby="featured">
+            <h2 id="featured" className="text-lg font-medium text-zinc-900 dark:text-zinc-50">
               Featured <span className="text-sm font-normal text-zinc-500 dark:text-zinc-400">(24h)</span>
             </h2>
             <ul className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
