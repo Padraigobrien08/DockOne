@@ -10,7 +10,7 @@ interface BoostButtonProps {
   className?: string;
 }
 
-/** Pro: use a boost slot to amplify trending score for 24h. Limited slots per day. */
+/** Pro: use a boost slot to amplify recent-interest score for 24h. Limited slots per day. */
 export function BoostButton({ appId, slug, className = "" }: BoostButtonProps) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
@@ -31,12 +31,13 @@ export function BoostButton({ appId, slug, className = "" }: BoostButtonProps) {
         type="button"
         onClick={handleClick}
         disabled={pending}
+        title="Amplifies recent interest score for 24h. Limited slots, rotates daily."
         className="inline-flex items-center gap-1.5 rounded-lg border border-sky-300 bg-sky-50 px-4 py-2 text-sm font-medium text-sky-800 hover:bg-sky-100 disabled:opacity-50 dark:border-sky-700 dark:bg-sky-950/40 dark:text-sky-200 dark:hover:bg-sky-900/40"
       >
-        {pending ? "…" : "⚡ Boost for 24h"}
+        {pending ? "…" : "Boost for 24h"}
       </button>
       <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-        Amplifies your trending score; limited slots, rotates daily.
+        Amplifies recent interest score; limited slots, rotates daily.
       </p>
       {error && (
         <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p>

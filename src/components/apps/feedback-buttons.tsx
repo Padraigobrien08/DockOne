@@ -49,6 +49,9 @@ export function FeedbackButtons({
       <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
         Quick feedback
       </p>
+      <p className="text-xs text-zinc-500 dark:text-zinc-400">
+        Help the creator with quick feedback
+      </p>
       {error && (
         <p className="text-sm text-amber-600 dark:text-amber-400">
           {error === "Sign in to leave feedback" ? (

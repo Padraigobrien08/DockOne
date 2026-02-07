@@ -268,26 +268,57 @@ export default async function AppDetailPage({
           )}
 
           {app.description && (
-            <div className="prose prose-zinc mt-8 dark:prose-invert max-w-none">
-              <ReactMarkdown>{app.description}</ReactMarkdown>
-            </div>
+            <section
+              className="mt-8 rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900/50"
+              aria-labelledby="section-description"
+            >
+              <h2
+                id="section-description"
+                className="text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50"
+              >
+                Description
+              </h2>
+              <div className="prose prose-zinc mt-4 dark:prose-invert max-w-none">
+                <ReactMarkdown>{app.description}</ReactMarkdown>
+              </div>
+            </section>
           )}
 
           {screenshots.length > 0 && (
-            <div className="mt-10">
-              <h2 className="text-lg font-medium text-zinc-900 dark:text-zinc-50">Screenshots</h2>
+            <section
+              className="mt-8 rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900/50"
+              aria-labelledby="section-screenshots"
+            >
+              <h2
+                id="section-screenshots"
+                className="text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50"
+              >
+                Screenshots
+              </h2>
               <div className="mt-4">
                 <ScreenshotsCarousel images={screenshots} />
               </div>
-            </div>
+            </section>
           )}
 
           {analytics && (
-            <AppAnalyticsSection
-              analytics={analytics}
-              isPro={!!app.owner.isPro}
-              className="mt-10 border-t border-zinc-200 pt-6 dark:border-zinc-800"
-            />
+            <section
+              className="mt-8 rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900/50"
+              aria-labelledby="section-signals"
+            >
+              <h2
+                id="section-signals"
+                className="text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50"
+              >
+                Project signals
+              </h2>
+              <div className="mt-4">
+                <AppAnalyticsSection
+                  analytics={analytics}
+                  isPro={!!app.owner.isPro}
+                />
+              </div>
+            </section>
           )}
 
           {featuredTokenAvailable && (
@@ -298,24 +329,35 @@ export default async function AppDetailPage({
             <BoostButton appId={app.id} slug={app.slug} className="mt-6" />
           )}
 
-          <div className="mt-10 space-y-6 border-t border-zinc-200 pt-6 dark:border-zinc-800">
-            <FeedbackButtons
-              appId={app.id}
-              slug={app.slug}
-              isOwner={!!isOwner}
-              counts={feedbackCounts}
-              currentUserKind={currentUserFeedback}
-            />
-            <div className="flex flex-wrap items-center gap-4">
-              <UpvoteButton
+          <section
+            className="mt-8 rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900/50"
+            aria-labelledby="section-feedback"
+          >
+            <h2
+              id="section-feedback"
+              className="text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50"
+            >
+              Feedback
+            </h2>
+            <div className="mt-4 space-y-6">
+              <FeedbackButtons
                 appId={app.id}
                 slug={app.slug}
-                voteCount={app.vote_count}
-                userHasVoted={app.user_has_voted}
+                isOwner={!!isOwner}
+                counts={feedbackCounts}
+                currentUserKind={currentUserFeedback}
               />
-              <ReportButton appName={app.name} appId={app.id} />
+              <div className="flex flex-wrap items-center gap-4">
+                <UpvoteButton
+                  appId={app.id}
+                  slug={app.slug}
+                  voteCount={app.vote_count}
+                  userHasVoted={app.user_has_voted}
+                />
+                <ReportButton appName={app.name} appId={app.id} />
+              </div>
             </div>
-          </div>
+          </section>
         </div>
       </Container>
       {app.app_url && (

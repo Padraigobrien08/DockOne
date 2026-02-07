@@ -9,7 +9,7 @@ type SortKey = "newest" | "trending" | "alphabetical";
 
 const SORT_OPTIONS: { value: SortKey; label: string }[] = [
   { value: "newest", label: "Newest" },
-  { value: "trending", label: "Trending" },
+  { value: "trending", label: "Recent interest" },
   { value: "alphabetical", label: "A–Z" },
 ];
 

@@ -47,7 +47,7 @@ export async function submitReport(appId: string, reason: string | null): Promis
 export async function voteApp(appId: string, slug: string): Promise<{ error?: string }> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: "Sign in to vote" };
+  if (!user) return { error: "Sign in to signal interest" };
 
   const { error } = await supabase.from("votes").insert({ app_id: appId, user_id: user.id });
   if (error) {
@@ -62,7 +62,7 @@ export async function voteApp(appId: string, slug: string): Promise<{ error?: st
 export async function unvoteApp(appId: string, slug: string): Promise<{ error?: string }> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: "Sign in to vote" };
+  if (!user) return { error: "Sign in to signal interest" };
 
   const { error } = await supabase
     .from("votes")
@@ -94,7 +94,7 @@ export async function useFeaturedToken(appId: string, slug: string): Promise<{ e
   if (!user) return { error: "Sign in to feature" };
 
   const isPro = await getIsPro(user.id);
-  if (!isPro) return { error: "Creator Pro required to feature apps" };
+  if (!isPro) return { error: "Creator Pro required to use featured token" };
 
   const { data: app } = await supabase
     .from("apps")
@@ -127,7 +127,7 @@ export async function useBoost(appId: string, slug: string): Promise<{ error?: s
   if (!user) return { error: "Sign in to boost" };
 
   const isPro = await getIsPro(user.id);
-  if (!isPro) return { error: "Creator Pro required to boost apps" };
+  if (!isPro) return { error: "Creator Pro required to use boost" };
 
   const { data: app } = await supabase
     .from("apps")

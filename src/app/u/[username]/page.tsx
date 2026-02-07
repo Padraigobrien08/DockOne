@@ -67,7 +67,7 @@ export default async function UserProfilePage({
                   <span className="font-medium text-zinc-900 dark:text-zinc-100">
                     {stats.totalVotes}
                   </span>{" "}
-                  total votes
+                  signals of interest
                 </div>
                 <div>
                   <span className="font-medium text-zinc-900 dark:text-zinc-100">
@@ -81,7 +81,7 @@ export default async function UserProfilePage({
                       {stats.appsWithMinVotes}
                     </span>{" "}
                     project{stats.appsWithMinVotes === 1 ? "" : "s"} with{" "}
-                    {CREATOR_MIN_VOTES_FOR_HIGHLIGHT}+ votes
+                    {CREATOR_MIN_VOTES_FOR_HIGHLIGHT}+ interested
                   </div>
                 )}
               </dl>

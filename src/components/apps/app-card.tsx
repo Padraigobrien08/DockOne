@@ -107,9 +107,9 @@ export function AppCard({ app, creatorStats, isBoosted }: AppCardProps) {
               Rising
             </span>
           )}
-          {typeof app.vote_count === "number" && (
+          {typeof app.vote_count === "number" && app.vote_count > 0 && (
             <span className="text-[11px] text-zinc-400 dark:text-zinc-500 tabular-nums">
-              ↑ {app.vote_count}
+              {app.vote_count} interested
             </span>
           )}
         </div>

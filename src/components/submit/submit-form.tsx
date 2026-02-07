@@ -235,10 +235,10 @@ export function SubmitForm({ isPro }: SubmitFormProps = {}) {
                   className="mt-1.5 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-50"
                 >
                   <option value="public">Listed — appears in browse</option>
-                  <option value="unlisted">Unlisted — shareable link only (investors, testers, hiring)</option>
+                  <option value="unlisted">Unlisted — shareable private link only</option>
                 </select>
                 <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                  Unlisted projects don’t appear in the catalog; share the direct link with anyone.
+                  Unlisted projects don’t appear in the catalog; share the direct link with anyone (Creator Pro).
                 </p>
               </div>
             )}
