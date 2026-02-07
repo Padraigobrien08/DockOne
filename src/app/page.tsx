@@ -2,9 +2,9 @@ import Link from "next/link";
 import { Container } from "@/components/ui/container";
 import { Section } from "@/components/ui/section";
 import { AppCard } from "@/components/apps/app-card";
-import { HeroVisual } from "@/components/landing/hero-visual";
 import { HeroMagicLinkForm } from "@/components/landing/hero-magic-link-form";
-import { ProofStrip } from "@/components/landing/proof-strip";
+import { HeroStrip } from "@/components/landing/hero-strip";
+import { ThesisBlock, ThesisHighlight } from "@/components/landing/thesis-block";
 import { getApprovedApps } from "@/lib/apps";
 import { getActiveBoosts } from "@/lib/boosts";
 import { computeCreatorStatsMap } from "@/lib/creator-stats";
@@ -24,9 +24,9 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-zinc-950 text-zinc-100">
-      {/* 1. Hero: Stripe-like 2-column — left: copy + email capture, right: visual */}
-      <section aria-labelledby="hero-heading" className="relative border-b border-zinc-800/50 overflow-hidden">
-        {/* Aurora: purple/indigo glow centered behind hero, fades at edges — no flat wash */}
+      {/* 1. Hero: single column, centred text, no image */}
+      <section aria-labelledby="hero-heading" className="relative overflow-hidden">
+        {/* Aurora: slightly stronger gradient, centred */}
         <div
           className="pointer-events-none absolute inset-0 z-0"
           style={{
@@ -39,57 +39,53 @@ export default async function Home() {
             style={{
               filter: "blur(64px)",
               background: [
-                "radial-gradient(ellipse 45% 40% at 42% 50%, rgba(99, 102, 241, 0.28) 0%, transparent 42%)",
-                "radial-gradient(ellipse 40% 38% at 58% 50%, rgba(139, 92, 246, 0.24) 0%, transparent 40%)",
-                "radial-gradient(ellipse 35% 35% at 50% 52%, rgba(129, 140, 248, 0.2) 0%, transparent 38%)",
+                "radial-gradient(ellipse 50% 45% at 50% 50%, rgba(99, 102, 241, 0.36) 0%, transparent 45%)",
+                "radial-gradient(ellipse 45% 42% at 50% 48%, rgba(139, 92, 246, 0.3) 0%, transparent 42%)",
+                "radial-gradient(ellipse 40% 38% at 50% 52%, rgba(129, 140, 248, 0.26) 0%, transparent 40%)",
               ].join(", "),
             }}
           />
         </div>
-        <Section className="relative z-10 pt-12 pb-8 md:pt-14 md:pb-10 lg:pt-16 lg:pb-12">
+        <div
+          className="pointer-events-none absolute inset-0 z-[1]"
+          style={{
+            background: "radial-gradient(ellipse 85% 75% at 50% 45%, transparent 40%, rgba(0,0,0,0.04) 100%)",
+          }}
+        />
+        <Section className="relative z-10 pt-12 pb-4 md:pt-14 md:pb-5 lg:pt-16 lg:pb-6">
           <Container size="wide">
-            <div className="grid grid-cols-1 items-start gap-12 md:grid-cols-2 md:gap-16 lg:gap-20">
-              {/* Left: eyebrow → H1 → subhead → email capture — clean left edge */}
-              <div className="min-w-0 w-full max-w-2xl flex flex-col">
-                <p className="hero-entrance text-xs font-medium uppercase tracking-[0.12em] text-zinc-400">
-                  Projects that work. No pitch required.
-                </p>
-                <h1
-                  id="hero-heading"
-                  className="hero-entrance hero-entrance-delay-1 mt-2 text-3xl font-semibold tracking-tight text-white sm:text-4xl md:text-5xl lg:text-6xl leading-[1.1]"
-                >
-                  <span className="block whitespace-nowrap">Not everything you build</span>
-                  <span className="block whitespace-nowrap">needs to become a product.</span>
-                </h1>
-                <p className="hero-entrance hero-entrance-delay-2 mt-4 max-w-prose text-lg leading-relaxed text-zinc-300/90 md:mt-5 md:text-xl">
-                  Publish working projects without marketing, scaling, or
-                  operational pressure.
-                </p>
-                <div className="hero-entrance hero-entrance-delay-3 mt-6 w-full md:mt-8">
-                  <HeroMagicLinkForm />
-                </div>
-              </div>
-              {/* Right: card stack — aligned with headline block */}
-              <div className="relative flex min-h-[280px] items-center justify-center pt-6 md:min-h-[360px] md:pt-7 lg:min-h-[400px]">
-                <HeroVisual projects={landingApps.slice(0, 3)} />
+            <div className="flex flex-col items-center text-center">
+              <p className="hero-entrance text-xs font-medium uppercase tracking-[0.06em] text-zinc-300">
+                Projects that work. No pitch required.
+              </p>
+              <h1
+                id="hero-heading"
+                className="hero-entrance hero-entrance-delay-1 mt-1.5 text-3xl font-semibold tracking-tight text-white sm:text-4xl md:text-5xl lg:text-6xl leading-[1.1]"
+              >
+                <span className="block">Not everything you build</span>
+                <span className="block">needs to become a product.</span>
+              </h1>
+              <p className="hero-entrance hero-entrance-delay-2 mt-3 text-lg font-medium text-zinc-300 md:text-xl">
+                It&apos;s worth showing.
+              </p>
+              <p className="hero-entrance hero-entrance-delay-2 mt-4 max-w-prose text-lg leading-relaxed text-zinc-300/90 md:mt-5 md:text-xl">
+                Publish working projects without marketing, scaling, or
+                operational pressure.
+              </p>
+              <div className="hero-entrance hero-entrance-delay-3 mt-6 w-full max-w-md text-center md:mt-8">
+                <HeroMagicLinkForm />
               </div>
             </div>
           </Container>
         </Section>
       </section>
 
-      {/* 2. Proof strip: band docked under hero */}
-      <section className="border-t border-b border-zinc-700/60 bg-zinc-900/40">
-        <Section className="py-0">
-          <Container size="wide">
-            <ProofStrip
-              projectCount={projectCount}
-              creatorCount={creatorCount}
-              updatedLabel="Updated daily"
-            />
-          </Container>
-        </Section>
-      </section>
+      {/* 2. Hero strip: hairline handoff, two-cluster stats */}
+      <HeroStrip
+        projectCount={projectCount}
+        creatorCount={creatorCount}
+        updatedLabel="Updated daily"
+      />
 
       {/* 3. Not / Is: iconic two-column */}
       <section aria-labelledby="not-is-heading" className="border-b border-zinc-800/50">
@@ -107,42 +103,42 @@ export default async function Home() {
               </p>
             </div>
             <div className="mt-8 grid grid-cols-1 gap-8 md:mt-10 md:grid-cols-2 md:gap-14 lg:gap-16">
-              {/* Not: muted × icons, slightly smaller text */}
-              <div className="max-w-prose border-l border-zinc-700/60 pl-6 md:pl-8">
+              {/* Not: intentionally muted, readable — not equal to "is" */}
+              <div className="max-w-prose border-l border-zinc-700/50 border-r border-zinc-600/55 pr-6 pl-6 md:pl-8 md:pr-8">
                 <h3 className="text-sm font-medium uppercase tracking-wide text-zinc-500">
                   DockOne is not
                 </h3>
-                <ul className="mt-5 space-y-3 text-xs leading-relaxed text-zinc-500 md:text-sm md:space-y-4" role="list">
+                <ul className="mt-5 space-y-4 text-xs leading-loose text-zinc-400 md:text-sm md:space-y-5 md:leading-loose" role="list">
                   <li className="flex gap-2.5">
-                    <span className="mt-0.5 shrink-0 text-zinc-600" aria-hidden>×</span>
+                    <span className="mt-0.5 shrink-0 text-zinc-500" aria-hidden>×</span>
                     <span>App store. Launch platform. Growth tool.</span>
                   </li>
                   <li className="flex gap-2.5">
-                    <span className="mt-0.5 shrink-0 text-zinc-600" aria-hidden>×</span>
+                    <span className="mt-0.5 shrink-0 text-zinc-500" aria-hidden>×</span>
                     <span>Vanity metrics.</span>
                   </li>
                   <li className="flex gap-2.5">
-                    <span className="mt-0.5 shrink-0 text-zinc-600" aria-hidden>×</span>
+                    <span className="mt-0.5 shrink-0 text-zinc-500" aria-hidden>×</span>
                     <span>Scale or track you.</span>
                   </li>
                 </ul>
               </div>
-              {/* Is: accent border + background tint, confident bullets */}
-              <div className="max-w-prose rounded-lg border border-violet-500/25 bg-violet-950/20 pl-6 pr-6 py-5 md:pl-8 md:pr-8 md:py-6">
-                <h3 className="text-sm font-semibold uppercase tracking-wide text-violet-300">
+              {/* Is: subtle tint and border — integrated, not a standalone card */}
+              <div className="max-w-prose rounded-lg border border-violet-500/12 bg-violet-950/8 pl-6 pr-6 py-5 md:pl-8 md:pr-8 md:py-6">
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-violet-400/90">
                   DockOne is
                 </h3>
                 <ul className="mt-5 space-y-3 text-sm leading-relaxed text-zinc-200 md:space-y-4 md:text-base" role="list">
                   <li className="flex gap-2.5">
-                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-violet-500/70" aria-hidden />
+                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-violet-500/50" aria-hidden />
                     <span>A public home for your work.</span>
                   </li>
                   <li className="flex gap-2.5">
-                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-violet-500/70" aria-hidden />
+                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-violet-500/50" aria-hidden />
                     <span>Portfolio surface. Quiet discovery. Early signals.</span>
                   </li>
                   <li className="flex gap-2.5">
-                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-violet-500/70" aria-hidden />
+                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-violet-500/50" aria-hidden />
                     <span>Share what works. No pitch.</span>
                   </li>
                 </ul>
@@ -151,6 +147,25 @@ export default async function Home() {
           </Container>
         </Section>
       </section>
+
+      {/* 3b. Thesis Block — core pillar, comparable importance to hero */}
+      <ThesisBlock
+        id="bridge-heading"
+        label="Where DockOne fits"
+        badge="The why"
+        headline={
+          <>
+            Between a <ThesisHighlight>README</ThesisHighlight> and a{" "}
+            <ThesisHighlight>product launch</ThesisHighlight> there’s a gap. DockOne is that space.
+          </>
+        }
+        outcomes={[
+          "Easier discovery",
+          "Immediate understanding",
+          "No setup. No pitch. No launch.",
+        ]}
+        supportingLine="Working software becomes easy to find, understand, and try — without turning it into a startup."
+      />
 
       {/* 4. Projects on DockOne: curated grid */}
       <section aria-labelledby="real-projects-heading" className="bg-zinc-900/20">
@@ -164,13 +179,13 @@ export default async function Home() {
                 >
                   Projects on DockOne
                 </h2>
-                <p className="mt-2 text-zinc-400">
-                  Real submissions. Real scope. No pitch required.
+                <p className="mt-2 text-zinc-500">
+                  Working software you can see, try, and understand.
                 </p>
               </div>
               <Link
                 href="/apps"
-                className="shrink-0 text-sm font-medium text-violet-400 underline decoration-violet-500/50 underline-offset-2 hover:text-violet-300 hover:decoration-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:ring-offset-zinc-950 rounded"
+                className="shrink-0 text-sm text-zinc-500 hover:text-zinc-400 hover:underline underline-offset-2 focus:outline-none focus:ring-1 focus:ring-violet-500 focus:ring-offset-2 focus:ring-offset-zinc-950 rounded"
               >
                 Browse all →
               </Link>
@@ -184,7 +199,8 @@ export default async function Home() {
                       creatorStats={creatorStatsMap.get(app.owner.id)}
                       isBoosted={boostMap.has(app.id)}
                       headingLevel={3}
-                      overrideMomentumHint="New this week"
+                      context="landing"
+                      imageStyle="premium"
                     />
                   </li>
                 ))}
@@ -205,61 +221,29 @@ export default async function Home() {
         </Section>
       </section>
 
-      {/* 5. BYOK: respectful trust callout */}
-      <section aria-labelledby="byok-heading" className="border-b border-zinc-800/50">
-        <Section className="py-12 md:py-16">
-          <Container size="wide">
-            <div className="rounded-xl border border-zinc-800/50 bg-zinc-900/30 px-5 py-4 md:px-6 md:py-5">
-              <div className="flex items-center gap-2.5">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-zinc-800/80 text-zinc-400" aria-hidden>
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-                  </svg>
-                </span>
-                <h2
-                  id="byok-heading"
-                  className="text-base font-semibold tracking-tight text-zinc-200 md:text-lg"
-                >
-                  Your keys stay yours.
-                </h2>
-              </div>
-              <p className="mt-3 max-w-2xl text-sm leading-relaxed text-zinc-300 md:text-base">
-                Some projects use LLMs. DockOne never stores your API keys —
-                they live only in your browser.
-              </p>
-              <p className="mt-3">
-                <Link
-                  href="/settings"
-                  className="inline-flex items-center rounded-lg border border-zinc-600/80 bg-transparent px-3 py-1.5 text-sm font-medium text-zinc-200 transition-colors hover:border-zinc-500 hover:bg-zinc-800/50 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:ring-offset-zinc-950"
-                >
-                  Manage keys in Settings
-                </Link>
-              </p>
-            </div>
-          </Container>
-        </Section>
-      </section>
-
-      {/* 6. Soft close */}
+      {/* 5. Soft close */}
       <section aria-labelledby="soft-close-heading" className="bg-zinc-900/20">
-        <Section className="py-12 md:py-16">
+        <Section className="py-14 md:py-20">
           <Container size="wide">
+            <p className="mx-auto max-w-xl text-center text-base font-normal leading-relaxed text-zinc-500 md:text-lg">
+              Work worth showing.
+            </p>
             <h2
               id="soft-close-heading"
-              className="text-2xl font-semibold tracking-tight text-white md:text-3xl"
+              className="mt-8 text-center text-2xl font-semibold tracking-tight text-white md:text-3xl md:leading-snug"
             >
               Browse what people are building.
             </h2>
-            <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
+            <div className="mt-8 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-center sm:gap-8">
               <Link
                 href="/apps"
-                className="inline-flex items-center justify-center rounded-lg bg-violet-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:ring-offset-zinc-950"
+                className="inline-flex items-center justify-center rounded-lg border border-violet-500/50 bg-transparent px-5 py-2.5 text-sm font-medium text-violet-300 transition-colors hover:bg-violet-500/10 hover:border-violet-500/70 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:ring-offset-zinc-950"
               >
                 Explore projects
               </Link>
               <Link
                 href="/submit"
-                className="text-sm text-zinc-400 underline decoration-zinc-600 underline-offset-2 hover:text-zinc-300 hover:decoration-zinc-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:ring-offset-zinc-950 rounded"
+                className="text-center text-sm font-normal text-zinc-500 hover:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:ring-offset-zinc-950 rounded"
               >
                 Publish a project
               </Link>

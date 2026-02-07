@@ -13,6 +13,16 @@ interface AppCardProps {
   headingLevel?: 2 | 3;
   /** When set, show this label instead of per-app momentum hint (e.g. "New this week" for curated sections). */
   overrideMomentumHint?: string;
+  /** "landing" = minimal pills, hide interested count, subtle tags. Overrides defaults for statusPills/metadataStyle/tagsStyle when set. */
+  context?: "default" | "landing";
+  /** "minimal" = only one pill on image (momentum, e.g. "New this week"); hide lifecycle pill. Default = both pills. */
+  statusPills?: "default" | "minimal";
+  /** "landing" = hide "X interested", quieter creator row (smaller, lower opacity). Default = full metadata. */
+  metadataStyle?: "default" | "landing";
+  /** "subtle" = tag chips feel like metadata (lower contrast, slightly smaller). Default = standard. */
+  tagsStyle?: "default" | "subtle";
+  /** "premium" = bottom gradient fade, subtle unifying overlay, consistent object-cover. Default = standard. */
+  imageStyle?: "default" | "premium";
 }
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -34,42 +44,67 @@ function getMomentumHint(app: AppListItem): string | null {
   return null;
 }
 
-export function AppCard({ app, creatorStats, isBoosted, headingLevel = 2, overrideMomentumHint }: AppCardProps) {
+export function AppCard({ app, creatorStats, isBoosted, headingLevel = 2, overrideMomentumHint, context = "default", statusPills, metadataStyle, tagsStyle, imageStyle = "default" }: AppCardProps) {
   const displayName = app.owner.display_name || app.owner.username;
   const lifecycle = (app.lifecycle ?? "wip") as AppLifecycle;
-  const momentumHint = overrideMomentumHint ?? getMomentumHint(app);
   const HeadingTag = headingLevel === 3 ? "h3" : "h2";
+
+  const effectiveStatusPills = statusPills ?? (context === "landing" ? "minimal" : "default");
+  const effectiveMetadataStyle = metadataStyle ?? (context === "landing" ? "landing" : "default");
+  const effectiveTagsStyle = tagsStyle ?? (context === "landing" ? "subtle" : "default");
+
+  const momentumHint = overrideMomentumHint ?? getMomentumHint(app);
+  const displayMomentumHint =
+    context === "landing" && effectiveStatusPills === "minimal"
+      ? momentumHint === "New this week"
+        ? "New this week"
+        : null
+      : momentumHint;
 
   return (
     <div className="group relative flex min-w-0 flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white transition hover:border-zinc-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700">
       <Link href={`/apps/${app.slug}`} className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-zinc-900">
-        <div className="relative aspect-video w-full bg-zinc-100 dark:bg-zinc-800">
-          {momentumHint && (
-            <span
-              className="absolute left-3 top-3 z-10 rounded-full bg-white/90 px-2 py-1 text-xs font-medium text-zinc-600 shadow-sm dark:bg-zinc-900/90 dark:text-zinc-300"
-              aria-label={`Momentum: ${momentumHint}`}
-            >
-              {momentumHint}
-            </span>
-          )}
-          <span
-            className={`absolute right-3 top-3 z-10 rounded-full px-2 py-1 text-xs font-medium ${APP_LIFECYCLE_CARD_CLASS[lifecycle]}`}
-            aria-label={`Status: ${APP_LIFECYCLE_LABELS[lifecycle]}`}
-          >
-            {APP_LIFECYCLE_LABELS[lifecycle]}
-          </span>
+        <div className="relative aspect-video w-full overflow-hidden bg-zinc-100 dark:bg-zinc-800">
           {app.primary_image_url ? (
             <Image
               src={app.primary_image_url}
               alt=""
               width={400}
               height={225}
-              className="h-full w-full object-cover transition group-hover:scale-[1.02]"
+              className="h-full w-full object-cover object-center transition group-hover:scale-[1.02]"
             />
           ) : (
             <div className="flex h-full items-center justify-center text-zinc-400 dark:text-zinc-500">
               No image
             </div>
+          )}
+          {imageStyle === "premium" && app.primary_image_url && (
+            <>
+              <div
+                className="pointer-events-none absolute inset-0 z-[1] bg-black/5"
+                aria-hidden
+              />
+              <div
+                className="pointer-events-none absolute bottom-0 left-0 right-0 z-[2] h-2/5 bg-gradient-to-t from-black/40 to-transparent"
+                aria-hidden
+              />
+            </>
+          )}
+          {displayMomentumHint && (
+            <span
+              className="absolute left-3 top-3 z-10 rounded-full bg-white/90 px-2 py-1 text-xs font-medium text-zinc-600 shadow-sm dark:bg-zinc-900/90 dark:text-zinc-300"
+              aria-label={`Momentum: ${displayMomentumHint}`}
+            >
+              {displayMomentumHint}
+            </span>
+          )}
+          {effectiveStatusPills !== "minimal" && (
+            <span
+              className={`absolute right-3 top-3 z-10 rounded-full px-2 py-1 text-xs font-medium ${APP_LIFECYCLE_CARD_CLASS[lifecycle]}`}
+              aria-label={`Status: ${APP_LIFECYCLE_LABELS[lifecycle]}`}
+            >
+              {APP_LIFECYCLE_LABELS[lifecycle]}
+            </span>
           )}
         </div>
         <div className="p-4">
@@ -87,18 +122,22 @@ export function AppCard({ app, creatorStats, isBoosted, headingLevel = 2, overri
         <div className="flex flex-wrap items-center gap-2">
           <Link
             href={`/u/${app.owner.username}`}
-            className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-zinc-600 dark:text-zinc-500 dark:hover:text-zinc-300"
+            className={
+              effectiveMetadataStyle === "landing"
+                ? "flex items-center gap-1.5 text-[11px] text-zinc-500 hover:text-zinc-400 dark:text-zinc-600 dark:hover:text-zinc-500"
+                : "flex items-center gap-1.5 text-xs text-zinc-400 hover:text-zinc-600 dark:text-zinc-500 dark:hover:text-zinc-300"
+            }
           >
             {app.owner.avatar_url ? (
               <Image
                 src={app.owner.avatar_url}
                 alt=""
-                width={18}
-                height={18}
+                width={effectiveMetadataStyle === "landing" ? 16 : 18}
+                height={effectiveMetadataStyle === "landing" ? 16 : 18}
                 className="rounded-full"
               />
             ) : (
-              <span className="h-[18px] w-[18px] rounded-full bg-zinc-300 dark:bg-zinc-600" />
+              <span className={effectiveMetadataStyle === "landing" ? "h-4 w-4 rounded-full bg-zinc-300 dark:bg-zinc-600" : "h-[18px] w-[18px] rounded-full bg-zinc-300 dark:bg-zinc-600"} />
             )}
             <span>{displayName}</span>
           </Link>
@@ -112,7 +151,7 @@ export function AppCard({ app, creatorStats, isBoosted, headingLevel = 2, overri
               Rising
             </span>
           )}
-          {typeof app.vote_count === "number" && app.vote_count > 0 && (
+          {effectiveMetadataStyle !== "landing" && typeof app.vote_count === "number" && app.vote_count > 0 && (
             <span className="text-[11px] text-zinc-400 dark:text-zinc-500 tabular-nums">
               {app.vote_count} interested
             </span>
@@ -137,7 +176,11 @@ export function AppCard({ app, creatorStats, isBoosted, headingLevel = 2, overri
           {app.tags.slice(0, 5).map((tag) => (
             <span
               key={tag}
-              className="rounded bg-zinc-100 px-1.5 py-0.5 text-xs text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300"
+              className={
+                effectiveTagsStyle === "subtle"
+                  ? "rounded bg-zinc-100/90 px-1 py-0.5 text-[11px] text-zinc-500 dark:bg-zinc-800/80 dark:text-zinc-500"
+                  : "rounded bg-zinc-100 px-1.5 py-0.5 text-xs text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300"
+              }
             >
               {tag}
             </span>

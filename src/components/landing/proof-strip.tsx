@@ -15,7 +15,7 @@ interface ProofStripProps {
 
 function Separator({ className = "" }: { className?: string }) {
   return (
-    <span className={`text-zinc-500 dark:text-zinc-400 ${className}`} aria-hidden>
+    <span className={`text-zinc-400/90 ${className}`} aria-hidden>
       ·
     </span>
   );
@@ -23,7 +23,7 @@ function Separator({ className = "" }: { className?: string }) {
 
 function PipeSeparator({ className = "" }: { className?: string }) {
   return (
-    <span className={`text-zinc-500 dark:text-zinc-400 ${className}`} aria-hidden>
+    <span className={`text-zinc-400/90 ${className}`} aria-hidden>
       |
     </span>
   );
@@ -39,11 +39,11 @@ export function ProofStrip({
 
   return (
     <div
-      className="flex flex-col gap-2 py-3 text-sm text-zinc-300 md:flex-row md:flex-wrap md:items-baseline md:justify-between md:gap-x-4 md:gap-y-1 md:py-3.5"
+      className="flex flex-col items-start justify-between gap-y-2 text-sm text-zinc-300/90 sm:flex-row sm:flex-nowrap sm:items-center sm:gap-x-4 sm:gap-y-0"
       aria-label="Proof strip"
     >
-      {/* Left: project(s) · creator(s) · updated */}
-      <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+      {/* Left cluster: middle dots */}
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
         <span>{projectCount} {projectLabel}</span>
         <Separator />
         <span>{creatorCount} {creatorLabel}</span>
@@ -51,8 +51,8 @@ export function ProofStrip({
         <span>{updatedLabel}</span>
       </div>
 
-      {/* Right: BYOK | Moderated | No growth pressure */}
-      <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+      {/* Right cluster: vertical bars */}
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
         {RIGHT_ITEMS.map((label, i) => (
           <span key={label} className="flex items-center gap-x-2">
             {i > 0 && <PipeSeparator />}

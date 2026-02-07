@@ -20,17 +20,22 @@ export function HeaderNav({ isLoggedIn }: HeaderNavProps) {
 
   return (
     <>
-      <div className="flex h-14 items-center justify-between md:h-16">
-        {/* Left: logo + nav links */}
-        <div className="flex min-w-0 flex-1 items-center gap-6 md:gap-8">
+      <div className="flex h-14 items-baseline justify-between md:h-16">
+        {/* Left: logo + nav links — shared baseline */}
+        <div className="flex min-w-0 flex-1 items-baseline gap-6 md:gap-8">
           <Link
             href="/"
-            className="shrink-0 font-semibold text-zinc-900 dark:text-zinc-50 hover:opacity-80 transition-opacity"
+            className="flex shrink-0 items-baseline gap-1.5 text-zinc-900 dark:text-zinc-50"
           >
-            {SITE_NAME}
+            <span className="font-semibold leading-none transition-opacity hover:opacity-80">
+              {SITE_NAME}
+            </span>
+            <span className="hidden font-normal text-sm leading-none text-zinc-500 sm:inline dark:text-zinc-500">
+              — Discover working software.
+            </span>
           </Link>
           <nav
-            className="hidden items-center gap-6 text-sm md:flex"
+            className="hidden items-baseline gap-6 text-sm leading-none md:flex"
             aria-label="Main"
           >
             {navLinks.map(({ href, label }) => (
@@ -45,11 +50,11 @@ export function HeaderNav({ isLoggedIn }: HeaderNavProps) {
           </nav>
         </div>
 
-        {/* Right: Sign in + CTA (desktop) */}
-        <div className="hidden shrink-0 items-center gap-5 md:flex">
+        {/* Right: Sign in + CTA (desktop) — same baseline */}
+        <div className="hidden shrink-0 items-baseline gap-5 md:flex">
           <Link
             href="/settings"
-            className="text-sm text-zinc-500 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-50 transition-colors"
+            className="text-sm leading-none text-zinc-500 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-50 transition-colors"
           >
             Settings
           </Link>
@@ -57,7 +62,7 @@ export function HeaderNav({ isLoggedIn }: HeaderNavProps) {
             <>
               <Link
                 href="/me"
-                className="text-sm text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-50 transition-colors"
+                className="text-sm leading-none text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-50 transition-colors"
               >
                 Profile
               </Link>
@@ -66,14 +71,14 @@ export function HeaderNav({ isLoggedIn }: HeaderNavProps) {
           ) : (
             <Link
               href="/auth/sign-in"
-              className="text-sm text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-50 transition-colors"
+              className="text-sm leading-none text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-50 transition-colors"
             >
               Sign in
             </Link>
           )}
           <Link
             href="/apps"
-            className="inline-flex items-center justify-center rounded-lg border border-violet-500/40 bg-violet-600/90 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-violet-500/90 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-zinc-950"
+            className="inline-flex items-center justify-center rounded-lg border border-violet-500/40 bg-violet-600/90 px-3 py-1.5 text-sm font-medium leading-none text-white transition-colors hover:bg-violet-500/90 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-zinc-950"
           >
             Browse projects →
           </Link>

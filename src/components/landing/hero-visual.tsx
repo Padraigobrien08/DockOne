@@ -84,7 +84,7 @@ export function HeroVisual({ projects }: HeroVisualProps) {
 
   return (
     <div
-      className="group relative flex min-h-[280px] w-full cursor-default items-center justify-center md:min-h-[360px] md:translate-x-[6.5rem] md:translate-y-[3.5rem] lg:min-h-[400px] lg:translate-x-[7rem] lg:translate-y-[4rem]"
+      className="group relative flex min-h-[280px] w-full cursor-default items-center justify-center md:min-h-[360px] md:translate-x-[5rem] md:translate-y-[3.5rem] lg:min-h-[400px] lg:translate-x-[5.5rem] lg:translate-y-[4rem]"
       aria-hidden
     >
       {/* Card stack: stronger hover lift/scale (CSS only) */}
