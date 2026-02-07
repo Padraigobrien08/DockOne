@@ -9,6 +9,8 @@ interface AppCardProps {
   creatorStats?: CreatorStats | null;
   /** True if app has an active boost (amplifies trending score). */
   isBoosted?: boolean;
+  /** Heading level for the app name (default 2). Use 3 when card is under an h2 section, e.g. landing. */
+  headingLevel?: 2 | 3;
 }
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -30,14 +32,15 @@ function getMomentumHint(app: AppListItem): string | null {
   return null;
 }
 
-export function AppCard({ app, creatorStats, isBoosted }: AppCardProps) {
+export function AppCard({ app, creatorStats, isBoosted, headingLevel = 2 }: AppCardProps) {
   const displayName = app.owner.display_name || app.owner.username;
   const lifecycle = (app.lifecycle ?? "wip") as AppLifecycle;
   const momentumHint = getMomentumHint(app);
+  const HeadingTag = headingLevel === 3 ? "h3" : "h2";
 
   return (
-    <div className="group relative flex flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white transition hover:border-zinc-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700">
-      <Link href={`/apps/${app.slug}`} className="block">
+    <div className="group relative flex min-w-0 flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white transition hover:border-zinc-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700">
+      <Link href={`/apps/${app.slug}`} className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-zinc-900">
         <div className="relative aspect-video w-full bg-zinc-100 dark:bg-zinc-800">
           {momentumHint && (
             <span
@@ -68,9 +71,9 @@ export function AppCard({ app, creatorStats, isBoosted }: AppCardProps) {
           )}
         </div>
         <div className="p-4">
-          <h2 className="text-lg font-bold tracking-tight text-zinc-900 dark:text-zinc-50 group-hover:underline">
+          <HeadingTag className="text-lg font-bold tracking-tight text-zinc-900 dark:text-zinc-50 group-hover:underline">
             {app.name}
-          </h2>
+          </HeadingTag>
           {app.tagline && (
             <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
               {app.tagline}

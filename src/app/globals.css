@@ -88,3 +88,51 @@ body {
   padding: 0;
   background: none;
 }
+
+/* Page section title (landing, apps, collections) */
+.page-section-title {
+  @apply text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-3xl;
+}
+
+/* CTA link as button – primary (accent), same size/focus as app buttons */
+.link-btn-primary {
+  @apply inline-flex items-center justify-center rounded-lg bg-violet-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:ring-offset-zinc-50 dark:focus:ring-offset-zinc-950;
+}
+
+/* CTA link as button – secondary */
+.link-btn-secondary {
+  @apply inline-flex items-center justify-center rounded-lg border border-zinc-300 bg-transparent px-4 py-2.5 text-sm font-medium text-zinc-600 transition-colors hover:border-zinc-400 hover:bg-zinc-100 hover:text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-400 focus:ring-offset-2 focus:ring-offset-zinc-50 dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-500 dark:hover:bg-zinc-800/50 dark:hover:text-zinc-50 dark:focus:ring-offset-zinc-950;
+}
+
+/* Hero entrance: one-time fade + translate, staggered (hero only) */
+@keyframes hero-entrance {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hero-entrance {
+  animation: hero-entrance 0.55s ease-out both;
+}
+
+.hero-entrance-delay-1 { animation-delay: 0.08s; }
+.hero-entrance-delay-2 { animation-delay: 0.18s; }
+.hero-entrance-delay-3 { animation-delay: 0.3s; }
+.hero-entrance-delay-4 { animation-delay: 0.42s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-entrance,
+  .hero-entrance-delay-1,
+  .hero-entrance-delay-2,
+  .hero-entrance-delay-3,
+  .hero-entrance-delay-4 {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
