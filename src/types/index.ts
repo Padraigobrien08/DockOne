@@ -83,6 +83,8 @@ export interface AppListItem {
   tagline: string | null;
   slug: string;
   created_at: string;
+  /** Set when fetched from list; used for "Updated X days ago" momentum hint. */
+  updated_at?: string;
   owner: AppOwner;
   tags: string[];
   primary_image_url: string | null;

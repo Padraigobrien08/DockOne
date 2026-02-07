@@ -17,6 +17,7 @@ import { TrackedLink } from "@/components/apps/tracked-link";
 import { AppAnalyticsSection } from "@/components/apps/app-analytics-section";
 import { FeaturedButton } from "@/components/apps/featured-button";
 import { BoostButton } from "@/components/apps/boost-button";
+import { StickyOpenProject } from "@/components/apps/sticky-open-project";
 import { getActiveBoosts, countActiveBoosts, MAX_ACTIVE_BOOSTS } from "@/lib/boosts";
 import type { Metadata } from "next";
 import { APP_LIFECYCLE_LABELS, APP_LIFECYCLE_CARD_CLASS } from "@/types";
@@ -90,7 +91,7 @@ export default async function AppDetailPage({
   const displayName = app.owner.display_name || app.owner.username;
 
   return (
-    <div className="py-8 sm:py-12">
+    <div className={`py-8 sm:py-12 ${app.app_url ? "pb-24 md:pb-28" : ""}`}>
       <Container>
         <div className="mx-auto max-w-3xl">
           {showPendingBanner && (
@@ -114,100 +115,107 @@ export default async function AppDetailPage({
               so the project can use it. Keys stay in your browser and are never sent to our server.
             </div>
           )}
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50 sm:text-3xl">
-                {app.name}
-              </h1>
-              {app.tagline && (
-                <p className="mt-1 text-lg text-zinc-600 dark:text-zinc-400">{app.tagline}</p>
-              )}
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <span
-                className={`rounded-full px-3 py-1 text-sm font-medium ${APP_LIFECYCLE_CARD_CLASS[app.lifecycle]}`}
-              >
-                {APP_LIFECYCLE_LABELS[app.lifecycle]}
-              </span>
-              {isBoosted && (
-                <span className="rounded-full bg-sky-100 px-3 py-1 text-sm font-medium text-sky-800 dark:bg-sky-900/40 dark:text-sky-200">
-                  Boosted
-                </span>
-              )}
-              {app.visibility === "unlisted" && (
-                <span className="rounded-full bg-zinc-200 px-3 py-1 text-sm font-medium text-zinc-700 dark:bg-zinc-600 dark:text-zinc-200">
-                  Unlisted — shareable link
-                </span>
-              )}
-              {showStatusBadge && (
-                <span
-                  className={`rounded-full px-3 py-1 text-sm font-medium ${STATUS_CLASS[app.status]}`}
-                >
-                  {STATUS_LABEL[app.status]}
-                </span>
-              )}
-            </div>
-          </div>
+          {/* Hero: title + tagline only */}
+          <header>
+            <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-3xl">
+              {app.name}
+            </h1>
+            {app.tagline && (
+              <p className="mt-2 text-lg text-zinc-600 dark:text-zinc-400">{app.tagline}</p>
+            )}
+          </header>
 
-          <div className="mt-4 flex flex-wrap items-center gap-3 text-sm">
+          {/* Tight metadata: status, creator, tags */}
+          <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
+            <span
+              className={`rounded-full px-2.5 py-1 text-xs font-medium ${APP_LIFECYCLE_CARD_CLASS[app.lifecycle]}`}
+            >
+              {APP_LIFECYCLE_LABELS[app.lifecycle]}
+            </span>
+            {isBoosted && (
+              <span className="rounded-full bg-sky-100 px-2.5 py-1 text-xs font-medium text-sky-800 dark:bg-sky-900/40 dark:text-sky-200">
+                Boosted
+              </span>
+            )}
+            {app.visibility === "unlisted" && (
+              <span className="rounded-full bg-zinc-200 px-2.5 py-1 text-xs font-medium text-zinc-700 dark:bg-zinc-600 dark:text-zinc-200">
+                Unlisted
+              </span>
+            )}
+            {showStatusBadge && (
+              <span
+                className={`rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_CLASS[app.status]}`}
+              >
+                {STATUS_LABEL[app.status]}
+              </span>
+            )}
+            <span className="text-zinc-400 dark:text-zinc-500" aria-hidden>
+              ·
+            </span>
             <Link
               href={`/u/${app.owner.username}`}
-              className="flex items-center gap-2 text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
+              className="flex items-center gap-1.5 text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
             >
               {app.owner.avatar_url ? (
                 <Image
                   src={app.owner.avatar_url}
                   alt=""
-                  width={24}
-                  height={24}
+                  width={20}
+                  height={20}
                   className="rounded-full"
                 />
               ) : (
-                <span className="h-6 w-6 rounded-full bg-zinc-300 dark:bg-zinc-600" />
+                <span className="h-5 w-5 rounded-full bg-zinc-300 dark:bg-zinc-600" />
               )}
               <span>{displayName}</span>
             </Link>
             {app.owner.isPro && (
-              <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200">
+              <span className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[11px] font-medium text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200">
                 Pro
               </span>
             )}
             {creatorStats.risingCreator && (
-              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">
-                Rising creator
+              <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[11px] font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">
+                Rising
               </span>
             )}
             {app.byok_required && (
-              <span className="rounded bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-700 dark:bg-violet-900/30 dark:text-violet-300">
+              <span className="rounded bg-violet-100 px-2 py-0.5 text-[11px] font-medium text-violet-700 dark:bg-violet-900/30 dark:text-violet-300">
                 BYOK
               </span>
             )}
             {app.tags.length > 0 && (
-              <ul className="flex flex-wrap gap-1.5">
-                {app.tags.map((tag) => (
-                  <li
-                    key={tag}
-                    className="rounded bg-zinc-100 px-2 py-0.5 text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300"
-                  >
-                    {tag}
-                  </li>
-                ))}
-              </ul>
+              <>
+                <span className="text-zinc-400 dark:text-zinc-500" aria-hidden>
+                  ·
+                </span>
+                <ul className="flex flex-wrap gap-1.5">
+                  {app.tags.map((tag) => (
+                    <li
+                      key={tag}
+                      className="rounded bg-zinc-100 px-2 py-0.5 text-xs text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300"
+                    >
+                      {tag}
+                    </li>
+                  ))}
+                </ul>
+              </>
             )}
           </div>
 
+          {/* Primary CTA: Open project dominant; secondary: Repo, Demo */}
           {(app.app_url || app.repo_url || app.demo_video_url) && (
-            <div className="mt-6 flex flex-wrap gap-3">
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
               {app.app_url && (
                 <TrackedLink
                   appId={app.id}
                   eventType="demo_click"
                   href={app.app_url}
                   highlightPro={!!app.owner.isPro}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-zinc-900 px-6 py-3.5 text-base font-semibold text-white transition hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 sm:w-auto sm:flex-none"
                 >
                   Open project
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -217,43 +225,45 @@ export default async function AppDetailPage({
                   </svg>
                 </TrackedLink>
               )}
-              {app.repo_url && (
-                <TrackedLink
-                  appId={app.id}
-                  eventType="repo_click"
-                  href={app.repo_url}
-                  highlightPro={!!app.owner.isPro}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
-                >
-                  Repo
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                    />
-                  </svg>
-                </TrackedLink>
-              )}
-              {app.demo_video_url && (
-                <a
-                  href={app.demo_video_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
-                >
-                  Demo video
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                    />
-                  </svg>
-                </a>
-              )}
+              <div className="flex flex-wrap gap-2">
+                {app.repo_url && (
+                  <TrackedLink
+                    appId={app.id}
+                    eventType="repo_click"
+                    href={app.repo_url}
+                    highlightPro={!!app.owner.isPro}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                  >
+                    Repo
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                      />
+                    </svg>
+                  </TrackedLink>
+                )}
+                {app.demo_video_url && (
+                  <a
+                    href={app.demo_video_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                  >
+                    Demo video
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                      />
+                    </svg>
+                  </a>
+                )}
+              </div>
             </div>
           )}
 
@@ -308,6 +318,13 @@ export default async function AppDetailPage({
           </div>
         </div>
       </Container>
+      {app.app_url && (
+        <StickyOpenProject
+          appId={app.id}
+          href={app.app_url}
+          highlightPro={!!app.owner.isPro}
+        />
+      )}
     </div>
   );
 }

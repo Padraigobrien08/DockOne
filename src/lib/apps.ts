@@ -8,6 +8,7 @@ type Row = {
   tagline: string | null;
   slug: string;
   created_at: string;
+  updated_at?: string;
   owner_id: string;
   byok_required: boolean;
   lifecycle: string;
@@ -107,7 +108,7 @@ export async function getApprovedApps(): Promise<AppListItem[]> {
   const { data, error } = await supabase
     .from("apps")
     .select(
-      "id, name, tagline, slug, created_at, owner_id, byok_required, lifecycle, visibility, profiles!owner_id(id, username, display_name, avatar_url, subscription_tier, pro_until), app_tags(tag), app_media(url, sort_order, kind)"
+      "id, name, tagline, slug, created_at, updated_at, owner_id, byok_required, lifecycle, visibility, profiles!owner_id(id, username, display_name, avatar_url, subscription_tier, pro_until), app_tags(tag), app_media(url, sort_order, kind)"
     )
     .eq("status", "approved")
     .eq("visibility", "public")
@@ -131,6 +132,7 @@ export async function getApprovedApps(): Promise<AppListItem[]> {
     tagline: row.tagline,
     slug: row.slug,
     created_at: row.created_at,
+    updated_at: row.updated_at,
     owner: row.profiles
       ? {
           id: row.profiles.id,
@@ -157,7 +159,7 @@ export async function getApprovedAppsByIds(appIds: string[]): Promise<AppListIte
   const { data, error } = await supabase
     .from("apps")
     .select(
-      "id, name, tagline, slug, created_at, owner_id, byok_required, lifecycle, visibility, profiles!owner_id(id, username, display_name, avatar_url, subscription_tier, pro_until), app_tags(tag), app_media(url, sort_order, kind)"
+      "id, name, tagline, slug, created_at, updated_at, owner_id, byok_required, lifecycle, visibility, profiles!owner_id(id, username, display_name, avatar_url, subscription_tier, pro_until), app_tags(tag), app_media(url, sort_order, kind)"
     )
     .eq("status", "approved")
     .eq("visibility", "public")
@@ -179,6 +181,7 @@ export async function getApprovedAppsByIds(appIds: string[]): Promise<AppListIte
     tagline: row.tagline,
     slug: row.slug,
     created_at: row.created_at,
+    updated_at: row.updated_at,
     owner: row.profiles
       ? {
           id: row.profiles.id,
@@ -280,7 +283,7 @@ export async function getApprovedAppsByOwnerId(
   const query = supabase
     .from("apps")
     .select(
-      "id, name, tagline, slug, created_at, owner_id, byok_required, lifecycle, visibility, profiles!owner_id(id, username, display_name, avatar_url, subscription_tier, pro_until), app_tags(tag), app_media(url, sort_order, kind)"
+      "id, name, tagline, slug, created_at, updated_at, owner_id, byok_required, lifecycle, visibility, profiles!owner_id(id, username, display_name, avatar_url, subscription_tier, pro_until), app_tags(tag), app_media(url, sort_order, kind)"
     )
     .eq("owner_id", ownerId)
     .eq("status", "approved")
@@ -302,6 +305,7 @@ export async function getApprovedAppsByOwnerId(
     tagline: row.tagline,
     slug: row.slug,
     created_at: row.created_at,
+    updated_at: row.updated_at,
     owner: row.profiles
       ? {
           id: row.profiles.id,

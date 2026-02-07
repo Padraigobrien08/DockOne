@@ -11,15 +11,42 @@ interface AppCardProps {
   isBoosted?: boolean;
 }
 
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+const ONE_WEEK_MS = 7 * MS_PER_DAY;
+
+function getMomentumHint(app: AppListItem): string | null {
+  const now = Date.now();
+  const createdMs = new Date(app.created_at).getTime();
+  const updatedMs = app.updated_at ? new Date(app.updated_at).getTime() : createdMs;
+
+  if (now - createdMs < ONE_WEEK_MS) return "New this week";
+  if (now - updatedMs < ONE_WEEK_MS) {
+    const daysAgo = Math.floor((now - updatedMs) / MS_PER_DAY);
+    if (daysAgo === 0) return "Updated today";
+    if (daysAgo === 1) return "Updated 1 day ago";
+    return `Updated ${daysAgo} days ago`;
+  }
+  if (app.trending_score > 0) return "Trending";
+  return null;
+}
+
 export function AppCard({ app, creatorStats, isBoosted }: AppCardProps) {
   const displayName = app.owner.display_name || app.owner.username;
-
   const lifecycle = (app.lifecycle ?? "wip") as AppLifecycle;
+  const momentumHint = getMomentumHint(app);
 
   return (
     <div className="group relative flex flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white transition hover:border-zinc-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700">
       <Link href={`/apps/${app.slug}`} className="block">
         <div className="relative aspect-video w-full bg-zinc-100 dark:bg-zinc-800">
+          {momentumHint && (
+            <span
+              className="absolute left-3 top-3 z-10 rounded-full bg-white/90 px-2 py-1 text-xs font-medium text-zinc-600 shadow-sm dark:bg-zinc-900/90 dark:text-zinc-300"
+              aria-label={`Momentum: ${momentumHint}`}
+            >
+              {momentumHint}
+            </span>
+          )}
           <span
             className={`absolute right-3 top-3 z-10 rounded-full px-2 py-1 text-xs font-medium ${APP_LIFECYCLE_CARD_CLASS[lifecycle]}`}
             aria-label={`Status: ${APP_LIFECYCLE_LABELS[lifecycle]}`}
