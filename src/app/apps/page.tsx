@@ -19,7 +19,7 @@ export default async function AppsPage() {
       <Container>
         <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">Apps</h1>
         <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-          Software projects and tools. Search, filter by tag, or sort.
+          A home for software projects that work — without the pressure to productise. Search, filter by tag, or sort.
         </p>
 
         {featured.length > 0 && (

@@ -1,6 +1,6 @@
 # DockOne
 
-A hub where creators share software projects and tools—working software with intentionally limited scope.
+A home for software projects that work — without the pressure to productise.
 
 ## Stack
 

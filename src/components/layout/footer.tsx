@@ -7,7 +7,7 @@ export function Footer() {
       <Container>
         <div className="flex flex-col gap-4 py-8 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-zinc-500 dark:text-zinc-400">
-            A hub for software projects and tools.
+            A home for software projects that work — without the pressure to productise.
           </p>
           <nav className="flex flex-wrap gap-6 text-sm" aria-label="Footer">
             <Link
