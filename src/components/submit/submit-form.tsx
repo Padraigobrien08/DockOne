@@ -14,7 +14,7 @@ type Step = 1 | 2;
 const initialState: SubmitState = {};
 
 interface SubmitFormProps {
-  /** Pro creators can submit unlisted apps (shareable link only). */
+  /** Pro creators can publish unlisted projects (shareable link only). */
   isPro?: boolean;
 }
 
@@ -76,7 +76,7 @@ export function SubmitForm({ isPro }: SubmitFormProps = {}) {
                 htmlFor="name"
                 className="block text-sm font-medium text-zinc-900 dark:text-zinc-50"
               >
-                App name <span className="text-red-500">*</span>
+                Project name <span className="text-red-500">*</span>
               </label>
               <input
                 id="name"
@@ -88,7 +88,7 @@ export function SubmitForm({ isPro }: SubmitFormProps = {}) {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="mt-1.5 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-500 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-50 dark:placeholder-zinc-400"
-                placeholder="My App"
+                placeholder="My project"
               />
               {state?.fieldErrors?.name && (
                 <p className="mt-1 text-sm text-red-600 dark:text-red-400">
@@ -126,7 +126,7 @@ export function SubmitForm({ isPro }: SubmitFormProps = {}) {
                 htmlFor="app_url"
                 className="block text-sm font-medium text-zinc-900 dark:text-zinc-50"
               >
-                App URL <span className="text-red-500">*</span>
+                Project URL <span className="text-red-500">*</span>
               </label>
               <input
                 id="app_url"
@@ -238,7 +238,7 @@ export function SubmitForm({ isPro }: SubmitFormProps = {}) {
                   <option value="unlisted">Unlisted — shareable link only (investors, testers, hiring)</option>
                 </select>
                 <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                  Unlisted apps don’t appear in the catalog; share the direct link with anyone.
+                  Unlisted projects don’t appear in the catalog; share the direct link with anyone.
                 </p>
               </div>
             )}
@@ -253,7 +253,7 @@ export function SubmitForm({ isPro }: SubmitFormProps = {}) {
                 className="mt-1 h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-900 dark:checked:bg-zinc-100"
               />
               <label htmlFor="byok_required" className="text-sm text-zinc-700 dark:text-zinc-300">
-                BYOK required — app uses an LLM and needs users to add API keys in Settings (OpenAI
+                BYOK required — project uses an LLM and needs users to add API keys in Settings (OpenAI
                 / Anthropic).
               </label>
             </div>
@@ -363,7 +363,7 @@ export function SubmitForm({ isPro }: SubmitFormProps = {}) {
                 disabled={isPending}
                 className="rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
               >
-                {isPending ? "Submitting…" : "Submit app"}
+                {isPending ? "Publishing…" : "Publish project"}
               </button>
             </div>
           </form>

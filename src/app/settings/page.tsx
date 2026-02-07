@@ -31,7 +31,7 @@ export default async function SettingsPage() {
           <section className="mt-8">
             <h2 className="text-lg font-medium text-zinc-900 dark:text-zinc-50">API Keys</h2>
             <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-              For apps that use OpenAI or Anthropic. Add keys here so BYOK-compatible apps can use
+              For projects that use OpenAI or Anthropic. Add keys here so BYOK-compatible projects can use
               them. Never sent to our server.
             </p>
             <div className="mt-4">

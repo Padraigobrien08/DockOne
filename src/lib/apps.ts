@@ -84,6 +84,23 @@ async function getVoteCountsByAppIds(
   return counts;
 }
 
+/** Lightweight stats for homepage social proof (approved public apps only). */
+export async function getHomepageStats(): Promise<{
+  projectCount: number;
+  creatorCount: number;
+}> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("apps")
+    .select("owner_id")
+    .eq("status", "approved")
+    .eq("visibility", "public");
+  const rows = (data ?? []) as { owner_id: string }[];
+  const projectCount = rows.length;
+  const creatorCount = new Set(rows.map((r) => r.owner_id)).size;
+  return { projectCount, creatorCount };
+}
+
 /** Fetch approved apps for the list (public only). */
 export async function getApprovedApps(): Promise<AppListItem[]> {
   const supabase = await createClient();

@@ -18,7 +18,7 @@ export async function generateMetadata({
   return {
     title: collection.name,
     description:
-      collection.description ?? `Curated collection: ${collection.name}. ${collection.apps.length} apps.`,
+      collection.description ?? `Curated collection: ${collection.name}. ${collection.apps.length} projects.`,
   };
 }
 
@@ -64,7 +64,7 @@ export default async function CollectionDetailPage({
 
         {collection.apps.length === 0 ? (
           <p className="mt-8 text-sm text-zinc-500 dark:text-zinc-400">
-            No apps in this collection yet.
+            No projects in this collection yet.
           </p>
         ) : (
           <ul className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">

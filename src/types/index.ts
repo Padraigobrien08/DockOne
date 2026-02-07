@@ -23,6 +23,16 @@ export const APP_LIFECYCLE_LABELS: Record<AppLifecycle, string> = {
   shipped_elsewhere: "Graduated",
 };
 
+/** Semantic colours for lifecycle on cards: grey (neutral/in progress), purple (seeking input), green (graduated). */
+export const APP_LIFECYCLE_CARD_CLASS: Record<AppLifecycle, string> = {
+  wip: "bg-zinc-100 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-200",
+  actively_building: "bg-zinc-100 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-200",
+  looking_for_feedback: "bg-violet-100 text-violet-800 dark:bg-violet-900/40 dark:text-violet-200",
+  looking_for_users: "bg-violet-100 text-violet-800 dark:bg-violet-900/40 dark:text-violet-200",
+  dormant: "bg-zinc-100 text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300",
+  shipped_elsewhere: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200",
+};
+
 /** Creator reputation stats (approved apps only). */
 export interface CreatorStats {
   /** Total votes across all approved apps. */

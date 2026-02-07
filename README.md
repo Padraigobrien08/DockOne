@@ -15,7 +15,7 @@ A home for software projects that work — without the pressure to productise.
 - Browse apps (cards, tags, search, sort)
 - App detail page (description, links, screenshots)
 - Creator profiles (public)
-- Submit an app (authenticated)
+- Publish a project (authenticated)
 - Lightweight moderation: new submissions are "pending" until approved (admin toggle)
 - BYOK: if an app uses an LLM, users can input their own API key in settings; keys stored only in `localStorage`, never sent to server
 

@@ -72,7 +72,7 @@ export function AdminCollectionsList({ collections }: AdminCollectionsListProps)
           <div className="mt-4 flex flex-wrap items-center gap-2">
             <input
               type="text"
-              placeholder="App slug (e.g. hello-world)"
+              placeholder="Project slug (e.g. hello-world)"
               className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-500 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-50 dark:placeholder-zinc-400"
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
@@ -98,7 +98,7 @@ export function AdminCollectionsList({ collections }: AdminCollectionsListProps)
           </div>
           <ul className="mt-4 space-y-2">
             {c.apps.length === 0 ? (
-              <li className="text-sm text-zinc-500 dark:text-zinc-400">No apps yet.</li>
+              <li className="text-sm text-zinc-500 dark:text-zinc-400">No projects yet.</li>
             ) : (
               c.apps.map((app) => (
                 <li

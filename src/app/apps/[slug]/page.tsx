@@ -19,7 +19,7 @@ import { FeaturedButton } from "@/components/apps/featured-button";
 import { BoostButton } from "@/components/apps/boost-button";
 import { getActiveBoosts, countActiveBoosts, MAX_ACTIVE_BOOSTS } from "@/lib/boosts";
 import type { Metadata } from "next";
-import { APP_LIFECYCLE_LABELS } from "@/types";
+import { APP_LIFECYCLE_LABELS, APP_LIFECYCLE_CARD_CLASS } from "@/types";
 import type { AppDetail } from "@/types";
 
 export async function generateMetadata({
@@ -95,7 +95,7 @@ export default async function AppDetailPage({
         <div className="mx-auto max-w-3xl">
           {showPendingBanner && (
             <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-200">
-              <strong>Pending approval.</strong> Your app is under review and will appear in the
+              <strong>Pending approval.</strong> Your project is under review and will appear in the
               browse list once approved.
             </div>
           )}
@@ -106,12 +106,12 @@ export default async function AppDetailPage({
           )}
           {app.byok_required && (
             <div className="mb-6 rounded-lg border border-violet-200 bg-violet-50 px-4 py-3 text-sm text-violet-800 dark:border-violet-800 dark:bg-violet-900/20 dark:text-violet-200">
-              <strong>BYOK compatible.</strong> This app uses an LLM. Add your OpenAI or Anthropic
+              <strong>BYOK compatible.</strong> This project uses an LLM. Add your OpenAI or Anthropic
               API key in{" "}
               <Link href="/settings" className="font-medium underline hover:no-underline">
                 Settings
               </Link>{" "}
-              so the app can use it. Keys stay in your browser and are never sent to our server.
+              so the project can use it. Keys stay in your browser and are never sent to our server.
             </div>
           )}
           <div className="flex flex-wrap items-start justify-between gap-4">
@@ -124,7 +124,9 @@ export default async function AppDetailPage({
               )}
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-sm font-medium text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+              <span
+                className={`rounded-full px-3 py-1 text-sm font-medium ${APP_LIFECYCLE_CARD_CLASS[app.lifecycle]}`}
+              >
                 {APP_LIFECYCLE_LABELS[app.lifecycle]}
               </span>
               {isBoosted && (
@@ -204,7 +206,7 @@ export default async function AppDetailPage({
                   highlightPro={!!app.owner.isPro}
                   className="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
                 >
-                  Open app
+                  Open project
                   <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       strokeLinecap="round"

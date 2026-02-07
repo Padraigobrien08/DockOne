@@ -32,12 +32,12 @@ export default async function AdminPage() {
       <Container>
         <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">Moderation</h1>
         <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-          Pending apps, reports, and staff collections.
+          Pending projects, reports, and staff collections.
         </p>
 
         <section className="mt-10">
           <h2 className="text-lg font-medium text-zinc-900 dark:text-zinc-50">
-            Pending apps
+            Pending projects
           </h2>
           <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
             Approve or reject with an optional reason.
@@ -52,7 +52,7 @@ export default async function AdminPage() {
             Reports
           </h2>
           <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-            User-submitted reports. Review and take action on the app if needed.
+            User-submitted reports. Review and take action on the project if needed.
           </p>
           <div className="mt-4">
             <ReportsList reports={reports} />
@@ -64,7 +64,7 @@ export default async function AdminPage() {
             Staff collections
           </h2>
           <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-            Curate Staff picks, Best BYOK tools, Best dev utilities. Add or remove apps by slug.
+            Curate Staff picks, Best BYOK tools, Best dev utilities. Add or remove projects by slug.
           </p>
           <div className="mt-4">
             <AdminCollectionsList collections={staffWithApps.filter(Boolean)} />

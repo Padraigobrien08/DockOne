@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { SITE_NAME, SITE_DESCRIPTION } from "@/lib/constants";
 import { Container } from "@/components/ui/container";
+import { getHomepageStats } from "@/lib/apps";
 
 const valueProps = [
   {
@@ -11,7 +12,7 @@ const valueProps = [
   {
     title: "BYOK supported",
     description:
-      "Apps that use LLMs let you bring your own API key. Stored only in your browser, never on our servers.",
+      "Projects that use LLMs let you bring your own API key. Stored only in your browser, never on our servers.",
   },
   {
     title: "No promises, just useful tools",
@@ -19,31 +20,44 @@ const valueProps = [
   },
 ] as const;
 
-export default function Home() {
+export default async function Home() {
+  const { projectCount, creatorCount } = await getHomepageStats();
+
   return (
     <div className="py-12 sm:py-16 lg:py-20">
       <Container>
         <div className="mx-auto max-w-2xl text-center">
-          <h1 className="text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-4xl">
+          <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-4xl sm:leading-tight">
             {SITE_NAME}
           </h1>
-          <p className="mt-3 text-lg text-zinc-600 dark:text-zinc-400">
+          <p className="mt-4 text-lg text-zinc-600 dark:text-zinc-400 sm:text-xl">
             {SITE_DESCRIPTION}
           </p>
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+          <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
             <Link
               href="/apps"
-              className="rounded-lg bg-zinc-900 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+              className="w-full rounded-lg bg-zinc-900 px-6 py-3 text-base font-semibold text-white transition hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 sm:w-auto"
             >
-              Browse apps
+              Browse projects
             </Link>
             <Link
               href="/submit"
-              className="rounded-lg border border-zinc-300 px-5 py-2.5 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
+              className="w-full rounded-lg border border-zinc-300 px-6 py-3 text-base font-medium text-zinc-700 transition hover:bg-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800 sm:w-auto"
             >
-              Submit an app
+              Publish a project
             </Link>
           </div>
+          <p className="mt-6 text-sm text-zinc-500 dark:text-zinc-400">
+            {projectCount > 0 || creatorCount > 0 ? (
+              <>
+                {projectCount.toLocaleString()} project{projectCount !== 1 ? "s" : ""} ·{" "}
+                {creatorCount.toLocaleString()} creator{creatorCount !== 1 ? "s" : ""} · Updated
+                daily
+              </>
+            ) : (
+              "Updated daily"
+            )}
+          </p>
         </div>
 
         <ul className="mx-auto mt-16 grid max-w-3xl gap-8 sm:mt-20 sm:gap-10" role="list">

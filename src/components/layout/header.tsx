@@ -34,7 +34,7 @@ export async function Header() {
               href="/submit"
               className="text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-50 transition-colors"
             >
-              Submit
+              Publish
             </Link>
             {user ? (
               <>

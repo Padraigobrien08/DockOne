@@ -73,14 +73,14 @@ export default async function UserProfilePage({
                   <span className="font-medium text-zinc-900 dark:text-zinc-100">
                     {stats.approvedAppsCount}
                   </span>{" "}
-                  approved {stats.approvedAppsCount === 1 ? "app" : "apps"}
+                  approved {stats.approvedAppsCount === 1 ? "project" : "projects"}
                 </div>
                 {stats.appsWithMinVotes > 0 && (
                   <div>
                     <span className="font-medium text-zinc-900 dark:text-zinc-100">
                       {stats.appsWithMinVotes}
                     </span>{" "}
-                    app{stats.appsWithMinVotes === 1 ? "" : "s"} with{" "}
+                    project{stats.appsWithMinVotes === 1 ? "" : "s"} with{" "}
                     {CREATOR_MIN_VOTES_FOR_HIGHLIGHT}+ votes
                   </div>
                 )}
@@ -89,9 +89,9 @@ export default async function UserProfilePage({
           </div>
 
           <section className="mt-10">
-            <h2 className="text-lg font-medium text-zinc-900 dark:text-zinc-50">Apps</h2>
+            <h2 className="text-lg font-medium text-zinc-900 dark:text-zinc-50">Projects</h2>
             {apps.length === 0 ? (
-              <p className="mt-4 text-sm text-zinc-500 dark:text-zinc-400">No approved apps yet.</p>
+              <p className="mt-4 text-sm text-zinc-500 dark:text-zinc-400">No approved projects yet.</p>
             ) : (
               <ul className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {apps.map((app) => (

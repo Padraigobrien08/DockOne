@@ -12,7 +12,7 @@ export default async function SubmitPage() {
   return (
     <div className="py-8 sm:py-12">
       <Container>
-        <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">Submit an app</h1>
+        <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">Publish a project</h1>
         <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
           New submissions start as pending until approved. Step 1: basics. Step 2: description and
           media.
