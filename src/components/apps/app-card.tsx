@@ -11,6 +11,8 @@ interface AppCardProps {
   isBoosted?: boolean;
   /** Heading level for the app name (default 2). Use 3 when card is under an h2 section, e.g. landing. */
   headingLevel?: 2 | 3;
+  /** When set, show this label instead of per-app momentum hint (e.g. "New this week" for curated sections). */
+  overrideMomentumHint?: string;
 }
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -32,10 +34,10 @@ function getMomentumHint(app: AppListItem): string | null {
   return null;
 }
 
-export function AppCard({ app, creatorStats, isBoosted, headingLevel = 2 }: AppCardProps) {
+export function AppCard({ app, creatorStats, isBoosted, headingLevel = 2, overrideMomentumHint }: AppCardProps) {
   const displayName = app.owner.display_name || app.owner.username;
   const lifecycle = (app.lifecycle ?? "wip") as AppLifecycle;
-  const momentumHint = getMomentumHint(app);
+  const momentumHint = overrideMomentumHint ?? getMomentumHint(app);
   const HeadingTag = headingLevel === 3 ? "h3" : "h2";
 
   return (

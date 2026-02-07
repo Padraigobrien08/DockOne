@@ -136,3 +136,24 @@ body {
     transform: none;
   }
 }
+
+/* Hero visual: very slow subtle float (respects prefers-reduced-motion) */
+@keyframes hero-visual-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.hero-visual-float {
+  animation: hero-visual-float 8s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-visual-float {
+    animation: none;
+  }
+}
