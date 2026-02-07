@@ -73,7 +73,7 @@ export function HeaderNav({ isLoggedIn }: HeaderNavProps) {
           )}
           <Link
             href="/apps"
-            className="inline-flex items-center justify-center rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-zinc-950"
+            className="inline-flex items-center justify-center rounded-lg border border-violet-500/40 bg-violet-600/90 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-violet-500/90 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-zinc-950"
           >
             Browse projects →
           </Link>

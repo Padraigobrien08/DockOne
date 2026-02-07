@@ -44,7 +44,7 @@ export function HeroMagicLinkForm() {
         id={SUCCESS_ID}
         role="status"
         aria-live="polite"
-        className="rounded-lg border border-emerald-800/60 bg-emerald-950/30 px-4 py-3 text-sm text-emerald-200"
+        className="w-full rounded-lg border border-emerald-800/60 bg-emerald-950/30 px-4 py-3 text-sm text-emerald-200"
       >
         <p className="font-medium">Check your inbox.</p>
         <p className="mt-1 text-emerald-300/90">
@@ -59,11 +59,11 @@ export function HeroMagicLinkForm() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex flex-col gap-3"
+      className="flex w-full flex-col gap-3"
       aria-label="Sign in with magic link"
       noValidate
     >
-      <div className="flex flex-col gap-3 sm:flex-row sm:gap-0">
+      <div className="flex w-full flex-col gap-3 sm:flex-row sm:gap-0">
         <label htmlFor={EMAIL_INPUT_ID} className="sr-only">
           Email address
         </label>
@@ -79,12 +79,12 @@ export function HeroMagicLinkForm() {
           disabled={loading}
           aria-describedby={describedBy}
           aria-invalid={!!error}
-          className="min-w-0 flex-1 rounded-l-lg border border-zinc-600 bg-zinc-900/50 px-4 py-3 text-sm text-zinc-100 placeholder-zinc-500 focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500 disabled:opacity-60 sm:rounded-r-none"
+          className="min-w-0 flex-1 rounded-lg border border-zinc-700/70 bg-zinc-800/40 px-4 py-3 text-sm text-zinc-100 placeholder-zinc-500 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:ring-offset-zinc-950 disabled:opacity-60 sm:rounded-r-none"
         />
         <button
           type="submit"
           disabled={loading}
-          className="rounded-lg bg-violet-600 px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:ring-offset-zinc-950 disabled:opacity-60 disabled:pointer-events-none sm:rounded-l-none"
+          className="w-full rounded-lg bg-violet-600 px-5 py-3.5 text-sm font-medium text-white shadow-lg shadow-violet-500/25 transition-colors hover:bg-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:ring-offset-zinc-950 disabled:opacity-60 disabled:pointer-events-none sm:w-auto sm:rounded-l-none"
         >
           {loading ? "Sending…" : "Send magic link"}
         </button>

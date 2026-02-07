@@ -25,31 +25,52 @@ export default async function Home() {
   return (
     <div className="min-h-screen overflow-x-hidden bg-zinc-950 text-zinc-100">
       {/* 1. Hero: Stripe-like 2-column — left: copy + email capture, right: visual */}
-      <section aria-labelledby="hero-heading" className="border-b border-zinc-800/50">
-        <Section className="py-14 md:py-16 lg:py-20">
+      <section aria-labelledby="hero-heading" className="relative border-b border-zinc-800/50 overflow-hidden">
+        {/* Aurora: purple/indigo glow centered behind hero, fades at edges — no flat wash */}
+        <div
+          className="pointer-events-none absolute inset-0 z-0"
+          style={{
+            maskImage: "radial-gradient(ellipse 75% 65% at 50% 50%, black 18%, transparent 58%)",
+            WebkitMaskImage: "radial-gradient(ellipse 75% 65% at 50% 50%, black 18%, transparent 58%)",
+          }}
+        >
+          <div
+            className="absolute inset-[-15%]"
+            style={{
+              filter: "blur(64px)",
+              background: [
+                "radial-gradient(ellipse 45% 40% at 42% 50%, rgba(99, 102, 241, 0.28) 0%, transparent 42%)",
+                "radial-gradient(ellipse 40% 38% at 58% 50%, rgba(139, 92, 246, 0.24) 0%, transparent 40%)",
+                "radial-gradient(ellipse 35% 35% at 50% 52%, rgba(129, 140, 248, 0.2) 0%, transparent 38%)",
+              ].join(", "),
+            }}
+          />
+        </div>
+        <Section className="relative z-10 pt-12 pb-8 md:pt-14 md:pb-10 lg:pt-16 lg:pb-12">
           <Container size="wide">
-            <div className="grid grid-cols-1 items-center gap-12 md:grid-cols-2 md:gap-16 lg:gap-20 md:items-center">
-              {/* Left: eyebrow → H1 → subhead → email capture */}
-              <div className="min-w-0 max-w-xl flex flex-col">
-                <p className="hero-entrance text-xs font-medium uppercase tracking-widest text-zinc-500">
+            <div className="grid grid-cols-1 items-start gap-12 md:grid-cols-2 md:gap-16 lg:gap-20">
+              {/* Left: eyebrow → H1 → subhead → email capture — clean left edge */}
+              <div className="min-w-0 w-full max-w-2xl flex flex-col">
+                <p className="hero-entrance text-xs font-medium uppercase tracking-[0.12em] text-zinc-400">
                   Projects that work. No pitch required.
                 </p>
                 <h1
                   id="hero-heading"
-                  className="hero-entrance hero-entrance-delay-1 mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl md:text-5xl lg:text-6xl leading-[1.1]"
+                  className="hero-entrance hero-entrance-delay-1 mt-2 text-3xl font-semibold tracking-tight text-white sm:text-4xl md:text-5xl lg:text-6xl leading-[1.1]"
                 >
-                  Not everything you build needs to become a product.
+                  <span className="block whitespace-nowrap">Not everything you build</span>
+                  <span className="block whitespace-nowrap">needs to become a product.</span>
                 </h1>
-                <p className="hero-entrance hero-entrance-delay-2 mt-5 max-w-prose text-lg leading-relaxed text-zinc-300/90 md:mt-6 md:text-xl">
+                <p className="hero-entrance hero-entrance-delay-2 mt-4 max-w-prose text-lg leading-relaxed text-zinc-300/90 md:mt-5 md:text-xl">
                   Publish working projects without marketing, scaling, or
                   operational pressure.
                 </p>
-                <div className="hero-entrance hero-entrance-delay-3 mt-8 md:mt-10">
+                <div className="hero-entrance hero-entrance-delay-3 mt-6 w-full md:mt-8">
                   <HeroMagicLinkForm />
                 </div>
               </div>
-              {/* Right: background visual container */}
-              <div className="relative flex min-h-[220px] items-center justify-center md:min-h-[260px] lg:min-h-[280px]">
+              {/* Right: card stack — aligned with headline block */}
+              <div className="relative flex min-h-[280px] items-center justify-center pt-6 md:min-h-[360px] md:pt-7 lg:min-h-[400px]">
                 <HeroVisual projects={landingApps.slice(0, 3)} />
               </div>
             </div>
@@ -57,8 +78,8 @@ export default async function Home() {
         </Section>
       </section>
 
-      {/* 2. Proof strip: distinct band beneath hero */}
-      <section className="border-t border-b border-zinc-800/40 bg-zinc-900/40">
+      {/* 2. Proof strip: band docked under hero */}
+      <section className="border-t border-b border-zinc-700/60 bg-zinc-900/40">
         <Section className="py-0">
           <Container size="wide">
             <ProofStrip

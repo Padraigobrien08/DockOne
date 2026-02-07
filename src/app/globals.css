@@ -137,23 +137,23 @@ body {
   }
 }
 
-/* Hero visual: very slow subtle float (respects prefers-reduced-motion) */
-@keyframes hero-visual-float {
+/* Hero visual stack: very subtle float (respects prefers-reduced-motion) */
+@keyframes hero-visual-stack-float {
   0%,
   100% {
     transform: translateY(0);
   }
   50% {
-    transform: translateY(-8px);
+    transform: translateY(-4px);
   }
 }
 
-.hero-visual-float {
-  animation: hero-visual-float 8s ease-in-out infinite;
+.hero-visual-stack {
+  animation: hero-visual-stack-float 10s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hero-visual-float {
+  .hero-visual-stack {
     animation: none;
   }
 }
