@@ -46,7 +46,7 @@ Shows a greeting. Nothing fancy — just enough to see the app detail page and m
     owner_id,
     'todo-wip',
     'Todo WIP',
-    'Unfinished todo list',
+    'Simple todo list project',
     'Work in progress. Add, complete, and delete items. Local storage only for now.',
     'approved',
     'https://example.com/todo',

@@ -1,11 +1,12 @@
 import Link from "next/link";
-import { SITE_NAME } from "@/lib/constants";
+import { SITE_NAME, SITE_DESCRIPTION } from "@/lib/constants";
 import { Container } from "@/components/ui/container";
 
 const valueProps = [
   {
-    title: "Show unfinished apps",
-    description: "Creators share work-in-progress apps that work—no polish required.",
+    title: "Discover projects & tools",
+    description:
+      "Creators share working software with intentionally limited scope. No polish required.",
   },
   {
     title: "BYOK supported",
@@ -27,7 +28,7 @@ export default function Home() {
             {SITE_NAME}
           </h1>
           <p className="mt-3 text-lg text-zinc-600 dark:text-zinc-400">
-            A hub where creators post unfinished but functional apps.
+            {SITE_DESCRIPTION}
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <Link
