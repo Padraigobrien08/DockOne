@@ -3,6 +3,7 @@ import { Container } from "@/components/ui/container";
 import { Section } from "@/components/ui/section";
 import { AppCard } from "@/components/apps/app-card";
 import { HeroVisual } from "@/components/landing/hero-visual";
+import { HeroMagicLinkForm } from "@/components/landing/hero-magic-link-form";
 import { ProofStrip } from "@/components/landing/proof-strip";
 import { getApprovedApps } from "@/lib/apps";
 import { getActiveBoosts } from "@/lib/boosts";
@@ -44,22 +45,7 @@ export default async function Home() {
                   operational pressure.
                 </p>
                 <div className="hero-entrance hero-entrance-delay-3 mt-8 md:mt-10">
-                  <form className="flex flex-col gap-3 sm:flex-row sm:gap-0" action="#" method="post" aria-label="Email signup">
-                    <label htmlFor="hero-email" className="sr-only">Email</label>
-                    <input
-                      id="hero-email"
-                      type="email"
-                      name="email"
-                      placeholder="you@example.com"
-                      className="min-w-0 flex-1 rounded-l-lg border border-zinc-600 bg-zinc-900/50 px-4 py-3 text-sm text-zinc-100 placeholder-zinc-500 focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500 sm:rounded-r-none"
-                    />
-                    <button
-                      type="submit"
-                      className="rounded-lg bg-violet-600 px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:ring-offset-zinc-950 sm:rounded-l-none"
-                    >
-                      Get updates
-                    </button>
-                  </form>
+                  <HeroMagicLinkForm />
                 </div>
               </div>
               {/* Right: background visual container */}
