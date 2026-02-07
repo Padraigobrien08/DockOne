@@ -16,10 +16,13 @@ export default async function AppsPage() {
 
   return (
     <div className="py-8 sm:py-12">
-      <Container>
+      <Container size="xl">
         <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">Projects</h1>
         <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
           Working software you can see and understand — no launch, no pitch.
+        </p>
+        <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-500">
+          A curated selection of working projects.
         </p>
         <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
           <Link href="/collections" className="underline hover:no-underline">
@@ -35,7 +38,7 @@ export default async function AppsPage() {
             <h2 id="featured" className="text-lg font-medium text-zinc-900 dark:text-zinc-50">
               Featured <span className="text-sm font-normal text-zinc-500 dark:text-zinc-400">(24h)</span>
             </h2>
-            <ul className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <ul className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {featured.map((app) => (
                 <li key={app.id}>
                   <AppCard

@@ -75,8 +75,23 @@ export function AppCard({ app, creatorStats, isBoosted, headingLevel = 2, overri
               className="h-full w-full object-cover object-center transition group-hover:scale-[1.02]"
             />
           ) : (
-            <div className="flex h-full items-center justify-center text-zinc-400 dark:text-zinc-500">
-              No image
+            <div
+              className="relative flex h-full w-full items-center justify-center overflow-hidden bg-gradient-to-br from-zinc-200 via-zinc-100 to-zinc-200 dark:from-zinc-800 dark:via-zinc-800/95 dark:to-zinc-900"
+              aria-hidden
+            >
+              <div
+                className="pointer-events-none absolute inset-0 opacity-40 dark:opacity-30"
+                style={{
+                  background: "radial-gradient(ellipse 70% 60% at 50% 50%, rgba(139, 92, 246, 0.08) 0%, transparent 60%)",
+                }}
+              />
+              <span
+                className="select-none font-light tracking-tight text-zinc-300/50 dark:text-zinc-600/50"
+                style={{ fontSize: "clamp(3rem, 20vw, 5rem)" }}
+                aria-hidden
+              >
+                {(app.name.charAt(0) || "?").toUpperCase()}
+              </span>
             </div>
           )}
           {imageStyle === "premium" && app.primary_image_url && (
@@ -93,7 +108,7 @@ export function AppCard({ app, creatorStats, isBoosted, headingLevel = 2, overri
           )}
           {displayMomentumHint && (
             <span
-              className="absolute left-3 top-3 z-10 rounded-full bg-white/90 px-2 py-1 text-xs font-medium text-zinc-600 shadow-sm dark:bg-zinc-900/90 dark:text-zinc-300"
+              className="absolute left-3 top-3 z-10 rounded-full bg-white/60 px-1.5 py-0.5 text-[11px] font-normal text-zinc-500 dark:bg-zinc-900/60 dark:text-zinc-500"
               aria-label={`Momentum: ${displayMomentumHint}`}
             >
               {displayMomentumHint}
@@ -101,7 +116,7 @@ export function AppCard({ app, creatorStats, isBoosted, headingLevel = 2, overri
           )}
           {effectiveStatusPills !== "minimal" && (
             <span
-              className={`absolute right-3 top-3 z-10 rounded-full px-2 py-1 text-xs font-medium ${APP_LIFECYCLE_CARD_CLASS[lifecycle]}`}
+              className={`absolute right-3 top-3 z-10 rounded-full px-2.5 py-1 text-xs font-semibold ${APP_LIFECYCLE_CARD_CLASS[lifecycle]}`}
               aria-label={`Status: ${APP_LIFECYCLE_LABELS[lifecycle]}`}
             >
               {APP_LIFECYCLE_LABELS[lifecycle]}
@@ -109,7 +124,7 @@ export function AppCard({ app, creatorStats, isBoosted, headingLevel = 2, overri
           )}
         </div>
         <div className="p-4 pb-3">
-          <HeadingTag className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 group-hover:underline">
+          <HeadingTag className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 md:text-2xl group-hover:underline">
             {app.name}
           </HeadingTag>
           {app.tagline && (
@@ -125,8 +140,8 @@ export function AppCard({ app, creatorStats, isBoosted, headingLevel = 2, overri
             href={`/u/${app.owner.username}`}
             className={
               effectiveMetadataStyle === "landing"
-                ? "flex items-center gap-1.5 text-[11px] text-zinc-500 hover:text-zinc-400 dark:text-zinc-600 dark:hover:text-zinc-500"
-                : "flex items-center gap-1.5 text-[11px] text-zinc-500 hover:text-zinc-600 dark:text-zinc-500 dark:hover:text-zinc-400"
+                ? "flex items-center gap-1.5 text-[10px] text-zinc-500 hover:text-zinc-400 dark:text-zinc-600 dark:hover:text-zinc-500"
+                : "flex items-center gap-1.5 text-[10px] text-zinc-500 hover:text-zinc-600 dark:text-zinc-500 dark:hover:text-zinc-400"
             }
           >
             {app.owner.avatar_url ? (
@@ -153,46 +168,45 @@ export function AppCard({ app, creatorStats, isBoosted, headingLevel = 2, overri
             </span>
           )}
           {effectiveMetadataStyle !== "landing" && typeof app.vote_count === "number" && app.vote_count > 0 && (
-            <span className="text-[11px] text-zinc-400 dark:text-zinc-500 tabular-nums">
+            <span className="text-[10px] text-zinc-400 dark:text-zinc-500 tabular-nums">
               {app.vote_count} interested
             </span>
           )}
         </div>
-        <div className="mt-2 flex flex-wrap items-center gap-1.5">
+        <div className="mt-1.5 flex flex-wrap items-center gap-1">
           {isBoosted && (
-            <span className="rounded bg-sky-100/80 px-1.5 py-0.5 text-[11px] font-medium text-sky-700 dark:bg-sky-900/50 dark:text-sky-200">
+            <span className="rounded bg-sky-100/60 px-1.5 py-0.5 text-[10px] font-normal text-sky-600/90 dark:bg-sky-900/40 dark:text-sky-300/90">
               Boosted
             </span>
           )}
           {app.visibility === "unlisted" && (
-            <span className="rounded bg-zinc-200/80 px-1.5 py-0.5 text-[11px] font-medium text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300">
+            <span className="rounded bg-zinc-200/60 px-1.5 py-0.5 text-[10px] font-normal text-zinc-500 dark:bg-zinc-700/80 dark:text-zinc-400">
               Unlisted
             </span>
           )}
           {app.byok_required && (
-            <span className="rounded bg-violet-100/80 px-1.5 py-0.5 text-[11px] font-medium text-violet-700 dark:bg-violet-900/40 dark:text-violet-300">
+            <span className="rounded bg-violet-100/50 px-1.5 py-0.5 text-[10px] font-normal text-violet-600/80 dark:bg-violet-950/30 dark:text-violet-400/80">
               BYOK
             </span>
           )}
           {app.tags.slice(0, 5).map((tag) => {
             const variant = getTagVariant(tag);
             const subtle = effectiveTagsStyle === "subtle";
-            const base = subtle ? "text-[11px] px-1 py-0.5" : "text-xs px-1.5 py-0.5";
+            const base = "px-1.5 py-0.5 text-[10px] font-normal";
             const stateClass =
-              "rounded-sm border-l-2 border-zinc-400/40 pl-1.5 pr-1.5 dark:border-zinc-500/40 text-zinc-600 dark:text-zinc-400";
+              "rounded-sm border-l border-zinc-400/25 pl-1.5 pr-1.5 dark:border-zinc-500/25 text-zinc-500/90 dark:text-zinc-500";
             const requirementClass =
-              "rounded-sm bg-violet-50/70 dark:bg-violet-950/25 text-violet-700/90 dark:text-violet-300/90";
+              "rounded-sm bg-violet-50/40 dark:bg-violet-950/15 text-violet-600/80 dark:text-violet-400/80";
             const defaultClass =
-              "rounded-sm bg-zinc-100/90 dark:bg-zinc-800/70 text-zinc-600 dark:text-zinc-400";
+              "rounded-sm bg-zinc-100/70 dark:bg-zinc-800/50 text-zinc-500/90 dark:text-zinc-500";
             const variantClass =
               variant === "state"
                 ? stateClass
                 : variant === "requirement"
                   ? requirementClass
                   : defaultClass;
-            const mutedDefault = subtle && variant === "default" ? "text-zinc-500 dark:text-zinc-500" : "";
             return (
-              <span key={tag} className={[base, variantClass, mutedDefault].filter(Boolean).join(" ").trim()}>
+              <span key={tag} className={[base, variantClass].filter(Boolean).join(" ").trim()}>
                 {tag}
               </span>
             );

@@ -186,6 +186,9 @@ export function AppsList({ apps, creatorStatsMap, boostMap }: AppsListProps) {
             </div>
           )}
         </div>
+        <p className="text-[11px] leading-relaxed text-zinc-500 dark:text-zinc-500">
+          Project status reflects what the creator is looking for — feedback, users, or quiet use.
+        </p>
       </div>
 
       {filtered.length === 0 ? (
@@ -193,7 +196,7 @@ export function AppsList({ apps, creatorStatsMap, boostMap }: AppsListProps) {
           No projects match your filters.
         </p>
       ) : (
-        <ul className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {filtered.map((app) => (
             <li key={app.id}>
               <AppCard
