@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { getTagVariant } from "@/lib/tag-variants";
-import { APP_LIFECYCLE_LABELS, APP_LIFECYCLE_CARD_CLASS } from "@/types";
+import { APP_LIFECYCLE_LABELS, APP_LIFECYCLE_CARD_CLASS, APP_LIFECYCLE_IMAGE_OVERLAY } from "@/types";
 import type { AppListItem, AppLifecycle, CreatorStats } from "@/types";
 
 interface AppCardProps {
@@ -79,12 +79,6 @@ export function AppCard({ app, creatorStats, isBoosted, headingLevel = 2, overri
               className="relative flex h-full w-full items-center justify-center overflow-hidden bg-gradient-to-br from-zinc-200 via-zinc-100 to-zinc-200 dark:from-zinc-800 dark:via-zinc-800/95 dark:to-zinc-900"
               aria-hidden
             >
-              <div
-                className="pointer-events-none absolute inset-0 opacity-40 dark:opacity-30"
-                style={{
-                  background: "radial-gradient(ellipse 70% 60% at 50% 50%, rgba(139, 92, 246, 0.08) 0%, transparent 60%)",
-                }}
-              />
               <span
                 className="select-none font-light tracking-tight text-zinc-300/50 dark:text-zinc-600/50"
                 style={{ fontSize: "clamp(3rem, 20vw, 5rem)" }}
@@ -94,6 +88,12 @@ export function AppCard({ app, creatorStats, isBoosted, headingLevel = 2, overri
               </span>
             </div>
           )}
+          {/* Lifecycle-based tint on image/background only; dark, muted, grayscale-safe */}
+          <div
+            className="pointer-events-none absolute inset-0 z-[1]"
+            style={{ background: APP_LIFECYCLE_IMAGE_OVERLAY[lifecycle] }}
+            aria-hidden
+          />
           {imageStyle === "premium" && app.primary_image_url && (
             <>
               <div

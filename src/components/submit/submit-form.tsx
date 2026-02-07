@@ -30,7 +30,6 @@ export function SubmitForm({ isPro }: SubmitFormProps = {}) {
   const [byokRequired, setByokRequired] = useState(false);
   const [lifecycle, setLifecycle] = useState<AppLifecycle>("wip");
   const [visibility, setVisibility] = useState<AppVisibility>("public");
-  const [graduatedUrl, setGraduatedUrl] = useState("");
   const [description, setDescription] = useState("");
 
   const canProceedStep1 =
@@ -220,34 +219,6 @@ export function SubmitForm({ isPro }: SubmitFormProps = {}) {
               </p>
             </div>
 
-            {lifecycle === "shipped_elsewhere" && (
-              <div>
-                <label
-                  htmlFor="graduated_url"
-                  className="block text-sm font-medium text-zinc-900 dark:text-zinc-50"
-                >
-                  Where it went <span className="text-zinc-500 dark:text-zinc-400">(optional)</span>
-                </label>
-                <input
-                  id="graduated_url"
-                  name="graduated_url"
-                  type="url"
-                  value={graduatedUrl}
-                  onChange={(e) => setGraduatedUrl(e.target.value)}
-                  placeholder="e.g. GitHub repo, product page, startup site"
-                  className="mt-1.5 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-500 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-50 dark:placeholder-zinc-400"
-                />
-                <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                  Link to where the project lives now — DockOne becomes part of its story.
-                </p>
-                {state?.fieldErrors?.graduated_url && (
-                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                    {state.fieldErrors.graduated_url}
-                  </p>
-                )}
-              </div>
-            )}
-
             {isPro && (
               <div>
                 <label
@@ -309,7 +280,6 @@ export function SubmitForm({ isPro }: SubmitFormProps = {}) {
             <input type="hidden" name="byok_required" value={byokRequired ? "on" : ""} />
             <input type="hidden" name="lifecycle" value={lifecycle} />
             <input type="hidden" name="visibility" value={visibility} />
-            <input type="hidden" name="graduated_url" value={graduatedUrl} />
 
             <div>
               <label

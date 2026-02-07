@@ -5,32 +5,39 @@
 
 export type AppStatus = "pending" | "approved" | "rejected";
 
-/** Creator-controlled lifecycle (separate from moderation status). */
+/** Creator-controlled lifecycle (separate from moderation status). Intent only, not outcomes. */
 export type AppLifecycle =
   | "wip"
-  | "actively_building"
   | "looking_for_feedback"
   | "looking_for_users"
-  | "dormant"
-  | "shipped_elsewhere";
+  | "dormant";
 
 export const APP_LIFECYCLE_LABELS: Record<AppLifecycle, string> = {
   wip: "Active",
-  actively_building: "Actively building",
   looking_for_feedback: "Seeking feedback",
   looking_for_users: "Looking for users",
   dormant: "Archived",
-  shipped_elsewhere: "Graduated",
 };
 
-/** Semantic colours for lifecycle on cards: grey (neutral/in progress), purple (seeking input), green (graduated). */
+/** Semantic colours for lifecycle on cards: grey (neutral), purple (seeking input). */
 export const APP_LIFECYCLE_CARD_CLASS: Record<AppLifecycle, string> = {
   wip: "bg-zinc-100 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-200",
-  actively_building: "bg-zinc-100 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-200",
   looking_for_feedback: "bg-violet-100 text-violet-800 dark:bg-violet-900/40 dark:text-violet-200",
   looking_for_users: "bg-violet-100 text-violet-800 dark:bg-violet-900/40 dark:text-violet-200",
   dormant: "bg-zinc-100 text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300",
-  shipped_elsewhere: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200",
+};
+
+/**
+ * Subtle tinted overlay for the card image/background area only.
+ * Dark, muted gradients keyed by lifecycle; readable in grayscale (luminance-based).
+ */
+export const APP_LIFECYCLE_IMAGE_OVERLAY: Record<AppLifecycle, string> = {
+  wip: "linear-gradient(to bottom, transparent 45%, rgba(24,24,27,0.04) 100%)",
+  looking_for_feedback:
+    "linear-gradient(to bottom, transparent 45%, rgba(46,16,101,0.06) 100%)",
+  looking_for_users:
+    "linear-gradient(to bottom, transparent 45%, rgba(46,16,101,0.06) 100%)",
+  dormant: "linear-gradient(to bottom, transparent 45%, rgba(9,9,11,0.07) 100%)",
 };
 
 /** Creator reputation stats (approved apps only). */
@@ -139,7 +146,7 @@ export interface AppDetail {
   app_url: string | null;
   repo_url: string | null;
   demo_video_url: string | null;
-  /** When lifecycle = shipped_elsewhere: optional "Where it went" link (GitHub, product, startup). */
+  /** Legacy: optional URL (column kept for existing data; no longer used in UI). */
   graduated_url: string | null;
   rejection_reason: string | null;
   byok_required: boolean;

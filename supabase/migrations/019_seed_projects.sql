@@ -44,7 +44,7 @@ select
     'Graduated to product.', 'Shipped elsewhere.', 'Moved on.'
   ])[1 + (i % 21)],
   'approved'::app_status,
-  (array['wip', 'actively_building', 'looking_for_feedback', 'looking_for_users', 'dormant', 'shipped_elsewhere']::app_lifecycle[])[1 + (i % 6)],
+  (array['wip', 'looking_for_feedback', 'looking_for_users', 'dormant']::app_lifecycle[])[1 + (i % 4)],
   'public',
   (i % 4 = 0)
 from generate_series(1, 50) i

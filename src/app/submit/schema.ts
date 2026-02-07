@@ -21,11 +21,9 @@ const tagsStringSchema = z
 
 const lifecycleEnum = z.enum([
   "wip",
-  "actively_building",
   "looking_for_feedback",
   "looking_for_users",
   "dormant",
-  "shipped_elsewhere",
 ]);
 
 const visibilityEnum = z.enum(["public", "unlisted"]);
@@ -43,8 +41,6 @@ export const submitBasicsSchema = z.object({
   byok_required: z.boolean().default(false),
   lifecycle: lifecycleEnum.default("wip"),
   visibility: visibilityEnum.default("public"),
-  /** When lifecycle = shipped_elsewhere: optional "Where it went" URL. */
-  graduated_url: z.string().url("Enter a valid URL.").optional().or(z.literal("")),
 });
 
 export const submitFullSchema = submitBasicsSchema.extend({
@@ -76,7 +72,6 @@ export function submitFormFromFormData(formData: FormData): z.input<typeof submi
   const visibility = visibilityEnum.safeParse(visibilityRaw).success
     ? (visibilityRaw as z.infer<typeof visibilityEnum>)
     : "public";
-  const graduated_url = (formData.get("graduated_url") as string)?.trim() ?? "";
 
   return {
     name,
@@ -88,7 +83,6 @@ export function submitFormFromFormData(formData: FormData): z.input<typeof submi
     byok_required,
     lifecycle,
     visibility,
-    graduated_url: graduated_url || undefined,
   };
 }
 

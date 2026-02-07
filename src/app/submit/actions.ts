@@ -60,7 +60,7 @@ export async function submitApp(_prev: SubmitState, formData: FormData): Promise
   const fileErrors = validateFiles(screenshotFiles, logoFile);
   if (fileErrors) return { fieldErrors: fileErrors };
 
-  const { name, tagline, app_url, repo_url, tags, description, byok_required, lifecycle, visibility, graduated_url: graduatedUrl } =
+  const { name, tagline, app_url, repo_url, tags, description, byok_required, lifecycle, visibility } =
     parsed.data;
 
   const isPro = await getIsPro(user.id);
@@ -94,7 +94,7 @@ export async function submitApp(_prev: SubmitState, formData: FormData): Promise
       visibility: effectiveVisibility,
       app_url: app_url || null,
       repo_url: repo_url || null,
-      graduated_url: graduatedUrl?.trim() || null,
+      graduated_url: null,
       byok_required,
     })
     .select("id")

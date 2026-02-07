@@ -1,5 +1,6 @@
--- Creator-controlled lifecycle: WIP, Actively building, Looking for feedback, etc.
+-- Creator-controlled lifecycle: WIP (Active), Looking for feedback, etc.
 -- Separate from moderation status (pending/approved/rejected). Owner can update.
+-- Note: "actively_building" merged into "wip" (020); "shipped_elsewhere" removed (021).
 
 create type app_lifecycle as enum (
   'wip',
