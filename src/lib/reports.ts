@@ -26,7 +26,7 @@ export async function getReportsForAdmin(): Promise<ReportForAdmin[]> {
     .from("profiles")
     .select("id, username")
     .in("id", reporterIds);
-  const usernameById = new Map(
+  const usernameById = new Map<string, string>(
     (profiles ?? []).map((p: { id: string; username: string }) => [p.id, p.username])
   );
 
@@ -35,15 +35,16 @@ export async function getReportsForAdmin(): Promise<ReportForAdmin[]> {
     return a ? { slug: a.slug, name: a.name } : { slug: "", name: "Unknown app" };
   };
 
-  return list.map((r) => {
+  return list.map((r): ReportForAdmin => {
     const app = appInfo(r);
+    const reporter_username = usernameById.get(r.reporter_id) ?? null;
     return {
       id: r.id,
       app_id: r.app_id,
       app_slug: app.slug,
       app_name: app.name,
       reporter_id: r.reporter_id,
-      reporter_username: usernameById.get(r.reporter_id) ?? null,
+      reporter_username: typeof reporter_username === "string" ? reporter_username : null,
       reason: r.reason,
       created_at: r.created_at,
     };
