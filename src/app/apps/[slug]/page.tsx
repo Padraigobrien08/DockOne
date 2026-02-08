@@ -362,6 +362,45 @@ export default async function AppDetailPage({
             )}
           </header>
 
+          {/* At a glance — cognitive anchor: what, where, who (always rendered) */}
+          <section
+            className="mt-6 rounded-xl border border-zinc-200 bg-zinc-50/60 px-5 py-4 dark:border-zinc-700 dark:bg-zinc-800/30"
+            aria-labelledby="at-a-glance"
+          >
+            <h2
+              id="at-a-glance"
+              className="text-sm font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400"
+            >
+              At a glance
+            </h2>
+            <dl className="mt-4 space-y-3 text-sm">
+              <div>
+                <dt className="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                  What it does
+                </dt>
+                <dd className="mt-0.5 text-zinc-700 dark:text-zinc-300">
+                  {atGlanceWhat || "Short description coming soon."}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                  Where it runs
+                </dt>
+                <dd className="mt-0.5 text-zinc-700 dark:text-zinc-300">
+                  {atGlanceWhere}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                  Who it&apos;s for
+                </dt>
+                <dd className="mt-0.5 text-zinc-700 dark:text-zinc-300">
+                  {atGlanceWho}
+                </dd>
+              </div>
+            </dl>
+          </section>
+
           {/* Screenshots — show all uploaded screenshots (carousel when multiple); always show section so it's obvious where they go */}
           <section
             className="mt-6"
@@ -413,45 +452,6 @@ export default async function AppDetailPage({
                 </div>
               </section>
             )}
-
-            {/* At a glance — cognitive anchor: what, where, who (always rendered) */}
-            <section
-              className="mt-6 rounded-xl border border-zinc-200 bg-zinc-50/60 px-5 py-4 dark:border-zinc-700 dark:bg-zinc-800/30"
-              aria-labelledby="at-a-glance"
-            >
-              <h2
-                id="at-a-glance"
-                className="text-sm font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400"
-              >
-                At a glance
-              </h2>
-              <dl className="mt-4 space-y-3 text-sm">
-                <div>
-                  <dt className="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                    What it does
-                  </dt>
-                  <dd className="mt-0.5 text-zinc-700 dark:text-zinc-300">
-                    {atGlanceWhat || "Short description coming soon."}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                    Where it runs
-                  </dt>
-                  <dd className="mt-0.5 text-zinc-700 dark:text-zinc-300">
-                    {atGlanceWhere}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                    Who it&apos;s for
-                  </dt>
-                  <dd className="mt-0.5 text-zinc-700 dark:text-zinc-300">
-                    {atGlanceWho}
-                  </dd>
-                </div>
-              </dl>
-            </section>
 
             {/* More details — optional expandable; does not compete with At a glance */}
             <details
