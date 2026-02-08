@@ -13,8 +13,6 @@ interface AppAnalyticsSectionProps {
   analytics: AppAnalytics;
   /** Pro: show early signals (7-day views). */
   isPro?: boolean;
-  /** Creator only: show conversion rate. Hidden from non-creators. */
-  showConversion?: boolean;
   className?: string;
 }
 
@@ -26,7 +24,6 @@ function formatSignal(value: number): string {
 export function AppAnalyticsSection({
   analytics,
   isPro,
-  showConversion = false,
   className = "",
 }: AppAnalyticsSectionProps) {
   const {
@@ -34,7 +31,6 @@ export function AppAnalyticsSection({
     demoClicks,
     repoClicks,
     voteCount,
-    voteConversionRate,
     feedbackBreakdown,
     pageViewsLast7Days,
   } = analytics;
@@ -54,7 +50,7 @@ export function AppAnalyticsSection({
         <p className="mt-3 text-xs text-zinc-500 dark:text-zinc-400">Activity will show here.</p>
       ) : (
         <>
-          <div className="mt-3 space-y-1.5 text-xs text-zinc-600 dark:text-zinc-300">
+          <div className="mt-3 space-y-1.5 text-xs text-zinc-500 dark:text-zinc-400">
             {voteCount >= 1 && <p>First interest received</p>}
             {demoClicks >= 1 && <p>{demoClicks === 1 ? "First app open" : "App opened"}</p>}
             {repoClicks >= 1 && <p>{repoClicks === 1 ? "First repo click" : "Repo clicked"}</p>}
@@ -63,9 +59,6 @@ export function AppAnalyticsSection({
             <span>{formatSignal(pageViews)} views</span>
             <span>{formatSignal(demoClicks)} app opens</span>
             <span>{formatSignal(repoClicks)} repo clicks</span>
-            {showConversion && pageViews > 0 && (
-              <span>{voteConversionRate}% interest</span>
-            )}
           </div>
           {totalFeedback > 0 && (
             <ul className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-xs text-zinc-500 dark:text-zinc-400">

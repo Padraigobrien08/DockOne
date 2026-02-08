@@ -284,13 +284,13 @@ export interface AppFeedbackCounts {
   needs_work: number;
 }
 
-/** Private analytics for app owner: page views, clicks, conversion, feedback. */
+/** Private activity/signals for app owner (UI: "Activity"). Page views, clicks, feedback. */
 export interface AppAnalytics {
   pageViews: number;
   demoClicks: number;
   repoClicks: number;
   voteCount: number;
-  /** Vote conversion rate (votes / page views * 100); 0 if no page views. */
+  /** Vote conversion rate (votes / page views * 100); 0 if no page views. Not shown in UI. */
   voteConversionRate: number;
   feedbackBreakdown: AppFeedbackCounts;
   /** Pro: page views in last 7 days. */

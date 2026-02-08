@@ -708,19 +708,17 @@ export default async function AppDetailPage({
                 ) : (
                   <>
                     {analytics.voteCount >= 1 && (
-                      <p className="text-zinc-600 dark:text-zinc-300">
-                        First interest received
-                      </p>
+                      <p>First interest received</p>
                     )}
                     {analytics.demoClicks >= 1 && (
-                      <p className="text-zinc-600 dark:text-zinc-300">
+                      <p>
                         {analytics.demoClicks === 1
                           ? "First app open"
                           : "App opened"}
                       </p>
                     )}
                     {analytics.repoClicks >= 1 && (
-                      <p className="text-zinc-600 dark:text-zinc-300">
+                      <p>
                         {analytics.repoClicks === 1
                           ? "First repo click"
                           : "Repo clicked"}

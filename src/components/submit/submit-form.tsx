@@ -3,13 +3,40 @@
 import { useState, useActionState } from "react";
 import { Container } from "@/components/ui/container";
 import { submitApp, type SubmitState } from "@/app/submit/actions";
-import { APP_LIFECYCLE_LABELS, type AppLifecycle } from "@/types";
+import { INTENT_TAGS } from "@/types";
 import type { AppVisibility } from "@/types";
 
 const SCREENSHOTS_MAX = 5;
 const ALLOWED_IMAGE_TYPES = "image/jpeg,image/png,image/webp";
-/** Pre-launch: hide multi-lifecycle dropdown; value remains wip. */
-const SHOW_LIFECYCLE_DROPDOWN = false;
+
+const INTENT_OPTIONS: { value: (typeof INTENT_TAGS)[number]; label: string }[] = [
+  { value: "feedback", label: "Feedback" },
+  { value: "early-users", label: "Early users" },
+];
+
+/** Parse free-form tag string: split, trim, lowercase, non-empty. */
+function parseFreeFormTags(s: string): string[] {
+  return s
+    .trim()
+    .split(/[\s,]+/)
+    .map((t) => t.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+/** Merge intent tags + free-form tags: no duplicates, lowercase, max 10. */
+function mergeIntentAndFreeFormTags(
+  intentTags: (typeof INTENT_TAGS)[number][],
+  freeForm: string
+): string[] {
+  const parsed = parseFreeFormTags(freeForm);
+  const combined = [...intentTags, ...parsed];
+  const seen = new Set<string>();
+  return combined.filter((t) => {
+    if (seen.has(t)) return false;
+    seen.add(t);
+    return true;
+  }).slice(0, 10);
+}
 
 type Step = 1 | 2;
 
@@ -29,8 +56,8 @@ export function SubmitForm({ isPro }: SubmitFormProps = {}) {
   const [appUrl, setAppUrl] = useState("");
   const [repoUrl, setRepoUrl] = useState("");
   const [tags, setTags] = useState("");
+  const [intentSelections, setIntentSelections] = useState<(typeof INTENT_TAGS)[number][]>([]);
   const [byokRequired, setByokRequired] = useState(false);
-  const [lifecycle, setLifecycle] = useState<AppLifecycle>("wip");
   const [visibility, setVisibility] = useState<AppVisibility>("public");
   const [description, setDescription] = useState("");
   const [howUsed, setHowUsed] = useState("");
@@ -196,34 +223,39 @@ export function SubmitForm({ isPro }: SubmitFormProps = {}) {
               <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Up to 10 tags.</p>
             </div>
 
-            {SHOW_LIFECYCLE_DROPDOWN && (
             <div>
-              <label
-                htmlFor="lifecycle"
-                className="block text-sm font-medium text-zinc-900 dark:text-zinc-50"
-              >
-                Status
-              </label>
-              <select
-                id="lifecycle"
-                name="lifecycle"
-                value={lifecycle}
-                onChange={(e) => setLifecycle(e.target.value as AppLifecycle)}
-                className="mt-1.5 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-50"
-              >
-                {(Object.entries(APP_LIFECYCLE_LABELS) as [AppLifecycle, string][]).map(
-                  ([value, label]) => (
-                    <option key={value} value={value}>
-                      {label}
-                    </option>
-                  )
-                )}
-              </select>
+              <p className="block text-sm font-medium text-zinc-900 dark:text-zinc-50">
+                What are you looking for? <span className="font-normal text-zinc-500 dark:text-zinc-400">(optional)</span>
+              </p>
+              <div className="mt-2 flex flex-wrap gap-3">
+                {INTENT_OPTIONS.map((opt) => {
+                  const checked = intentSelections.includes(opt.value);
+                  return (
+                    <label
+                      key={opt.value}
+                      className="flex cursor-pointer items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm transition dark:border-zinc-700 dark:bg-zinc-900"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => {
+                          setIntentSelections((prev) =>
+                            prev.includes(opt.value)
+                              ? prev.filter((t) => t !== opt.value)
+                              : [...prev, opt.value]
+                          );
+                        }}
+                        className="h-4 w-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-900"
+                      />
+                      <span className="text-zinc-700 dark:text-zinc-300">{opt.label}</span>
+                    </label>
+                  );
+                })}
+              </div>
               <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                Helps others know what you’re looking for (feedback, users, etc.).
+                Adds the matching tag(s) to your project. Merged with your tags above.
               </p>
             </div>
-            )}
 
             {isPro && (
               <div>
@@ -282,9 +314,9 @@ export function SubmitForm({ isPro }: SubmitFormProps = {}) {
             <input type="hidden" name="tagline" value={tagline} />
             <input type="hidden" name="app_url" value={appUrl} />
             <input type="hidden" name="repo_url" value={repoUrl} />
-            <input type="hidden" name="tags" value={tags} />
+            <input type="hidden" name="tags" value={mergeIntentAndFreeFormTags(intentSelections, tags).join(", ")} />
             <input type="hidden" name="byok_required" value={byokRequired ? "on" : ""} />
-            <input type="hidden" name="lifecycle" value={lifecycle} />
+            <input type="hidden" name="lifecycle" value="wip" />
             <input type="hidden" name="visibility" value={visibility} />
             <input type="hidden" name="demo_video_url" value={demoVideoUrl} />
 
