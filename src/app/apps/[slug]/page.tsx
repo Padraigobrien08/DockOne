@@ -19,12 +19,16 @@ import { BoostButton } from "@/components/apps/boost-button";
 import { getActiveBoosts, countActiveBoosts, MAX_ACTIVE_BOOSTS } from "@/lib/boosts";
 import type { Metadata } from "next";
 import {
-  APP_LIFECYCLE_LABELS,
-  APP_LIFECYCLE_CARD_CLASS,
+  getUiLifecycleLabel,
+  getUiLifecycleCardClass,
   APP_RUNTIME_LABELS,
   APP_REQUIREMENTS_LABELS,
+  INTENT_TAGS,
 } from "@/types";
 import type { AppDetail } from "@/types";
+
+/** Pre-launch: hide Featured/Boost and Pro surfaces (no monetisation during MVP). */
+const SHOW_PROMO_FEATURES = false;
 
 export async function generateMetadata({
   params,
@@ -34,10 +38,23 @@ export async function generateMetadata({
   const { slug } = await params;
   const app = await getAppBySlug(slug);
   if (!app) return {};
+  
+  const title = app.name;
+  const description = app.tagline?.trim() || 
+    app.whatItDoes?.trim()?.slice(0, 160) ||
+    app.description?.trim()?.slice(0, 160) ||
+    `View ${app.name} on DockOne — working software you can see and understand.`;
+  
+  const metadata: Metadata = {
+    title: `${title} — DockOne`,
+    description,
+  };
+  
   if (app.visibility === "unlisted") {
-    return { robots: { index: false, follow: true } };
+    metadata.robots = { index: false, follow: true };
   }
-  return {};
+  
+  return metadata;
 }
 
 export default async function AppDetailPage({
@@ -227,7 +244,7 @@ export default async function AppDetailPage({
                     appId={app.id}
                     eventType="demo_click"
                     href={app.app_url}
-                    highlightPro={!!app.owner.isPro}
+                    highlightPro={SHOW_PROMO_FEATURES && !!app.owner.isPro}
                     className="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
                   >
                     Open app
@@ -240,7 +257,7 @@ export default async function AppDetailPage({
                       appId={app.id}
                       eventType="repo_click"
                       href={app.repo_url}
-                      highlightPro={!!app.owner.isPro}
+                      highlightPro={SHOW_PROMO_FEATURES && !!app.owner.isPro}
                       className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
                     >
                       View repo
@@ -256,7 +273,7 @@ export default async function AppDetailPage({
                     appId={app.id}
                     eventType="repo_click"
                     href={app.repo_url}
-                    highlightPro={!!app.owner.isPro}
+                    highlightPro={SHOW_PROMO_FEATURES && !!app.owner.isPro}
                     className="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
                   >
                     View repo
@@ -276,9 +293,9 @@ export default async function AppDetailPage({
             </div>
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs text-zinc-500 dark:text-zinc-400" role="group" aria-label="Project metadata">
               <span
-                className={`rounded px-1.5 py-0.5 font-medium ${APP_LIFECYCLE_CARD_CLASS[app.lifecycle]}`}
+                className={`rounded px-1.5 py-0.5 font-medium ${getUiLifecycleCardClass(app.lifecycle)}`}
               >
-                {APP_LIFECYCLE_LABELS[app.lifecycle]}
+                {getUiLifecycleLabel(app.lifecycle)}
               </span>
               <span className="text-zinc-300 dark:text-zinc-600" aria-hidden>·</span>
               <Link
@@ -292,6 +309,17 @@ export default async function AppDetailPage({
                 )}
                 {displayName}
               </Link>
+              {isOwner && (
+                <>
+                  <span className="text-zinc-300 dark:text-zinc-600" aria-hidden>·</span>
+                  <Link
+                    href={`/apps/${app.slug}/edit`}
+                    className="hover:text-zinc-700 dark:hover:text-zinc-300"
+                  >
+                    Edit project
+                  </Link>
+                </>
+              )}
               {app.visibility === "unlisted" && (
                 <>
                   <span className="text-zinc-300 dark:text-zinc-600" aria-hidden>·</span>
@@ -320,6 +348,17 @@ export default async function AppDetailPage({
                 </>
               )}
             </div>
+            {(app.tags ?? []).some((t) => INTENT_TAGS.includes(t as (typeof INTENT_TAGS)[number])) && (
+              <p className="mt-1.5 text-[11px] text-zinc-400 dark:text-zinc-500" aria-label="Creator intent">
+                {(app.tags ?? []).includes("feedback") && (app.tags ?? []).includes("early-users")
+                  ? "Creator is looking for feedback and early users."
+                  : (app.tags ?? []).includes("feedback")
+                    ? "Creator is looking for feedback."
+                    : (app.tags ?? []).includes("early-users")
+                      ? "Creator is looking for early users."
+                      : null}
+              </p>
+            )}
           </header>
 
           {/* Primary artifact — project image as context (reduced dominance), optional caption, or neutral no-image placeholder */}
@@ -501,7 +540,7 @@ export default async function AppDetailPage({
                   appId={app.id}
                   eventType="demo_click"
                   href={app.app_url}
-                  highlightPro={!!app.owner.isPro}
+                  highlightPro={SHOW_PROMO_FEATURES && !!app.owner.isPro}
                   className="mt-3 inline-flex items-center gap-2 rounded-lg bg-zinc-900 px-5 py-3 text-base font-semibold text-white transition hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
                 >
                   Open app
@@ -640,11 +679,11 @@ export default async function AppDetailPage({
             </div>
           </section>
 
-          {featuredTokenAvailable && (
+          {SHOW_PROMO_FEATURES && featuredTokenAvailable && (
             <FeaturedButton appId={app.id} slug={app.slug} className="mt-5" />
           )}
 
-          {canBoost && (
+          {SHOW_PROMO_FEATURES && canBoost && (
             <BoostButton appId={app.id} slug={app.slug} className="mt-5" />
           )}
 

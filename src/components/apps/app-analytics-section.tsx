@@ -11,7 +11,7 @@ const FEEDBACK_LABELS: Record<keyof AppAnalytics["feedbackBreakdown"], string> =
 
 interface AppAnalyticsSectionProps {
   analytics: AppAnalytics;
-  /** Pro: show advanced analytics (7-day views). */
+  /** Pro: show early signals (7-day views). */
   isPro?: boolean;
   /** Creator only: show conversion rate. Hidden from non-creators. */
   showConversion?: boolean;
@@ -91,8 +91,7 @@ export function AppAnalyticsSection({
       )}
       {!isPro && (
         <p className="mt-4 text-xs text-zinc-500 dark:text-zinc-400">
-          <span className="font-medium text-zinc-600 dark:text-zinc-300">Creator Pro</span> includes
-          advanced signals, priority review, featured token, and more.
+          Planned: early signals, priority review, and more.
         </p>
       )}
     </section>

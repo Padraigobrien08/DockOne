@@ -1,0 +1,191 @@
+"use server";
+
+import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
+import { createClient } from "@/lib/supabase/server";
+import { getIsPro } from "@/lib/profile";
+import { editFullSchema, editFormFromFormData, zodFieldErrors } from "@/app/submit/schema";
+
+const APP_MEDIA_MAX_BYTES = 5 * 1024 * 1024;
+const SCREENSHOTS_MAX = 5;
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
+export type EditState = {
+  error?: string;
+  fieldErrors?: Record<string, string>;
+};
+
+function validateFiles(screenshotFiles: File[], logoFile: File | null): EditState["fieldErrors"] {
+  const fieldErrors: Record<string, string> = {};
+  const screenshots = screenshotFiles.filter((f) => f.size > 0);
+  if (screenshots.length > SCREENSHOTS_MAX)
+    fieldErrors.screenshots = `At most ${SCREENSHOTS_MAX} screenshots.`;
+  for (const f of screenshots) {
+    if (!ALLOWED_IMAGE_TYPES.includes(f.type)) {
+      fieldErrors.screenshots = "Screenshots must be JPEG, PNG, or WebP.";
+      break;
+    }
+    if (f.size > APP_MEDIA_MAX_BYTES) {
+      fieldErrors.screenshots = "Each screenshot must be 5MB or smaller.";
+      break;
+    }
+  }
+  if (logoFile && logoFile.size > 0) {
+    if (!ALLOWED_IMAGE_TYPES.includes(logoFile.type))
+      fieldErrors.logo = "Logo must be JPEG, PNG, or WebP.";
+    else if (logoFile.size > APP_MEDIA_MAX_BYTES) fieldErrors.logo = "Logo must be 5MB or smaller.";
+  }
+  return Object.keys(fieldErrors).length > 0 ? fieldErrors : undefined;
+}
+
+export async function updateApp(_prev: EditState, formData: FormData): Promise<EditState> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/auth/sign-in");
+
+  const appId = (formData.get("app_id") as string)?.trim();
+  const slug = (formData.get("slug") as string)?.trim();
+  if (!appId || !slug) return { error: "Missing app." };
+
+  const { data: row } = await supabase
+    .from("apps")
+    .select("id, owner_id, status")
+    .eq("id", appId)
+    .single();
+  if (!row || (row as { owner_id: string }).owner_id !== user.id) {
+    return { error: "You can only edit your own project." };
+  }
+
+  const screenshotFiles = formData.getAll("screenshots") as File[];
+  const logoFile = formData.get("logo") as File | null;
+  const raw = editFormFromFormData(formData);
+  const parsed = editFullSchema.safeParse(raw);
+  if (!parsed.success) {
+    return { fieldErrors: zodFieldErrors(parsed.error) };
+  }
+
+  const fileErrors = validateFiles(screenshotFiles, logoFile);
+  if (fileErrors) return { fieldErrors: fileErrors };
+
+  const {
+    name,
+    tagline,
+    app_url,
+    repo_url,
+    demo_video_url,
+    tags,
+    description,
+    how_used,
+    byok_required,
+    lifecycle,
+    visibility,
+    what_it_does,
+    what_it_does_not,
+    why_this_exists,
+    runtime_type,
+    requirements,
+    primary_tag,
+  } = parsed.data;
+
+  const isPro = await getIsPro(user.id);
+  const effectiveVisibility = visibility === "unlisted" && !isPro ? "public" : visibility ?? "public";
+
+  const { error: updateError } = await supabase
+    .from("apps")
+    .update({
+      name,
+      tagline: tagline || null,
+      app_url: app_url || null,
+      repo_url: repo_url || null,
+      demo_video_url: demo_video_url?.trim() || null,
+      description: description?.trim() || null,
+      how_used: how_used?.trim() || null,
+      byok_required,
+      lifecycle: lifecycle ?? "wip",
+      visibility: effectiveVisibility,
+      what_it_does: what_it_does?.trim() || null,
+      what_it_does_not: what_it_does_not?.trim() || null,
+      why_this_exists: why_this_exists?.trim() || null,
+      runtime_type: runtime_type && runtime_type !== "" ? runtime_type : null,
+      requirements: requirements && requirements !== "" ? requirements : null,
+      primary_tag: primary_tag?.trim() || null,
+    })
+    .eq("id", appId);
+
+  if (updateError) return { error: updateError.message };
+
+  await supabase.from("app_tags").delete().eq("app_id", appId);
+  if (tags.length > 0) {
+    await supabase.from("app_tags").insert(tags.map((tag) => ({ app_id: appId, tag })));
+  }
+
+  const bucket = "app-media";
+  const prefix = `${appId}/`;
+
+  const screenshotsToUpload = screenshotFiles.filter((f) => f.size > 0);
+  if (screenshotsToUpload.length > 0) {
+    const { data: existingMedia } = await supabase
+      .from("app_media")
+      .select("id, url")
+      .eq("app_id", appId)
+      .eq("kind", "screenshot");
+    for (const m of existingMedia ?? []) {
+      const pathInBucket = m.url.includes(`/${bucket}/`) ? m.url.split(`/${bucket}/`)[1] : null;
+      if (pathInBucket) await supabase.storage.from(bucket).remove([pathInBucket]);
+    }
+    await supabase.from("app_media").delete().eq("app_id", appId).eq("kind", "screenshot");
+    for (let i = 0; i < screenshotsToUpload.length; i++) {
+      const file = screenshotsToUpload[i];
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `${prefix}screenshot-${i + 1}-${crypto.randomUUID().slice(0, 8)}.${ext}`;
+      const buffer = Buffer.from(await file.arrayBuffer());
+      const { error: upErr } = await supabase.storage
+        .from(bucket)
+        .upload(path, buffer, { contentType: file.type, upsert: true });
+      if (!upErr) {
+        const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(path);
+        await supabase.from("app_media").insert({
+          app_id: appId,
+          kind: "screenshot",
+          url: publicUrl,
+          sort_order: i,
+        });
+      }
+    }
+  }
+
+  if (logoFile && logoFile.size > 0) {
+    const { data: existingLogo } = await supabase
+      .from("app_media")
+      .select("id, url")
+      .eq("app_id", appId)
+      .eq("kind", "logo")
+      .maybeSingle();
+    if (existingLogo) {
+      const pathInBucket = existingLogo.url.includes(`/${bucket}/`) ? existingLogo.url.split(`/${bucket}/`)[1] : null;
+      if (pathInBucket) await supabase.storage.from(bucket).remove([pathInBucket]);
+      await supabase.from("app_media").delete().eq("id", existingLogo.id);
+    }
+    const ext = logoFile.name.split(".").pop() || "jpg";
+    const path = `${prefix}logo-${crypto.randomUUID().slice(0, 8)}.${ext}`;
+    const buffer = Buffer.from(await logoFile.arrayBuffer());
+    const { error: upErr } = await supabase.storage
+      .from(bucket)
+      .upload(path, buffer, { contentType: logoFile.type, upsert: true });
+    if (!upErr) {
+      const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(path);
+      await supabase.from("app_media").insert({
+        app_id: appId,
+        kind: "logo",
+        url: publicUrl,
+        sort_order: 0,
+      });
+    }
+  }
+
+  revalidatePath(`/apps/${slug}`);
+  revalidatePath("/apps");
+  redirect(`/apps/${slug}`);
+}

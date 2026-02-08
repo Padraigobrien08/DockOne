@@ -26,11 +26,11 @@ export default async function AppsPage() {
         </p>
         <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
           <Link href="/collections" className="underline hover:no-underline">
-            Staff picks and community collections
+            Staff picks
           </Link>
         </p>
         <p className="mt-3 text-xs text-zinc-500 dark:text-zinc-500">
-          Filter by status to find demos, works in progress, or tools you can use now.
+          Search, filter by tag, or sort to find projects.
         </p>
 
         {featured.length > 0 && (

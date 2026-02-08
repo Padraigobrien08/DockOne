@@ -1,6 +1,6 @@
 import {
-  APP_LIFECYCLE_LABELS,
-  APP_LIFECYCLE_CARD_CLASS,
+  getUiLifecycleLabel,
+  getUiLifecycleCardClass,
   type AppLifecycle,
 } from "@/types";
 import type { AppListItem } from "@/types";
@@ -34,8 +34,8 @@ function normalizePreview(item: PreviewItem): PreviewItem {
 }
 
 function ProjectCardPreview({ item, compact = false }: { item: PreviewItem; compact?: boolean }) {
-  const label = APP_LIFECYCLE_LABELS[item.lifecycle];
-  const pillClass = APP_LIFECYCLE_CARD_CLASS[item.lifecycle];
+  const label = getUiLifecycleLabel(item.lifecycle);
+  const pillClass = getUiLifecycleCardClass(item.lifecycle);
 
   return (
     <div

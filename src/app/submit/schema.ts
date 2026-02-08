@@ -66,8 +66,28 @@ export const submitFullSchema = submitBasicsSchema.extend({
     .or(z.literal("")),
 });
 
+const runtimeTypeEnum = z.enum(["browser", "local", "api", "cli", "hybrid"]);
+const requirementsEnum = z.enum(["none", "api_key_required", "local_install", "account_required"]);
+
+/** Edit form: submit fields + optional progressive fields. */
+export const editFullSchema = submitFullSchema.extend({
+  what_it_does: z.string().max(5_000).optional().or(z.literal("")),
+  what_it_does_not: z.string().max(5_000).optional().or(z.literal("")),
+  why_this_exists: z.string().max(2_000).optional().or(z.literal("")),
+  runtime_type: z
+    .union([runtimeTypeEnum, z.literal(""), z.null()])
+    .optional()
+    .transform((v) => (v === "" ? undefined : v)),
+  requirements: z
+    .union([requirementsEnum, z.literal(""), z.null()])
+    .optional()
+    .transform((v) => (v === "" ? undefined : v)),
+  primary_tag: z.string().max(TAG_MAX).optional().or(z.literal("")),
+});
+
 export type SubmitBasics = z.infer<typeof submitBasicsSchema>;
 export type SubmitFull = z.infer<typeof submitFullSchema>;
+export type EditFull = z.infer<typeof editFullSchema>;
 
 /** Build submit form object from FormData (no files). */
 export function submitFormFromFormData(formData: FormData): z.input<typeof submitFullSchema> {
@@ -102,6 +122,26 @@ export function submitFormFromFormData(formData: FormData): z.input<typeof submi
     byok_required,
     lifecycle,
     visibility,
+  };
+}
+
+/** Build edit form object from FormData (includes progressive fields). */
+export function editFormFromFormData(formData: FormData): z.input<typeof editFullSchema> {
+  const base = submitFormFromFormData(formData);
+  const what_it_does = (formData.get("what_it_does") as string)?.trim() ?? "";
+  const what_it_does_not = (formData.get("what_it_does_not") as string)?.trim() ?? "";
+  const why_this_exists = (formData.get("why_this_exists") as string)?.trim() ?? "";
+  const runtime_type = (formData.get("runtime_type") as string)?.trim() || "";
+  const requirements = (formData.get("requirements") as string)?.trim() || "";
+  const primary_tag = (formData.get("primary_tag") as string)?.trim() ?? "";
+  return {
+    ...base,
+    what_it_does: what_it_does || undefined,
+    what_it_does_not: what_it_does_not || undefined,
+    why_this_exists: why_this_exists || undefined,
+    runtime_type: runtime_type && runtimeTypeEnum.safeParse(runtime_type).success ? runtime_type : undefined,
+    requirements: requirements && requirementsEnum.safeParse(requirements).success ? requirements : undefined,
+    primary_tag: primary_tag || undefined,
   };
 }
 

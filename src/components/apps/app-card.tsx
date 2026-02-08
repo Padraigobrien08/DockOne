@@ -2,8 +2,14 @@ import Link from "next/link";
 import Image from "next/image";
 import { getTagVariant } from "@/lib/tag-variants";
 import { getTagAccentStyles } from "@/lib/tag-accent";
-import { APP_LIFECYCLE_LABELS, APP_LIFECYCLE_CARD_CLASS, APP_LIFECYCLE_IMAGE_OVERLAY } from "@/types";
+import { getUiLifecycleLabel, getUiLifecycleCardClass, getUiLifecycleImageOverlay, INTENT_TAGS } from "@/types";
 import type { AppListItem, AppLifecycle, CreatorStats } from "@/types";
+
+/** Display labels for intent tags (tag-style chips only). */
+const INTENT_TAG_LABELS: Record<(typeof INTENT_TAGS)[number], string> = {
+  feedback: "Feedback",
+  "early-users": "Early users",
+};
 
 interface AppCardProps {
   app: AppListItem;
@@ -94,7 +100,7 @@ export function AppCard({ app, creatorStats, isBoosted, headingLevel = 2, overri
           {/* Lifecycle-based tint on image/background only; dark, muted, grayscale-safe */}
           <div
             className="pointer-events-none absolute inset-0 z-[1]"
-            style={{ background: APP_LIFECYCLE_IMAGE_OVERLAY[lifecycle] }}
+            style={{ background: getUiLifecycleImageOverlay(lifecycle) }}
             aria-hidden
           />
           {imageStyle === "premium" && app.primary_image_url && (
@@ -119,10 +125,10 @@ export function AppCard({ app, creatorStats, isBoosted, headingLevel = 2, overri
           )}
           {effectiveStatusPills !== "minimal" && (
             <span
-              className={`absolute right-3 top-3 z-10 rounded-full px-2.5 py-1 text-xs font-semibold ${APP_LIFECYCLE_CARD_CLASS[lifecycle]}`}
-              aria-label={`Status: ${APP_LIFECYCLE_LABELS[lifecycle]}`}
+              className={`absolute right-3 top-3 z-10 rounded-full px-2.5 py-1 text-xs font-semibold ${getUiLifecycleCardClass(lifecycle)}`}
+              aria-label={`Status: ${getUiLifecycleLabel(lifecycle)}`}
             >
-              {APP_LIFECYCLE_LABELS[lifecycle]}
+              {getUiLifecycleLabel(lifecycle)}
             </span>
           )}
         </div>
@@ -192,28 +198,40 @@ export function AppCard({ app, creatorStats, isBoosted, headingLevel = 2, overri
               BYOK
             </span>
           )}
-          {app.tags.slice(0, 5).map((tag) => {
-            const variant = getTagVariant(tag);
-            const subtle = effectiveTagsStyle === "subtle";
-            const base = "px-1.5 py-0.5 text-[10px] font-normal";
-            const stateClass =
-              "rounded-sm border-l border-zinc-400/25 pl-1.5 pr-1.5 dark:border-zinc-500/25 text-zinc-500/90 dark:text-zinc-500";
-            const requirementClass =
-              "rounded-sm bg-violet-50/40 dark:bg-violet-950/15 text-violet-600/80 dark:text-violet-400/80";
-            const defaultClass =
-              "rounded-sm bg-zinc-100/70 dark:bg-zinc-800/50 text-zinc-500/90 dark:text-zinc-500";
-            const variantClass =
-              variant === "state"
-                ? stateClass
-                : variant === "requirement"
-                  ? requirementClass
-                  : defaultClass;
-            return (
-              <span key={tag} className={[base, variantClass].filter(Boolean).join(" ").trim()}>
-                {tag}
-              </span>
-            );
-          })}
+          {/* Intent tag chips: Feedback / Early users when tag present; tag-style, not status */}
+          {INTENT_TAGS.filter((intentTag) => app.tags.includes(intentTag)).map((intentTag) => (
+            <span
+              key={intentTag}
+              className="rounded-sm bg-zinc-100/70 px-1.5 py-0.5 text-[10px] font-normal text-zinc-500/90 dark:bg-zinc-800/50 dark:text-zinc-500"
+              aria-label={`Intent: ${INTENT_TAG_LABELS[intentTag]}`}
+            >
+              {INTENT_TAG_LABELS[intentTag]}
+            </span>
+          ))}
+          {app.tags
+            .filter((tag) => !INTENT_TAGS.includes(tag))
+            .slice(0, 5)
+            .map((tag) => {
+              const variant = getTagVariant(tag);
+              const base = "px-1.5 py-0.5 text-[10px] font-normal";
+              const stateClass =
+                "rounded-sm border-l border-zinc-400/25 pl-1.5 pr-1.5 dark:border-zinc-500/25 text-zinc-500/90 dark:text-zinc-500";
+              const requirementClass =
+                "rounded-sm bg-violet-50/40 dark:bg-violet-950/15 text-violet-600/80 dark:text-violet-400/80";
+              const defaultClass =
+                "rounded-sm bg-zinc-100/70 dark:bg-zinc-800/50 text-zinc-500/90 dark:text-zinc-500";
+              const variantClass =
+                variant === "state"
+                  ? stateClass
+                  : variant === "requirement"
+                    ? requirementClass
+                    : defaultClass;
+              return (
+                <span key={tag} className={[base, variantClass].filter(Boolean).join(" ").trim()}>
+                  {tag}
+                </span>
+              );
+            })}
         </div>
       </div>
     </div>

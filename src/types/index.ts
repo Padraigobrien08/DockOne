@@ -12,33 +12,69 @@ export type AppLifecycle =
   | "looking_for_users"
   | "dormant";
 
+/** UI contract: only two states. DB still has four; we collapse for display. */
+export type UiLifecycle = "active" | "archived";
+
+/** Map DB lifecycle to UI lifecycle (active vs archived). */
+export function getUiLifecycle(lifecycle: AppLifecycle): UiLifecycle {
+  return lifecycle === "dormant" ? "archived" : "active";
+}
+
+/** UI label for lifecycle: "Active" or "Archived". */
+export function getUiLifecycleLabel(lifecycle: AppLifecycle): string {
+  return getUiLifecycle(lifecycle) === "active" ? "Active" : "Archived";
+}
+
+/** @deprecated Use getUiLifecycleLabel(lifecycle). Kept for backward compat; values collapsed to Active/Archived. */
 export const APP_LIFECYCLE_LABELS: Record<AppLifecycle, string> = {
   wip: "Active",
-  looking_for_feedback: "Seeking feedback",
-  looking_for_users: "Looking for users",
+  looking_for_feedback: "Active",
+  looking_for_users: "Active",
   dormant: "Archived",
 };
 
-/** Semantic colours for lifecycle on cards: grey (neutral), purple (seeking input). */
-export const APP_LIFECYCLE_CARD_CLASS: Record<AppLifecycle, string> = {
-  wip: "bg-zinc-100 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-200",
-  looking_for_feedback: "bg-violet-100 text-violet-800 dark:bg-violet-900/40 dark:text-violet-200",
-  looking_for_users: "bg-violet-100 text-violet-800 dark:bg-violet-900/40 dark:text-violet-200",
-  dormant: "bg-zinc-100 text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300",
+/** Active and archived only; active-ish states share the same style. */
+const UI_LIFECYCLE_CARD_CLASS: Record<UiLifecycle, string> = {
+  active: "bg-zinc-100 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-200",
+  archived: "bg-zinc-100 text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300",
 };
 
-/**
- * Subtle tinted overlay for the card image/background area only.
- * Dark, muted gradients keyed by lifecycle; readable in grayscale (luminance-based).
- */
-export const APP_LIFECYCLE_IMAGE_OVERLAY: Record<AppLifecycle, string> = {
-  wip: "linear-gradient(to bottom, transparent 45%, rgba(24,24,27,0.04) 100%)",
-  looking_for_feedback:
-    "linear-gradient(to bottom, transparent 45%, rgba(46,16,101,0.06) 100%)",
-  looking_for_users:
-    "linear-gradient(to bottom, transparent 45%, rgba(46,16,101,0.06) 100%)",
-  dormant: "linear-gradient(to bottom, transparent 45%, rgba(9,9,11,0.07) 100%)",
+/** @deprecated Use getUiLifecycleCardClass(lifecycle). Kept for backward compat. */
+export const APP_LIFECYCLE_CARD_CLASS: Record<AppLifecycle, string> = {
+  wip: UI_LIFECYCLE_CARD_CLASS.active,
+  looking_for_feedback: UI_LIFECYCLE_CARD_CLASS.active,
+  looking_for_users: UI_LIFECYCLE_CARD_CLASS.active,
+  dormant: UI_LIFECYCLE_CARD_CLASS.archived,
 };
+
+export function getUiLifecycleCardClass(lifecycle: AppLifecycle): string {
+  return UI_LIFECYCLE_CARD_CLASS[getUiLifecycle(lifecycle)];
+}
+
+/** Active and archived only; same overlay for all active-ish. */
+const UI_LIFECYCLE_IMAGE_OVERLAY: Record<UiLifecycle, string> = {
+  active: "linear-gradient(to bottom, transparent 45%, rgba(24,24,27,0.04) 100%)",
+  archived: "linear-gradient(to bottom, transparent 45%, rgba(9,9,11,0.07) 100%)",
+};
+
+/** @deprecated Use getUiLifecycleImageOverlay(lifecycle). Kept for backward compat. */
+export const APP_LIFECYCLE_IMAGE_OVERLAY: Record<AppLifecycle, string> = {
+  wip: UI_LIFECYCLE_IMAGE_OVERLAY.active,
+  looking_for_feedback: UI_LIFECYCLE_IMAGE_OVERLAY.active,
+  looking_for_users: UI_LIFECYCLE_IMAGE_OVERLAY.active,
+  dormant: UI_LIFECYCLE_IMAGE_OVERLAY.archived,
+};
+
+export function getUiLifecycleImageOverlay(lifecycle: AppLifecycle): string {
+  return UI_LIFECYCLE_IMAGE_OVERLAY[getUiLifecycle(lifecycle)];
+}
+
+/**
+ * Recommended tags for creator intent (UI hints and tag styling only).
+ * Replaces lifecycle states for intent: feedback ≈ looking_for_feedback, early-users ≈ looking_for_users.
+ * Tags remain free-form in DB; this is not an enum.
+ */
+export const INTENT_TAGS = ["feedback", "early-users"] as const;
 
 /** Creator reputation stats (approved apps only). */
 export interface CreatorStats {

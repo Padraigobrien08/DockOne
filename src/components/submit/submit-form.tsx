@@ -8,6 +8,8 @@ import type { AppVisibility } from "@/types";
 
 const SCREENSHOTS_MAX = 5;
 const ALLOWED_IMAGE_TYPES = "image/jpeg,image/png,image/webp";
+/** Pre-launch: hide multi-lifecycle dropdown; value remains wip. */
+const SHOW_LIFECYCLE_DROPDOWN = false;
 
 type Step = 1 | 2;
 
@@ -194,6 +196,7 @@ export function SubmitForm({ isPro }: SubmitFormProps = {}) {
               <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Up to 10 tags.</p>
             </div>
 
+            {SHOW_LIFECYCLE_DROPDOWN && (
             <div>
               <label
                 htmlFor="lifecycle"
@@ -220,6 +223,7 @@ export function SubmitForm({ isPro }: SubmitFormProps = {}) {
                 Helps others know what you’re looking for (feedback, users, etc.).
               </p>
             </div>
+            )}
 
             {isPro && (
               <div>
@@ -240,7 +244,7 @@ export function SubmitForm({ isPro }: SubmitFormProps = {}) {
                   <option value="unlisted">Unlisted — shareable private link only</option>
                 </select>
                 <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                  Unlisted projects don’t appear in the catalog; share the direct link with anyone (Creator Pro).
+                  Unlisted projects don’t appear in the catalog; share the direct link with anyone. Planned.
                 </p>
               </div>
             )}
