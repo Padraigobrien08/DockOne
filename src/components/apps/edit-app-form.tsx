@@ -86,7 +86,7 @@ export function EditAppForm({ app, isPro, initialError }: EditAppFormProps) {
                 defaultValue={app.name}
                 className="mt-1.5 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-500 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-50"
               />
-              {state?.fieldErrors?.name && (
+              {fieldErrors?.name && (
                 <p className="mt-1 text-sm text-red-600 dark:text-red-400">{fieldErrors.name}</p>
               )}
             </div>
@@ -104,7 +104,7 @@ export function EditAppForm({ app, isPro, initialError }: EditAppFormProps) {
                 className="mt-1.5 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-500 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-50"
                 placeholder="Short one-liner"
               />
-              {state?.fieldErrors?.tagline && (
+              {fieldErrors?.tagline && (
                 <p className="mt-1 text-sm text-red-600 dark:text-red-400">{fieldErrors.tagline}</p>
               )}
             </div>
@@ -122,7 +122,7 @@ export function EditAppForm({ app, isPro, initialError }: EditAppFormProps) {
                 className="mt-1.5 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-500 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-50"
                 placeholder="https://..."
               />
-              {state?.fieldErrors?.app_url && (
+              {fieldErrors?.app_url && (
                 <p className="mt-1 text-sm text-red-600 dark:text-red-400">{fieldErrors.app_url}</p>
               )}
             </div>
@@ -139,7 +139,7 @@ export function EditAppForm({ app, isPro, initialError }: EditAppFormProps) {
                 className="mt-1.5 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-500 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-50"
                 placeholder="https://github.com/..."
               />
-              {state?.fieldErrors?.repo_url && (
+              {fieldErrors?.repo_url && (
                 <p className="mt-1 text-sm text-red-600 dark:text-red-400">{fieldErrors.repo_url}</p>
               )}
             </div>
@@ -156,7 +156,7 @@ export function EditAppForm({ app, isPro, initialError }: EditAppFormProps) {
                 className="mt-1.5 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-500 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-50"
                 placeholder="https://www.youtube.com/watch?v=... or https://youtu.be/..."
               />
-              {state?.fieldErrors?.demo_video_url && (
+              {fieldErrors?.demo_video_url && (
                 <p className="mt-1 text-sm text-red-600 dark:text-red-400">{fieldErrors.demo_video_url}</p>
               )}
             </div>
@@ -174,7 +174,7 @@ export function EditAppForm({ app, isPro, initialError }: EditAppFormProps) {
                 className="mt-1.5 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-500 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-50"
                 placeholder="react, tool, cli (comma or space separated)"
               />
-              {state?.fieldErrors?.tags && (
+              {fieldErrors?.tags && (
                 <p className="mt-1 text-sm text-red-600 dark:text-red-400">{fieldErrors.tags}</p>
               )}
               <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Up to 10 tags.</p>
@@ -253,7 +253,7 @@ export function EditAppForm({ app, isPro, initialError }: EditAppFormProps) {
                 className="mt-1.5 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 font-mono text-sm text-zinc-900 placeholder-zinc-500 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-50"
                 placeholder="## What it does..."
               />
-              {state?.fieldErrors?.description && (
+              {fieldErrors?.description && (
                 <p className="mt-1 text-sm text-red-600 dark:text-red-400">{fieldErrors.description}</p>
               )}
             </div>
@@ -271,7 +271,7 @@ export function EditAppForm({ app, isPro, initialError }: EditAppFormProps) {
                 className="mt-1.5 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-500 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-50"
                 placeholder="How I use it day to day…"
               />
-              {state?.fieldErrors?.how_used && (
+              {fieldErrors?.how_used && (
                 <p className="mt-1 text-sm text-red-600 dark:text-red-400">{fieldErrors.how_used}</p>
               )}
             </div>
@@ -394,7 +394,7 @@ export function EditAppForm({ app, isPro, initialError }: EditAppFormProps) {
                 multiple
                 className="mt-1.5 w-full text-sm text-zinc-600 dark:text-zinc-400 file:mr-2 file:rounded-lg file:border-0 file:bg-zinc-200 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-zinc-900 dark:file:bg-zinc-700 dark:file:text-zinc-50"
               />
-              {state?.fieldErrors?.screenshots && (
+              {fieldErrors?.screenshots && (
                 <p className="mt-1 text-sm text-red-600 dark:text-red-400">{fieldErrors.screenshots}</p>
               )}
               <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
@@ -412,7 +412,7 @@ export function EditAppForm({ app, isPro, initialError }: EditAppFormProps) {
                 accept={ALLOWED_IMAGE_TYPES}
                 className="mt-1.5 w-full text-sm text-zinc-600 dark:text-zinc-400 file:mr-2 file:rounded-lg file:border-0 file:bg-zinc-200 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-zinc-900 dark:file:bg-zinc-700 dark:file:text-zinc-50"
               />
-              {state?.fieldErrors?.logo && (
+              {fieldErrors?.logo && (
                 <p className="mt-1 text-sm text-red-600 dark:text-red-400">{fieldErrors.logo}</p>
               )}
             </div>
