@@ -59,7 +59,7 @@ export function EditAppForm({ app, isPro }: EditAppFormProps) {
             Update your project details. Leave screenshots/logo empty to keep current media.
           </p>
 
-          <form action={formAction} className="mt-8 space-y-6">
+          <form action={formAction} encType="multipart/form-data" className="mt-8 space-y-6">
             <input type="hidden" name="app_id" value={app.id} />
             <input type="hidden" name="slug" value={app.slug} />
 

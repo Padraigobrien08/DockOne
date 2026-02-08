@@ -11,6 +11,7 @@ import { hasUsedFeaturedTokenThisMonth } from "@/lib/profile";
 import { ReportButton } from "@/components/apps/report-button";
 import { UpvoteButton } from "@/components/apps/upvote-button";
 import { FeedbackButtons } from "@/components/apps/feedback-buttons";
+import { ScreenshotsCarousel } from "@/components/apps/screenshots-carousel";
 import { getFeedbackCountsForOwner, getCurrentUserFeedback } from "@/lib/feedback";
 import { recordPageView, getAppAnalytics } from "@/lib/analytics";
 import { TrackedLink } from "@/components/apps/tracked-link";
@@ -361,35 +362,35 @@ export default async function AppDetailPage({
             )}
           </header>
 
-          {/* Primary artifact — project image as context (reduced dominance), optional caption, or neutral no-image placeholder */}
+          {/* Screenshots — show all uploaded screenshots (carousel when multiple); always show section so it's obvious where they go */}
           <section
             className="mt-6"
-            aria-labelledby="primary-artifact"
+            aria-labelledby="screenshots-heading"
           >
-            {primaryScreenshot ? (
-              <figure className="space-y-1.5">
-                <div className="relative aspect-video w-full max-h-[min(36vh,320px)] overflow-hidden rounded-xl border border-zinc-200 bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-800">
-                  <Image
-                    src={primaryScreenshot.url}
-                    alt={`What ${app.name} does`}
-                    fill
-                    className="object-contain"
-                    sizes="(max-width: 1024px) 100vw, 1024px"
-                    priority
-                  />
-                </div>
-                <figcaption className="text-xs text-zinc-500 dark:text-zinc-400">
-                  Main interface
-                </figcaption>
-              </figure>
+            <h2
+              id="screenshots-heading"
+              className="text-sm font-medium uppercase tracking-wider text-zinc-600 dark:text-zinc-300 mb-3"
+            >
+              Screenshots
+            </h2>
+            {screenshots.length > 0 ? (
+              <ScreenshotsCarousel
+                images={screenshots.map((s) => ({ id: s.id, url: s.url }))}
+                projectName={app.name}
+              />
             ) : (
-              <div
-                className="flex min-h-[140px] w-full flex-col items-center justify-center rounded-xl border border-zinc-200 bg-zinc-50/80 px-6 py-8 dark:border-zinc-700 dark:bg-zinc-800/40"
-                aria-hidden
-              >
+              <div className="flex min-h-[140px] w-full flex-col items-center justify-center rounded-xl border border-zinc-200 bg-zinc-50/80 px-6 py-8 dark:border-zinc-700 dark:bg-zinc-800/40">
                 <p className="text-center text-sm text-zinc-500 dark:text-zinc-400">
-                  Try the app to see it live.
+                  No screenshots yet. Try the app to see it live.
                 </p>
+                {isOwner && (
+                  <p className="mt-2 text-center text-xs text-zinc-400 dark:text-zinc-500">
+                    <Link href={`/apps/${app.slug}/edit`} className="underline hover:no-underline">
+                      Edit project
+                    </Link>
+                    {" "}to add screenshots.
+                  </p>
+                )}
               </div>
             )}
 

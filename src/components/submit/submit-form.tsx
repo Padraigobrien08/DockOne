@@ -309,7 +309,7 @@ export function SubmitForm({ isPro }: SubmitFormProps = {}) {
         )}
 
         {step === 2 && (
-          <form action={formAction} className="space-y-6">
+          <form action={formAction} encType="multipart/form-data" className="space-y-6">
             <input type="hidden" name="name" value={name} />
             <input type="hidden" name="tagline" value={tagline} />
             <input type="hidden" name="app_url" value={appUrl} />

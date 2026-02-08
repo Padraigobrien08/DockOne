@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 
 interface ScreenshotsCarouselProps {
   images: { id: string; url: string }[];
+  /** Project name for alt text */
+  projectName?: string;
 }
 
-export function ScreenshotsCarousel({ images }: ScreenshotsCarouselProps) {
+export function ScreenshotsCarousel({ images, projectName = "Project" }: ScreenshotsCarouselProps) {
   const [index, setIndex] = useState(0);
 
   if (!images.length) return null;
@@ -18,12 +19,11 @@ export function ScreenshotsCarousel({ images }: ScreenshotsCarouselProps) {
   return (
     <div className="space-y-2">
       <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-zinc-200 bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-800">
-        <Image
+        {/* Plain img so Supabase storage URLs always work (no next/image domain config needed) */}
+        <img
           src={images[index].url}
-          alt=""
-          fill
-          className="object-contain"
-          sizes="(max-width: 768px) 100vw, 800px"
+          alt={`${projectName} screenshot ${index + 1} of ${images.length}`}
+          className="h-full w-full object-contain"
         />
         {images.length > 1 && (
           <>
