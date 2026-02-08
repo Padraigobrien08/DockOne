@@ -134,13 +134,15 @@ export function editFormFromFormData(formData: FormData): z.input<typeof editFul
   const runtime_type = (formData.get("runtime_type") as string)?.trim() || "";
   const requirements = (formData.get("requirements") as string)?.trim() || "";
   const primary_tag = (formData.get("primary_tag") as string)?.trim() ?? "";
+  const runtimeTypeParsed = runtimeTypeEnum.safeParse(runtime_type);
+  const requirementsParsed = requirementsEnum.safeParse(requirements);
   return {
     ...base,
     what_it_does: what_it_does || undefined,
     what_it_does_not: what_it_does_not || undefined,
     why_this_exists: why_this_exists || undefined,
-    runtime_type: runtime_type && runtimeTypeEnum.safeParse(runtime_type).success ? runtime_type : undefined,
-    requirements: requirements && requirementsEnum.safeParse(requirements).success ? requirements : undefined,
+    runtime_type: runtimeTypeParsed.success ? runtimeTypeParsed.data : undefined,
+    requirements: requirementsParsed.success ? requirementsParsed.data : undefined,
     primary_tag: primary_tag || undefined,
   };
 }
