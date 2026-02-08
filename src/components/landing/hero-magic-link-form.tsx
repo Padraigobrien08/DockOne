@@ -1,18 +1,38 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createClientAsync } from "@/lib/supabase/client";
 
 const EMAIL_INPUT_ID = "hero-magic-link-email";
 const HELPER_ID = "hero-magic-link-helper";
 const ERROR_ID = "hero-magic-link-error";
 const SUCCESS_ID = "hero-magic-link-success";
+const RATE_LIMIT_COOLDOWN_SEC = 60;
+
+function friendlyError(message: string): string {
+  const m = message.toLowerCase();
+  if (m.includes("rate limit") || m.includes("wait") || m.includes("seconds"))
+    return "Too many attempts. Please wait a minute before requesting another link.";
+  return message;
+}
+
+function isRateLimitError(message: string): boolean {
+  const m = message.toLowerCase();
+  return m.includes("rate limit") || m.includes("wait") || /\d+\s*seconds?/.test(m);
+}
 
 export function HeroMagicLinkForm() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [cooldownSec, setCooldownSec] = useState(0);
+
+  useEffect(() => {
+    if (cooldownSec <= 0) return;
+    const t = setInterval(() => setCooldownSec((s) => (s <= 1 ? 0 : s - 1)), 1000);
+    return () => clearInterval(t);
+  }, [cooldownSec]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -32,10 +52,26 @@ export function HeroMagicLinkForm() {
     });
     setLoading(false);
     if (err) {
-      setError(err.message);
+      setError(friendlyError(err.message));
+      if (isRateLimitError(err.message)) setCooldownSec(RATE_LIMIT_COOLDOWN_SEC);
       return;
     }
     setSent(true);
+  }
+
+  async function handleGoogleSignIn() {
+    setError(null);
+    const supabase = await createClientAsync();
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const { data, error: err } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${origin}/auth/callback` },
+    });
+    if (err) {
+      setError(err.message);
+      return;
+    }
+    if (data?.url) window.location.href = data.url;
   }
 
   if (sent) {
@@ -83,10 +119,10 @@ export function HeroMagicLinkForm() {
         />
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || cooldownSec > 0}
           className="w-full rounded-lg bg-violet-600 px-5 py-3.5 text-sm font-medium text-white shadow-lg shadow-violet-500/25 transition-colors hover:bg-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:ring-offset-zinc-950 disabled:opacity-60 disabled:pointer-events-none sm:w-auto sm:rounded-l-none"
         >
-          {loading ? "Sending…" : "Send magic link"}
+          {loading ? "Sending…" : cooldownSec > 0 ? `Wait ${cooldownSec}s` : "Send magic link"}
         </button>
       </div>
       <div className="flex flex-col gap-1.5">
@@ -103,6 +139,16 @@ export function HeroMagicLinkForm() {
             {error}
           </p>
         )}
+        <div className="flex items-center gap-3 pt-1">
+          <span className="text-xs text-zinc-500">Or</span>
+          <button
+            type="button"
+            onClick={handleGoogleSignIn}
+            className="text-sm font-medium text-violet-400 hover:text-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:ring-offset-zinc-950 rounded"
+          >
+            Sign in with Google
+          </button>
+        </div>
       </div>
     </form>
   );

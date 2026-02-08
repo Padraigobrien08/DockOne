@@ -66,6 +66,21 @@ export function SignInForm() {
     setSent(true);
   }
 
+  async function handleGoogleSignIn() {
+    setError(null);
+    const supabase = await createClientAsync();
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const { data, error: err } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${origin}/auth/callback` },
+    });
+    if (err) {
+      setError(err.message);
+      return;
+    }
+    if (data?.url) window.location.href = data.url;
+  }
+
   return (
     <div className="py-12 sm:py-16">
       <Container>
@@ -109,6 +124,14 @@ export function SignInForm() {
                 className="w-full rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
               >
                 {loading ? "Sending…" : cooldownSec > 0 ? `Wait ${cooldownSec}s` : "Send magic link"}
+              </button>
+              <p className="text-center text-xs text-zinc-500 dark:text-zinc-400">Or</p>
+              <button
+                type="button"
+                onClick={handleGoogleSignIn}
+                className="w-full rounded-lg border border-zinc-300 px-4 py-2.5 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
+              >
+                Sign in with Google
               </button>
             </form>
           )}

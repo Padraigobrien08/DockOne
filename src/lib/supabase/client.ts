@@ -34,6 +34,11 @@ function mockBrowserClient(): SupabaseClient {
           data: { user: null, session: null },
           error: { message: MOCK_ERROR_MSG },
         }),
+      signInWithOAuth: () =>
+        Promise.resolve({
+          data: { provider: null, url: null },
+          error: { message: MOCK_ERROR_MSG },
+        }),
       signOut: () => Promise.resolve({ error: null }),
     },
     from: mockFrom,
