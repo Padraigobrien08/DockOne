@@ -209,7 +209,7 @@ export function AppCard({ app, creatorStats, isBoosted, headingLevel = 2, overri
             </span>
           ))}
           {app.tags
-            .filter((tag) => !INTENT_TAGS.includes(tag))
+            .filter((tag) => !INTENT_TAGS.includes(tag as (typeof INTENT_TAGS)[number]))
             .slice(0, 5)
             .map((tag) => {
               const variant = getTagVariant(tag);
