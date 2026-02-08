@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 /**
  * Refreshes the Supabase auth session on every request.
- * Server Components can read cookies but cannot write them; middleware can.
+ * Server Components can read cookies but cannot write them; the proxy can.
  * Without this, when the JWT expires (e.g. after ~1 hour) the user appears logged out.
  */
 export async function updateSession(request: NextRequest) {
