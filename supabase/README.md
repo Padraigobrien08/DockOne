@@ -46,4 +46,4 @@ With the Supabase CLI and local DB: after `supabase db reset` (which runs migrat
 - **Votes**: Migration `006_votes_rls.sql` enables SELECT (for counts), INSERT/DELETE for authenticated users (own vote). **Reports**: Migration `007_reports.sql` adds `reports` table; authenticated users can insert, admins can select.
 - **Storage**: After running migrations, create these buckets in the Dashboard (**Storage** → **New bucket**), then run the corresponding migration (or `supabase db push`):
   - `avatars`: Public on. RLS in `002_storage_avatars.sql` — users upload under `avatars/{user_id}/`.
-  - `app-media`: Public on. RLS in `003_storage_app_media.sql` — app owners upload under `app-media/{app_id}/`.
+  - `app-media`: Public on. RLS in `003_storage_app_media.sql`; `028_storage_app_media_rls_fix.sql` fixes upload RLS (run if you see "row-level security policy" on screenshot upload).
