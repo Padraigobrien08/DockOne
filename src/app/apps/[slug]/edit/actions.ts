@@ -38,16 +38,25 @@ function validateFiles(screenshotFiles: File[], logoFile: File | null): EditStat
   return Object.keys(fieldErrors).length > 0 ? fieldErrors : undefined;
 }
 
-export async function updateApp(_prev: EditState, formData: FormData): Promise<EditState> {
+/** Result of performing the edit (used by both Server Action and API route). */
+export type PerformEditResult =
+  | { ok: true; slug: string }
+  | { ok: false; error?: string; fieldErrors?: Record<string, string> };
+
+/**
+ * Perform the app update (auth, validation, DB update, storage upload).
+ * Used by the Server Action and by the API route so file uploads work in both.
+ */
+export async function performAppEdit(formData: FormData): Promise<PerformEditResult> {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect("/auth/sign-in");
+  if (!user) return { ok: false, error: "Sign in required." };
 
   const appId = (formData.get("app_id") as string)?.trim();
   const slug = (formData.get("slug") as string)?.trim();
-  if (!appId || !slug) return { error: "Missing app." };
+  if (!appId || !slug) return { ok: false, error: "Missing app." };
 
   const { data: row } = await supabase
     .from("apps")
@@ -55,7 +64,7 @@ export async function updateApp(_prev: EditState, formData: FormData): Promise<E
     .eq("id", appId)
     .single();
   if (!row || (row as { owner_id: string }).owner_id !== user.id) {
-    return { error: "You can only edit your own project." };
+    return { ok: false, error: "You can only edit your own project." };
   }
 
   const screenshotFiles = formData.getAll("screenshots") as File[];
@@ -63,11 +72,11 @@ export async function updateApp(_prev: EditState, formData: FormData): Promise<E
   const raw = editFormFromFormData(formData);
   const parsed = editFullSchema.safeParse(raw);
   if (!parsed.success) {
-    return { fieldErrors: zodFieldErrors(parsed.error) };
+    return { ok: false, fieldErrors: zodFieldErrors(parsed.error) };
   }
 
   const fileErrors = validateFiles(screenshotFiles, logoFile);
-  if (fileErrors) return { fieldErrors: fileErrors };
+  if (fileErrors) return { ok: false, fieldErrors: fileErrors };
 
   const {
     name,
@@ -114,7 +123,7 @@ export async function updateApp(_prev: EditState, formData: FormData): Promise<E
     })
     .eq("id", appId);
 
-  if (updateError) return { error: updateError.message };
+  if (updateError) return { ok: false, error: updateError.message };
 
   await supabase.from("app_tags").delete().eq("app_id", appId);
   if (tags.length > 0) {
@@ -124,7 +133,9 @@ export async function updateApp(_prev: EditState, formData: FormData): Promise<E
   const bucket = "app-media";
   const prefix = `${appId}/`;
 
-  const screenshotsToUpload = screenshotFiles.filter((f) => f.size > 0);
+  const screenshotsToUpload = screenshotFiles.filter(
+    (f): f is File => f instanceof File && typeof f.size === "number" && f.size > 0
+  );
   if (screenshotsToUpload.length > 0) {
     const { data: existingMedia } = await supabase
       .from("app_media")
@@ -140,18 +151,30 @@ export async function updateApp(_prev: EditState, formData: FormData): Promise<E
       const file = screenshotsToUpload[i];
       const ext = file.name.split(".").pop() || "jpg";
       const path = `${prefix}screenshot-${i + 1}-${crypto.randomUUID().slice(0, 8)}.${ext}`;
-      const buffer = Buffer.from(await file.arrayBuffer());
+      let buffer: Buffer;
+      try {
+        buffer = Buffer.from(await file.arrayBuffer());
+      } catch {
+        return { ok: false, error: "Screenshots could not be read. Try again with smaller files (max 5MB each)." };
+      }
       const { error: upErr } = await supabase.storage
         .from(bucket)
         .upload(path, buffer, { contentType: file.type, upsert: true });
-      if (!upErr) {
-        const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(path);
-        await supabase.from("app_media").insert({
-          app_id: appId,
-          kind: "screenshot",
-          url: publicUrl,
-          sort_order: i,
-        });
+      if (upErr) {
+        return {
+          ok: false,
+          error: `Screenshot upload failed: ${upErr.message}. In Supabase Dashboard → Storage, ensure the "app-media" bucket exists and is public.`,
+        };
+      }
+      const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(path);
+      const { error: insertErr } = await supabase.from("app_media").insert({
+        app_id: appId,
+        kind: "screenshot",
+        url: publicUrl,
+        sort_order: i,
+      });
+      if (insertErr) {
+        return { ok: false, error: `Failed to save screenshot: ${insertErr.message}` };
       }
     }
   }
@@ -187,5 +210,14 @@ export async function updateApp(_prev: EditState, formData: FormData): Promise<E
 
   revalidatePath(`/apps/${slug}`);
   revalidatePath("/apps");
-  redirect(`/apps/${slug}`);
+  return { ok: true, slug };
+}
+
+export async function updateApp(_prev: EditState, formData: FormData): Promise<EditState> {
+  const result = await performAppEdit(formData);
+  if (result.ok) redirect(`/apps/${result.slug}`);
+  return {
+    error: result.error,
+    fieldErrors: result.fieldErrors,
+  };
 }

@@ -6,10 +6,13 @@ import { EditAppForm } from "@/components/apps/edit-app-form";
 
 export default async function EditAppPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ error?: string }>;
 }) {
   const { slug } = await params;
+  const { error: errorParam } = await searchParams;
   const user = await getUser();
   if (!user) redirect("/auth/sign-in");
 
@@ -24,5 +27,5 @@ export default async function EditAppPage({
     // Default to false
   }
 
-  return <EditAppForm app={app} isPro={isPro} />;
+  return <EditAppForm app={app} isPro={isPro} initialError={errorParam ?? undefined} />;
 }

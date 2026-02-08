@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useActionState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { Container } from "@/components/ui/container";
-import { updateApp, type EditState } from "@/app/apps/[slug]/edit/actions";
 import { INTENT_TAGS, APP_RUNTIME_LABELS, APP_REQUIREMENTS_LABELS, type AppDetail } from "@/types";
 import type { AppVisibility } from "@/types";
 
@@ -35,11 +34,15 @@ function toggleTagInString(tagsString: string, tag: string, add: boolean): strin
 interface EditAppFormProps {
   app: AppDetail;
   isPro?: boolean;
+  /** Error from URL (e.g. after API route redirect on failure). */
+  initialError?: string;
 }
 
-export function EditAppForm({ app, isPro }: EditAppFormProps) {
-  const [state, formAction, isPending] = useActionState(updateApp, {} as EditState);
+export function EditAppForm({ app, isPro, initialError }: EditAppFormProps) {
+  const [isPending, setIsPending] = useState(false);
   const [tags, setTags] = useState(() => (app.tags ?? []).join(", "));
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const error = initialError ?? undefined;
 
   return (
     <div className="py-8 sm:py-12">
@@ -59,7 +62,13 @@ export function EditAppForm({ app, isPro }: EditAppFormProps) {
             Update your project details. Leave screenshots/logo empty to keep current media.
           </p>
 
-          <form action={formAction} encType="multipart/form-data" className="mt-8 space-y-6">
+          <form
+            action={`/api/apps/${app.slug}/edit`}
+            method="POST"
+            encType="multipart/form-data"
+            className="mt-8 space-y-6"
+            onSubmit={() => setIsPending(true)}
+          >
             <input type="hidden" name="app_id" value={app.id} />
             <input type="hidden" name="slug" value={app.slug} />
 
@@ -78,7 +87,7 @@ export function EditAppForm({ app, isPro }: EditAppFormProps) {
                 className="mt-1.5 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-500 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-50"
               />
               {state?.fieldErrors?.name && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{state.fieldErrors.name}</p>
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{fieldErrors.name}</p>
               )}
             </div>
 
@@ -96,7 +105,7 @@ export function EditAppForm({ app, isPro }: EditAppFormProps) {
                 placeholder="Short one-liner"
               />
               {state?.fieldErrors?.tagline && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{state.fieldErrors.tagline}</p>
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{fieldErrors.tagline}</p>
               )}
             </div>
 
@@ -114,7 +123,7 @@ export function EditAppForm({ app, isPro }: EditAppFormProps) {
                 placeholder="https://..."
               />
               {state?.fieldErrors?.app_url && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{state.fieldErrors.app_url}</p>
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{fieldErrors.app_url}</p>
               )}
             </div>
 
@@ -131,7 +140,7 @@ export function EditAppForm({ app, isPro }: EditAppFormProps) {
                 placeholder="https://github.com/..."
               />
               {state?.fieldErrors?.repo_url && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{state.fieldErrors.repo_url}</p>
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{fieldErrors.repo_url}</p>
               )}
             </div>
 
@@ -148,7 +157,7 @@ export function EditAppForm({ app, isPro }: EditAppFormProps) {
                 placeholder="https://www.youtube.com/watch?v=... or https://youtu.be/..."
               />
               {state?.fieldErrors?.demo_video_url && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{state.fieldErrors.demo_video_url}</p>
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{fieldErrors.demo_video_url}</p>
               )}
             </div>
 
@@ -166,7 +175,7 @@ export function EditAppForm({ app, isPro }: EditAppFormProps) {
                 placeholder="react, tool, cli (comma or space separated)"
               />
               {state?.fieldErrors?.tags && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{state.fieldErrors.tags}</p>
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{fieldErrors.tags}</p>
               )}
               <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Up to 10 tags.</p>
             </div>
@@ -245,7 +254,7 @@ export function EditAppForm({ app, isPro }: EditAppFormProps) {
                 placeholder="## What it does..."
               />
               {state?.fieldErrors?.description && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{state.fieldErrors.description}</p>
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{fieldErrors.description}</p>
               )}
             </div>
 
@@ -263,7 +272,7 @@ export function EditAppForm({ app, isPro }: EditAppFormProps) {
                 placeholder="How I use it day to day…"
               />
               {state?.fieldErrors?.how_used && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{state.fieldErrors.how_used}</p>
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{fieldErrors.how_used}</p>
               )}
             </div>
 
@@ -386,7 +395,7 @@ export function EditAppForm({ app, isPro }: EditAppFormProps) {
                 className="mt-1.5 w-full text-sm text-zinc-600 dark:text-zinc-400 file:mr-2 file:rounded-lg file:border-0 file:bg-zinc-200 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-zinc-900 dark:file:bg-zinc-700 dark:file:text-zinc-50"
               />
               {state?.fieldErrors?.screenshots && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{state.fieldErrors.screenshots}</p>
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{fieldErrors.screenshots}</p>
               )}
               <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
                 Leave empty to keep current. Up to {SCREENSHOTS_MAX}. JPEG, PNG or WebP. Max 5MB each.
@@ -404,12 +413,12 @@ export function EditAppForm({ app, isPro }: EditAppFormProps) {
                 className="mt-1.5 w-full text-sm text-zinc-600 dark:text-zinc-400 file:mr-2 file:rounded-lg file:border-0 file:bg-zinc-200 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-zinc-900 dark:file:bg-zinc-700 dark:file:text-zinc-50"
               />
               {state?.fieldErrors?.logo && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{state.fieldErrors.logo}</p>
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{fieldErrors.logo}</p>
               )}
             </div>
 
-            {state?.error && (
-              <p className="text-sm text-red-600 dark:text-red-400">{state.error}</p>
+            {error && (
+              <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
             )}
 
             <div className="flex gap-3">
