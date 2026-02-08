@@ -30,19 +30,25 @@ type DetailRow = {
   name: string;
   tagline: string | null;
   description: string | null;
+  how_used: string | null;
   status: string;
   lifecycle: string;
   visibility?: string;
   app_url: string | null;
   repo_url: string | null;
   demo_video_url: string | null;
-  graduated_url: string | null;
   rejection_reason: string | null;
   byok_required: boolean;
   created_at: string;
   updated_at: string;
   owner_id: string;
   slug: string;
+  why_this_exists?: string | null;
+  what_it_does?: string | null;
+  what_it_does_not?: string | null;
+  runtime_type?: string | null;
+  requirements?: string | null;
+  primary_tag?: string | null;
   profiles: {
     id: string;
     username: string;
@@ -213,7 +219,7 @@ export async function getAppBySlug(
   const query = supabase
     .from("apps")
     .select(
-      "id, name, tagline, description, status, lifecycle, visibility, app_url, repo_url, demo_video_url, graduated_url, rejection_reason, byok_required, created_at, updated_at, owner_id, slug, profiles!owner_id(id, username, display_name, avatar_url, subscription_tier, pro_until), app_tags(tag), app_media(id, url, sort_order, kind)"
+      "id, name, tagline, description, how_used, status, lifecycle, visibility, app_url, repo_url, demo_video_url, rejection_reason, byok_required, created_at, updated_at, owner_id, slug, why_this_exists, what_it_does, what_it_does_not, runtime_type, requirements, primary_tag, profiles!owner_id(id, username, display_name, avatar_url, subscription_tier, pro_until), app_tags(tag), app_media(id, url, sort_order, kind)"
     )
     .eq("slug", slug);
 
@@ -249,11 +255,12 @@ export async function getAppBySlug(
     name: row.name,
     tagline: row.tagline,
     description: row.description,
+    how_used: row.how_used ?? null,
     status,
+    moderationState: status,
     app_url: row.app_url,
     repo_url: row.repo_url,
     demo_video_url: row.demo_video_url,
-    graduated_url: row.graduated_url ?? null,
     rejection_reason: row.rejection_reason ?? null,
     byok_required: row.byok_required ?? false,
     created_at: row.created_at,
@@ -273,6 +280,12 @@ export async function getAppBySlug(
     user_has_voted: !!userVote.data,
     lifecycle: (row.lifecycle ?? "wip") as AppDetail["lifecycle"],
     visibility: (row.visibility ?? "public") as AppDetail["visibility"],
+    whyThisExists: row.why_this_exists ?? null,
+    whatItDoes: row.what_it_does ?? null,
+    whatItDoesNot: row.what_it_does_not ?? null,
+    runtimeType: (row.runtime_type as AppDetail["runtimeType"]) ?? null,
+    requirements: (row.requirements as AppDetail["requirements"]) ?? null,
+    primaryTag: row.primary_tag ?? null,
   };
 }
 

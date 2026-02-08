@@ -67,7 +67,7 @@ export default async function AdminPage() {
             Curate Staff picks, Best BYOK tools, Best dev utilities. Add or remove projects by slug.
           </p>
           <div className="mt-4">
-            <AdminCollectionsList collections={staffWithApps.filter(Boolean)} />
+            <AdminCollectionsList collections={staffWithApps.filter((c): c is NonNullable<typeof c> => c != null)} />
           </div>
         </section>
       </Container>

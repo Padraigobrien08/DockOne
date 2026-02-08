@@ -31,6 +31,8 @@ export function SubmitForm({ isPro }: SubmitFormProps = {}) {
   const [lifecycle, setLifecycle] = useState<AppLifecycle>("wip");
   const [visibility, setVisibility] = useState<AppVisibility>("public");
   const [description, setDescription] = useState("");
+  const [howUsed, setHowUsed] = useState("");
+  const [demoVideoUrl, setDemoVideoUrl] = useState("");
 
   const canProceedStep1 =
     name.trim().length >= 1 && name.trim().length <= 100 && appUrl.trim().length >= 1;
@@ -280,6 +282,7 @@ export function SubmitForm({ isPro }: SubmitFormProps = {}) {
             <input type="hidden" name="byok_required" value={byokRequired ? "on" : ""} />
             <input type="hidden" name="lifecycle" value={lifecycle} />
             <input type="hidden" name="visibility" value={visibility} />
+            <input type="hidden" name="demo_video_url" value={demoVideoUrl} />
 
             <div>
               <label
@@ -305,6 +308,59 @@ export function SubmitForm({ isPro }: SubmitFormProps = {}) {
               )}
               <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
                 Max 10,000 characters.
+              </p>
+            </div>
+
+            <div>
+              <label
+                htmlFor="how_used"
+                className="block text-sm font-medium text-zinc-900 dark:text-zinc-50"
+              >
+                How this is used <span className="font-normal text-zinc-500 dark:text-zinc-400">(optional)</span>
+              </label>
+              <textarea
+                id="how_used"
+                name="how_used"
+                rows={5}
+                maxLength={5000}
+                value={howUsed}
+                onChange={(e) => setHowUsed(e.target.value)}
+                className="mt-1.5 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-500 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-50 dark:placeholder-zinc-400"
+                placeholder="How I use it day to day…"
+              />
+              {state?.fieldErrors?.how_used && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                  {state.fieldErrors.how_used}
+                </p>
+              )}
+              <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                First-person, real usage — not features or plans. Markdown supported. Max 5,000 characters.
+              </p>
+            </div>
+
+            <div>
+              <label
+                htmlFor="demo_video_url"
+                className="block text-sm font-medium text-zinc-900 dark:text-zinc-50"
+              >
+                Demo video (YouTube) <span className="font-normal text-zinc-500 dark:text-zinc-400">(optional)</span>
+              </label>
+              <input
+                id="demo_video_url"
+                name="demo_video_url"
+                type="url"
+                value={demoVideoUrl}
+                onChange={(e) => setDemoVideoUrl(e.target.value)}
+                className="mt-1.5 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-500 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-50 dark:placeholder-zinc-400"
+                placeholder="https://www.youtube.com/watch?v=... or https://youtu.be/..."
+              />
+              {state?.fieldErrors?.demo_video_url && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                  {state.fieldErrors.demo_video_url}
+                </p>
+              )}
+              <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                A short YouTube walkthrough or demo. YouTube links only.
               </p>
             </div>
 

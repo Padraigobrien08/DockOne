@@ -32,6 +32,21 @@ export async function setAppFeedback(
   return {};
 }
 
+export async function clearAppFeedback(appId: string, slug: string): Promise<{ error?: string }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Sign in to change your signal" };
+
+  const { error } = await supabase
+    .from("app_feedback")
+    .delete()
+    .eq("app_id", appId)
+    .eq("user_id", user.id);
+  if (error) return { error: error.message };
+  revalidatePath(`/apps/${slug}`);
+  return {};
+}
+
 export async function submitReport(appId: string, reason: string | null): Promise<{ error?: string }> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

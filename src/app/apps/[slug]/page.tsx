@@ -5,23 +5,25 @@ import ReactMarkdown from "react-markdown";
 import { Container } from "@/components/ui/container";
 import { getAppBySlug } from "@/lib/apps";
 import { getTagVariant } from "@/lib/tag-variants";
+import { getEffectivePrimaryTag, getTagAccentStyles } from "@/lib/tag-accent";
 import { getUser } from "@/lib/supabase/server";
-import { getIsAdmin, hasUsedFeaturedTokenThisMonth } from "@/lib/profile";
-import { ScreenshotsCarousel } from "@/components/apps/screenshots-carousel";
+import { hasUsedFeaturedTokenThisMonth } from "@/lib/profile";
 import { ReportButton } from "@/components/apps/report-button";
 import { UpvoteButton } from "@/components/apps/upvote-button";
 import { FeedbackButtons } from "@/components/apps/feedback-buttons";
 import { getFeedbackCountsForOwner, getCurrentUserFeedback } from "@/lib/feedback";
-import { getCreatorStats } from "@/lib/creator-stats";
 import { recordPageView, getAppAnalytics } from "@/lib/analytics";
 import { TrackedLink } from "@/components/apps/tracked-link";
-import { AppAnalyticsSection } from "@/components/apps/app-analytics-section";
 import { FeaturedButton } from "@/components/apps/featured-button";
 import { BoostButton } from "@/components/apps/boost-button";
-import { StickyOpenProject } from "@/components/apps/sticky-open-project";
 import { getActiveBoosts, countActiveBoosts, MAX_ACTIVE_BOOSTS } from "@/lib/boosts";
 import type { Metadata } from "next";
-import { APP_LIFECYCLE_LABELS, APP_LIFECYCLE_CARD_CLASS } from "@/types";
+import {
+  APP_LIFECYCLE_LABELS,
+  APP_LIFECYCLE_CARD_CLASS,
+  APP_RUNTIME_LABELS,
+  APP_REQUIREMENTS_LABELS,
+} from "@/types";
 import type { AppDetail } from "@/types";
 
 export async function generateMetadata({
@@ -38,26 +40,6 @@ export async function generateMetadata({
   return {};
 }
 
-const STATUS_LABEL: Record<AppDetail["status"], string> = {
-  pending: "Pending",
-  approved: "Approved",
-  rejected: "Rejected",
-};
-
-const STATUS_CLASS: Record<AppDetail["status"], string> = {
-  pending: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-200",
-  approved: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-200",
-  rejected: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200",
-};
-
-/** One-line intent for lifecycle; used to surface what the creator wants right now. */
-const LIFECYCLE_INTENT: Record<AppDetail["lifecycle"], string | null> = {
-  wip: null,
-  looking_for_feedback: "The creator is looking for feedback — try it and tell them what works.",
-  looking_for_users: "The creator is looking for users — try it and share how you use it.",
-  dormant: null,
-};
-
 export default async function AppDetailPage({
   params,
   searchParams,
@@ -71,17 +53,15 @@ export default async function AppDetailPage({
   const app = await getAppBySlug(slug, user?.id);
   if (!app) notFound();
 
-  const showStatusBadge = user && (user.id === app.owner.id || (await getIsAdmin(user.id)));
   const isOwner = user?.id === app.owner.id;
   const showPendingBanner = app.status === "pending" && isOwner && pendingParam === "1";
 
   if (!isOwner) void recordPageView(app.id);
 
-  const [feedbackCounts, currentUserFeedback, creatorStats, analytics, featuredTokenUsed, boostMap, activeBoostCount] =
+  const [feedbackCounts, currentUserFeedback, analytics, featuredTokenUsed, boostMap, activeBoostCount] =
     await Promise.all([
       getFeedbackCountsForOwner(app.id, app.owner.id, user?.id ?? null),
       getCurrentUserFeedback(app.id, user?.id ?? null),
-      getCreatorStats(app.owner.id),
       isOwner ? getAppAnalytics(app.id, app.owner.id, user?.id ?? null) : Promise.resolve(null),
       isOwner && app.owner.isPro
         ? hasUsedFeaturedTokenThisMonth(app.owner.id)
@@ -96,13 +76,112 @@ export default async function AppDetailPage({
   const screenshots = app.media
     .filter((m) => m.kind === "screenshot")
     .map((m) => ({ id: m.id, url: m.url }));
+  const primaryScreenshot = screenshots[0] ?? null;
+  const hasDemo = !!app.app_url?.trim();
+  const explanationFromWhatItDoes = app.whatItDoes?.trim() || null;
+  const explanationFromHowUsed = app.how_used?.trim() || null;
+  const explanationFromDescription = app.description?.trim() || null;
+  type ArtifactType = "screenshot" | "demo" | "explanation";
+  const primaryArtifact: ArtifactType = primaryScreenshot
+    ? "screenshot"
+    : hasDemo
+      ? "demo"
+      : "explanation";
+  const primaryExplanation =
+    primaryArtifact === "explanation"
+      ? explanationFromWhatItDoes || explanationFromHowUsed || explanationFromDescription
+      : null;
+  const primaryExplanationIsHowUsed =
+    !explanationFromWhatItDoes && !!explanationFromHowUsed && primaryArtifact === "explanation";
 
   const displayName = app.owner.display_name || app.owner.username;
+  const displayTags = app.primaryTag
+    ? [app.primaryTag, ...app.tags.filter((t) => t !== app.primaryTag)]
+    : app.tags;
+  const effectivePrimaryTag = getEffectivePrimaryTag(app.primaryTag, app.tags);
+  const accentStyles = getTagAccentStyles(effectivePrimaryTag);
+
+  const hasAppUrl = !!app.app_url?.trim();
+
+  // At a glance: always render with sensible defaults
+  const atGlanceWhatRaw =
+    app.tagline?.trim() ||
+    app.whatItDoes?.trim() ||
+    app.how_used?.trim() ||
+    app.description?.trim() ||
+    "";
+  const atGlanceWhat =
+    atGlanceWhatRaw &&
+    (app.tagline?.trim()
+      ? app.tagline.trim()
+      : (() => {
+          const plain = atGlanceWhatRaw
+            .replace(/\n+/g, " ")
+            .replace(/\s+/g, " ")
+            .replace(/^#+\s*|\*\*?/g, "")
+            .trim();
+          const take = plain.slice(0, 220);
+          const lastPeriod = take.lastIndexOf(".");
+          return lastPeriod > 60 ? take.slice(0, lastPeriod + 1) : take;
+        })());
+  const atGlanceWhere = app.runtimeType
+    ? APP_RUNTIME_LABELS[app.runtimeType]
+    : app.app_url?.trim()
+      ? "Runs in the browser"
+      : app.repo_url?.trim()
+        ? "Local or CLI — check repo"
+        : "To be added";
+  const atGlanceWho = "Anyone";
+
+  /** YouTube URL → embed URL for iframe (watch, youtu.be, or embed). */
+  function getYoutubeEmbedUrl(url: string): string | null {
+    try {
+      const u = new URL(url.trim());
+      if (u.hostname === "youtu.be") {
+        const id = u.pathname.slice(1).split("?")[0];
+        return id ? `https://www.youtube.com/embed/${id}` : null;
+      }
+      if (u.hostname?.replace("www.", "") === "youtube.com") {
+        const v = u.searchParams.get("v");
+        if (v) return `https://www.youtube.com/embed/${v}`;
+        if (u.pathname.startsWith("/embed/")) return url;
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  }
+  const demoVideoEmbedUrl = app.demo_video_url?.trim()
+    ? getYoutubeEmbedUrl(app.demo_video_url)
+    : null;
+
+  /** Strip a leading markdown heading line if it matches the block label (avoids duplicate "What it does" etc.). */
+  function stripLeadingMatchingHeading(md: string, label: string): string {
+    const trimmed = md.trimStart();
+    const firstLine = trimmed.split("\n")[0];
+    const match = firstLine?.match(/^#+\s*(.+?)\s*$/);
+    if (!match) return md;
+    const headingText = match[1].trim();
+    if (headingText.toLowerCase() !== label.trim().toLowerCase()) return md;
+    const rest = trimmed.slice(trimmed.indexOf("\n") + 1).trimStart();
+    return rest || trimmed;
+  }
 
   return (
-    <div className={`py-8 sm:py-12 ${app.app_url ? "pb-24 md:pb-28" : ""}`}>
+    <div className="py-6 sm:py-10">
       <Container>
-        <div className="mx-auto max-w-3xl">
+        <div
+          className={`mx-auto max-w-3xl ${effectivePrimaryTag ? `pl-4 border-l-4 ${accentStyles.borderClass} sm:pl-6` : ""}`}
+        >
+          <Link
+            href="/apps"
+            className="mb-6 inline-flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
+          >
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            Back to projects
+          </Link>
           {showPendingBanner && (
             <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-200">
               <strong>Pending approval.</strong> Your project is under review and will appear in the
@@ -124,118 +203,308 @@ export default async function AppDetailPage({
               so the project can use it. Keys stay in your browser and are never sent to our server.
             </div>
           )}
-          {/* Hero: title + tagline only */}
-          <header>
-            <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-3xl">
-              {app.name}
-            </h1>
-            {app.tagline && (
-              <p className="mt-2 text-lg text-zinc-600 dark:text-zinc-400">{app.tagline}</p>
-            )}
+          {app.visibility === "unlisted" && (
+            <p className="mb-5 text-sm text-zinc-500 dark:text-zinc-400">
+              Unlisted — accessible by link.
+            </p>
+          )}
+          {/* Header: 1. Name 2. Tagline 3. Primary actions 4. Metadata (status, creator, tags) */}
+          <header className="space-y-4">
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-3xl">
+                {app.name}
+              </h1>
+              {app.tagline && (
+                <p className="mt-1 text-base text-zinc-600 dark:text-zinc-400">
+                  {app.tagline}
+                </p>
+              )}
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              {app.app_url?.trim() ? (
+                <>
+                  <TrackedLink
+                    appId={app.id}
+                    eventType="demo_click"
+                    href={app.app_url}
+                    highlightPro={!!app.owner.isPro}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                  >
+                    Open app
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </TrackedLink>
+                  {app.repo_url?.trim() && (
+                    <TrackedLink
+                      appId={app.id}
+                      eventType="repo_click"
+                      href={app.repo_url}
+                      highlightPro={!!app.owner.isPro}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                    >
+                      View repo
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                    </TrackedLink>
+                  )}
+                </>
+              ) : app.repo_url?.trim() ? (
+                <>
+                  <TrackedLink
+                    appId={app.id}
+                    eventType="repo_click"
+                    href={app.repo_url}
+                    highlightPro={!!app.owner.isPro}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                  >
+                    View repo
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </TrackedLink>
+                </>
+              ) : (
+                <span
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-zinc-50/80 px-4 py-2 text-sm font-medium text-zinc-400 dark:border-zinc-700 dark:bg-zinc-800/50 dark:text-zinc-500"
+                  aria-hidden
+                >
+                  Demo link coming soon
+                </span>
+              )}
+            </div>
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs text-zinc-500 dark:text-zinc-400" role="group" aria-label="Project metadata">
+              <span
+                className={`rounded px-1.5 py-0.5 font-medium ${APP_LIFECYCLE_CARD_CLASS[app.lifecycle]}`}
+              >
+                {APP_LIFECYCLE_LABELS[app.lifecycle]}
+              </span>
+              <span className="text-zinc-300 dark:text-zinc-600" aria-hidden>·</span>
+              <Link
+                href={`/u/${app.owner.username}`}
+                className="flex items-center gap-1.5 hover:text-zinc-700 dark:hover:text-zinc-300"
+              >
+                {app.owner.avatar_url ? (
+                  <Image src={app.owner.avatar_url} alt="" width={16} height={16} className="rounded-full" />
+                ) : (
+                  <span className="h-4 w-4 rounded-full bg-zinc-300 dark:bg-zinc-600" />
+                )}
+                {displayName}
+              </Link>
+              {app.visibility === "unlisted" && (
+                <>
+                  <span className="text-zinc-300 dark:text-zinc-600" aria-hidden>·</span>
+                  <span className="rounded bg-zinc-200 px-1.5 py-0.5 text-[11px] font-medium text-zinc-600 dark:bg-zinc-600 dark:text-zinc-200">
+                    Unlisted
+                  </span>
+                </>
+              )}
+              {displayTags.length > 0 && (
+                <>
+                  <span className="text-zinc-300 dark:text-zinc-600" aria-hidden>·</span>
+                  <span className="flex flex-wrap gap-1">
+                    {displayTags.map((tag) => {
+                      const variant = getTagVariant(tag);
+                      const stateClass = "rounded border-l-2 border-zinc-400/40 pl-1 pr-1.5 py-0.5 text-zinc-500 dark:text-zinc-400";
+                      const requirementClass = "rounded bg-violet-50/70 dark:bg-violet-950/25 px-1.5 py-0.5 text-violet-600 dark:text-violet-400";
+                      const defaultClass = "rounded bg-zinc-100/90 dark:bg-zinc-800/70 px-1.5 py-0.5 text-zinc-500 dark:text-zinc-400";
+                      const className = variant === "state" ? stateClass : variant === "requirement" ? requirementClass : defaultClass;
+                      return (
+                        <span key={tag} className={className}>
+                          {tag}
+                        </span>
+                      );
+                    })}
+                  </span>
+                </>
+              )}
+            </div>
           </header>
 
-          {/* Tight metadata: status, creator, tags */}
-          <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
-            <span
-              className={`rounded-full px-2.5 py-1 text-xs font-medium ${APP_LIFECYCLE_CARD_CLASS[app.lifecycle]}`}
-            >
-              {APP_LIFECYCLE_LABELS[app.lifecycle]}
-            </span>
-            {isBoosted && (
-              <span className="rounded-full bg-sky-100 px-2.5 py-1 text-xs font-medium text-sky-800 dark:bg-sky-900/40 dark:text-sky-200">
-                Boosted
-              </span>
-            )}
-            {app.visibility === "unlisted" && (
-              <span className="rounded-full bg-zinc-200 px-2.5 py-1 text-xs font-medium text-zinc-700 dark:bg-zinc-600 dark:text-zinc-200">
-                Unlisted
-              </span>
-            )}
-            {showStatusBadge && (
-              <span
-                className={`rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_CLASS[app.status]}`}
+          {/* Primary artifact — project image as context (reduced dominance), optional caption, or neutral no-image placeholder */}
+          <section
+            className="mt-6"
+            aria-labelledby="primary-artifact"
+          >
+            {primaryScreenshot ? (
+              <figure className="space-y-1.5">
+                <div className="relative aspect-video w-full max-h-[min(36vh,320px)] overflow-hidden rounded-xl border border-zinc-200 bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-800">
+                  <Image
+                    src={primaryScreenshot.url}
+                    alt={`What ${app.name} does`}
+                    fill
+                    className="object-contain"
+                    sizes="(max-width: 1024px) 100vw, 1024px"
+                    priority
+                  />
+                </div>
+                <figcaption className="text-xs text-zinc-500 dark:text-zinc-400">
+                  Main interface
+                </figcaption>
+              </figure>
+            ) : (
+              <div
+                className="flex min-h-[140px] w-full flex-col items-center justify-center rounded-xl border border-zinc-200 bg-zinc-50/80 px-6 py-8 dark:border-zinc-700 dark:bg-zinc-800/40"
+                aria-hidden
               >
-                {STATUS_LABEL[app.status]}
-              </span>
+                <p className="text-center text-sm text-zinc-500 dark:text-zinc-400">
+                  Try the app to see it live.
+                </p>
+              </div>
             )}
-            <span className="text-zinc-400 dark:text-zinc-500" aria-hidden>
-              ·
-            </span>
-            <Link
-              href={`/u/${app.owner.username}`}
-              className="flex items-center gap-1.5 text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
-            >
-              {app.owner.avatar_url ? (
-                <Image
-                  src={app.owner.avatar_url}
-                  alt=""
-                  width={20}
-                  height={20}
-                  className="rounded-full"
-                />
-              ) : (
-                <span className="h-5 w-5 rounded-full bg-zinc-300 dark:bg-zinc-600" />
-              )}
-              <span>{displayName}</span>
-            </Link>
-            {app.owner.isPro && (
-              <span className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[11px] font-medium text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200">
-                Pro
-              </span>
-            )}
-            {creatorStats.risingCreator && (
-              <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[11px] font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">
-                Rising
-              </span>
-            )}
-            {app.byok_required && (
-              <span className="rounded bg-violet-100 px-2 py-0.5 text-[11px] font-medium text-violet-700 dark:bg-violet-900/30 dark:text-violet-300">
-                BYOK
-              </span>
-            )}
-            {app.tags.length > 0 && (
-              <>
-                <span className="text-zinc-400 dark:text-zinc-500" aria-hidden>
-                  ·
-                </span>
-                <ul className="flex flex-wrap gap-1.5">
-                  {app.tags.map((tag) => {
-                    const variant = getTagVariant(tag);
-                    const stateClass =
-                      "rounded-sm border-l-2 border-zinc-400/40 pl-1.5 pr-2 py-0.5 dark:border-zinc-500/40 text-xs text-zinc-600 dark:text-zinc-400";
-                    const requirementClass =
-                      "rounded-sm bg-violet-50/70 dark:bg-violet-950/25 px-2 py-0.5 text-xs text-violet-700/90 dark:text-violet-300/90";
-                    const defaultClass =
-                      "rounded-sm bg-zinc-100/90 dark:bg-zinc-800/70 px-2 py-0.5 text-xs text-zinc-600 dark:text-zinc-400";
-                    const className =
-                      variant === "state"
-                        ? stateClass
-                        : variant === "requirement"
-                          ? requirementClass
-                          : defaultClass;
-                    return (
-                      <li key={tag} className={className}>
-                        {tag}
-                      </li>
-                    );
-                  })}
-                </ul>
-              </>
-            )}
-          </div>
 
-          {/* Primary CTA: Open project dominant; secondary: Repo, Demo */}
-          {(app.app_url || app.repo_url || app.demo_video_url) && (
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
-              {app.app_url && (
+            {demoVideoEmbedUrl && (
+              <section className="mt-6" aria-labelledby="demo-video-heading">
+                <h2
+                  id="demo-video-heading"
+                  className="sr-only"
+                >
+                  Demo video
+                </h2>
+                <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-zinc-200 bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-800">
+                  <iframe
+                    src={demoVideoEmbedUrl}
+                    title={`${app.name} demo video`}
+                    className="absolute inset-0 h-full w-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                </div>
+              </section>
+            )}
+
+            {/* At a glance — cognitive anchor: what, where, who (always rendered) */}
+            <section
+              className="mt-6 rounded-xl border border-zinc-200 bg-zinc-50/60 px-5 py-4 dark:border-zinc-700 dark:bg-zinc-800/30"
+              aria-labelledby="at-a-glance"
+            >
+              <h2
+                id="at-a-glance"
+                className="text-sm font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400"
+              >
+                At a glance
+              </h2>
+              <dl className="mt-4 space-y-3 text-sm">
+                <div>
+                  <dt className="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                    What it does
+                  </dt>
+                  <dd className="mt-0.5 text-zinc-700 dark:text-zinc-300">
+                    {atGlanceWhat || "Short description coming soon."}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                    Where it runs
+                  </dt>
+                  <dd className="mt-0.5 text-zinc-700 dark:text-zinc-300">
+                    {atGlanceWhere}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                    Who it&apos;s for
+                  </dt>
+                  <dd className="mt-0.5 text-zinc-700 dark:text-zinc-300">
+                    {atGlanceWho}
+                  </dd>
+                </div>
+              </dl>
+            </section>
+
+            {/* More details — optional expandable; does not compete with At a glance */}
+            <details
+              className="mt-6 group"
+              aria-labelledby="more-details-summary"
+            >
+              <summary
+                id="more-details-summary"
+                className="cursor-pointer list-none select-none text-xs font-medium uppercase tracking-wider text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300 [&::-webkit-details-marker]:hidden"
+              >
+                <span className="inline-flex items-center gap-1.5">
+                  More details
+                  <svg
+                    className="h-3.5 w-3.5 transition-transform group-open:rotate-180"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    aria-hidden
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </span>
+              </summary>
+              <div className="mt-4 space-y-4 border-t border-zinc-200/80 pt-4 dark:border-zinc-700/80">
+                {(app.whatItDoes?.trim() || app.whatItDoesNot?.trim() || app.whyThisExists?.trim()) ? (
+                  <>
+                    <div className="space-y-6 max-w-2xl">
+                      {app.whatItDoes?.trim() && (
+                        <div>
+                          <p className="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-2">
+                            What it does
+                          </p>
+                          <div className="prose prose-zinc dark:prose-invert max-w-none prose-p:text-[15px] prose-p:leading-[1.7] prose-p:text-zinc-700 dark:prose-p:text-zinc-300 prose-headings:font-semibold prose-headings:tracking-tight">
+                            <ReactMarkdown>{stripLeadingMatchingHeading(app.whatItDoes.trim(), "What it does")}</ReactMarkdown>
+                          </div>
+                        </div>
+                      )}
+                      {app.whatItDoesNot?.trim() && (
+                        <div>
+                          <p className="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-2">
+                            What it doesn&apos;t do
+                          </p>
+                          <div className="prose prose-zinc dark:prose-invert max-w-none prose-p:text-[15px] prose-p:leading-[1.7] prose-p:text-zinc-700 dark:prose-p:text-zinc-300 prose-headings:font-semibold prose-headings:tracking-tight">
+                            <ReactMarkdown>{stripLeadingMatchingHeading(app.whatItDoesNot.trim(), "What it doesn't do")}</ReactMarkdown>
+                          </div>
+                        </div>
+                      )}
+                      {app.whyThisExists?.trim() && (
+                        <div>
+                          <p className="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-2">
+                            Why it exists
+                          </p>
+                          <div className="prose prose-zinc dark:prose-invert max-w-none prose-p:text-[15px] prose-p:leading-[1.7] prose-p:text-zinc-700 dark:prose-p:text-zinc-300 prose-headings:font-semibold prose-headings:tracking-tight">
+                            <ReactMarkdown>{stripLeadingMatchingHeading(app.whyThisExists.trim(), "Why it exists")}</ReactMarkdown>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    {(app.runtimeType || (app.requirements != null)) && (
+                      <div className="flex flex-wrap items-center gap-2" aria-label="Quick facts">
+                        {app.runtimeType && (
+                          <span className="inline-flex items-center rounded-md bg-zinc-100 px-2.5 py-1 text-xs font-medium text-zinc-700 dark:bg-zinc-700 dark:text-zinc-300">
+                            Runtime: {APP_RUNTIME_LABELS[app.runtimeType]}
+                          </span>
+                        )}
+                        {app.requirements != null && (
+                          <span className="inline-flex items-center rounded-md bg-zinc-100 px-2.5 py-1 text-xs font-medium text-zinc-700 dark:bg-zinc-700 dark:text-zinc-300">
+                            Requirements: {APP_REQUIREMENTS_LABELS[app.requirements]}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                    More details coming soon.
+                  </p>
+                )}
+              </div>
+            </details>
+            {primaryArtifact === "demo" && app.app_url && (
+              <div className={`rounded-xl border border-zinc-200 bg-zinc-50/80 p-8 dark:border-zinc-700 dark:bg-zinc-800/50 ${!primaryScreenshot ? "mt-6" : ""}`}>
+                <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+                  What it does
+                </p>
                 <TrackedLink
                   appId={app.id}
                   eventType="demo_click"
                   href={app.app_url}
                   highlightPro={!!app.owner.isPro}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-zinc-900 px-6 py-3.5 text-base font-semibold text-white transition hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 sm:w-auto sm:flex-none"
+                  className="mt-3 inline-flex items-center gap-2 rounded-lg bg-zinc-900 px-5 py-3 text-base font-semibold text-white transition hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
                 >
-                  Open project
+                  Open app
                   <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       strokeLinecap="round"
@@ -245,122 +514,114 @@ export default async function AppDetailPage({
                     />
                   </svg>
                 </TrackedLink>
-              )}
-              <div className="flex flex-wrap gap-2">
-                {app.repo_url && (
-                  <TrackedLink
-                    appId={app.id}
-                    eventType="repo_click"
-                    href={app.repo_url}
-                    highlightPro={!!app.owner.isPro}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
-                  >
-                    Repo
-                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                      />
-                    </svg>
-                  </TrackedLink>
-                )}
-                {app.demo_video_url && (
-                  <a
-                    href={app.demo_video_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
-                  >
-                    Demo video
-                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                      />
-                    </svg>
-                  </a>
-                )}
+                <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-500">
+                  See what it does
+                </p>
               </div>
-            </div>
-          )}
+            )}
+            {primaryArtifact === "explanation" && primaryExplanation && (
+              <div className={`rounded-xl border border-zinc-200 bg-zinc-50/80 p-6 dark:border-zinc-700 dark:bg-zinc-800/50 ${!primaryScreenshot ? "mt-6" : ""}`}>
+                <p
+                  id="primary-artifact"
+                  className="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400"
+                >
+                  {primaryExplanationIsHowUsed
+                    ? "How this is used"
+                    : "What it does"}
+                </p>
+                <div className="prose prose-zinc mt-4 dark:prose-invert max-w-none prose-p:text-zinc-600 dark:prose-p:text-zinc-400 prose-p:leading-relaxed">
+                  <ReactMarkdown>
+                    {stripLeadingMatchingHeading(
+                      primaryExplanation,
+                      primaryExplanationIsHowUsed ? "How this is used" : "What it does"
+                    )}
+                  </ReactMarkdown>
+                </div>
+              </div>
+            )}
+          </section>
 
-          {app.description && (
+          {/* Supporting content — only what wasn’t the primary artifact */}
+          {primaryArtifact !== "explanation" && app.how_used?.trim() && (
             <section
-              className="mt-8 rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900/50"
-              aria-labelledby="section-description"
+              className="mt-6 rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900/50"
+              aria-labelledby="section-how-used"
             >
               <h2
-                id="section-description"
-                className="text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50"
+                id="section-how-used"
+                className="text-lg font-semibold tracking-tight text-zinc-900 dark:text-zinc-50"
               >
-                Description
+                How this is used
               </h2>
-              <div className="prose prose-zinc mt-4 dark:prose-invert max-w-none">
-                <ReactMarkdown>{app.description}</ReactMarkdown>
+              <div className="prose prose-zinc mt-4 dark:prose-invert max-w-none prose-p:text-zinc-600 dark:prose-p:text-zinc-400 prose-p:leading-relaxed">
+                <ReactMarkdown>{stripLeadingMatchingHeading(app.how_used.trim(), "How this is used")}</ReactMarkdown>
+              </div>
+            </section>
+          )}
+          {primaryArtifact !== "explanation" && app.description?.trim() && (
+            <section
+              className="mt-6 rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900/50"
+              aria-labelledby="section-what"
+            >
+              <h2
+                id="section-what"
+                className="text-lg font-semibold tracking-tight text-zinc-900 dark:text-zinc-50"
+              >
+                What it does
+              </h2>
+              <div className="prose prose-zinc mt-4 dark:prose-invert max-w-none prose-p:text-zinc-600 dark:prose-p:text-zinc-400">
+                <ReactMarkdown>{stripLeadingMatchingHeading(app.description.trim(), "What it does")}</ReactMarkdown>
+              </div>
+            </section>
+          )}
+          {primaryArtifact === "explanation" && primaryExplanationIsHowUsed && app.description?.trim() && (
+            <section
+              className="mt-6 rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900/50"
+              aria-labelledby="section-what"
+            >
+              <h2
+                id="section-what"
+                className="text-lg font-semibold tracking-tight text-zinc-900 dark:text-zinc-50"
+              >
+                What it does
+              </h2>
+              <div className="prose prose-zinc mt-4 dark:prose-invert max-w-none prose-p:text-zinc-600 dark:prose-p:text-zinc-400">
+                <ReactMarkdown>{stripLeadingMatchingHeading(app.description.trim(), "What it does")}</ReactMarkdown>
+              </div>
+            </section>
+          )}
+          {primaryArtifact === "explanation" && !primaryExplanationIsHowUsed && app.how_used?.trim() && (
+            <section
+              className="mt-6 rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900/50"
+              aria-labelledby="section-how-used"
+            >
+              <h2
+                id="section-how-used"
+                className="text-lg font-semibold tracking-tight text-zinc-900 dark:text-zinc-50"
+              >
+                How this is used
+              </h2>
+              <div className="prose prose-zinc mt-4 dark:prose-invert max-w-none prose-p:text-zinc-600 dark:prose-p:text-zinc-400 prose-p:leading-relaxed">
+                <ReactMarkdown>{stripLeadingMatchingHeading(app.how_used.trim(), "How this is used")}</ReactMarkdown>
               </div>
             </section>
           )}
 
-          {screenshots.length > 0 && (
-            <section
-              className="mt-8 rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900/50"
-              aria-labelledby="section-screenshots"
-            >
-              <h2
-                id="section-screenshots"
-                className="text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50"
-              >
-                Screenshots
-              </h2>
-              <div className="mt-4">
-                <ScreenshotsCarousel images={screenshots} />
-              </div>
-            </section>
-          )}
-
-          {analytics && (
-            <section
-              className="mt-8 rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900/50"
-              aria-labelledby="section-signals"
-            >
-              <h2
-                id="section-signals"
-                className="text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50"
-              >
-                Project signals
-              </h2>
-              <div className="mt-4">
-                <AppAnalyticsSection
-                  analytics={analytics}
-                  isPro={!!app.owner.isPro}
-                />
-              </div>
-            </section>
-          )}
-
-          {featuredTokenAvailable && (
-            <FeaturedButton appId={app.id} slug={app.slug} className="mt-6" />
-          )}
-
-          {canBoost && (
-            <BoostButton appId={app.id} slug={app.slug} className="mt-6" />
-          )}
-
+          {/* Send a signal to the creator — primary interaction, intentional not reactive */}
           <section
-            className="mt-8 rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900/50"
-            aria-labelledby="section-feedback"
+            className="mt-6 rounded-xl border border-zinc-200 bg-zinc-50/70 px-5 py-5 dark:border-zinc-700 dark:bg-zinc-800/40"
+            aria-labelledby="section-signal"
           >
             <h2
-              id="section-feedback"
-              className="text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50"
+              id="section-signal"
+              className="text-sm font-medium uppercase tracking-wider text-zinc-600 dark:text-zinc-300"
             >
-              Feedback
+              Send a signal to the creator
             </h2>
-            <div className="mt-4 space-y-6">
+            <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+              Lightweight signals help creators understand what resonates — no comments, no rankings.
+            </p>
+            <div className="mt-4 flex flex-wrap items-center gap-2">
               <FeedbackButtons
                 appId={app.id}
                 slug={app.slug}
@@ -368,26 +629,78 @@ export default async function AppDetailPage({
                 counts={feedbackCounts}
                 currentUserKind={currentUserFeedback}
               />
-              <div className="flex flex-wrap items-center gap-4">
-                <UpvoteButton
-                  appId={app.id}
-                  slug={app.slug}
-                  voteCount={app.vote_count}
-                  userHasVoted={app.user_has_voted}
-                />
-                <ReportButton appName={app.name} appId={app.id} />
-              </div>
+              <span className="text-zinc-300 dark:text-zinc-600" aria-hidden>·</span>
+              <UpvoteButton
+                appId={app.id}
+                slug={app.slug}
+                voteCount={app.vote_count}
+                userHasVoted={app.user_has_voted}
+              />
+              <ReportButton appName={app.name} appId={app.id} />
             </div>
           </section>
+
+          {featuredTokenAvailable && (
+            <FeaturedButton appId={app.id} slug={app.slug} className="mt-5" />
+          )}
+
+          {canBoost && (
+            <BoostButton appId={app.id} slug={app.slug} className="mt-5" />
+          )}
+
+          {/* Activity (owner only) — subdued, trend over raw counts, no conversion */}
+          {analytics && (
+            <section
+              className="mt-8 border-t border-zinc-200/80 pt-6 dark:border-zinc-800/80"
+              aria-labelledby="activity-heading"
+            >
+              <h2
+                id="activity-heading"
+                className="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400"
+              >
+                Activity
+              </h2>
+              <div className="mt-3 space-y-2 text-xs text-zinc-500 dark:text-zinc-400">
+                {analytics.pageViews === 0 &&
+                analytics.demoClicks === 0 &&
+                analytics.repoClicks === 0 &&
+                analytics.voteCount === 0 ? (
+                  <p>Activity will show here.</p>
+                ) : (
+                  <>
+                    {analytics.voteCount >= 1 && (
+                      <p className="text-zinc-600 dark:text-zinc-300">
+                        First interest received
+                      </p>
+                    )}
+                    {analytics.demoClicks >= 1 && (
+                      <p className="text-zinc-600 dark:text-zinc-300">
+                        {analytics.demoClicks === 1
+                          ? "First app open"
+                          : "App opened"}
+                      </p>
+                    )}
+                    {analytics.repoClicks >= 1 && (
+                      <p className="text-zinc-600 dark:text-zinc-300">
+                        {analytics.repoClicks === 1
+                          ? "First repo click"
+                          : "Repo clicked"}
+                      </p>
+                    )}
+                    <p className="pt-1 text-zinc-400 dark:text-zinc-500">
+                      {analytics.pageViews} view{analytics.pageViews !== 1 ? "s" : ""}
+                      {" · "}
+                      {analytics.demoClicks} app open{analytics.demoClicks !== 1 ? "s" : ""}
+                      {" · "}
+                      {analytics.repoClicks} repo click{analytics.repoClicks !== 1 ? "s" : ""}
+                    </p>
+                  </>
+                )}
+              </div>
+            </section>
+          )}
         </div>
       </Container>
-      {app.app_url && (
-        <StickyOpenProject
-          appId={app.id}
-          href={app.app_url}
-          highlightPro={!!app.owner.isPro}
-        />
-      )}
     </div>
   );
 }

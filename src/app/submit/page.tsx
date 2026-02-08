@@ -7,7 +7,13 @@ import { SubmitForm } from "@/components/submit/submit-form";
 export default async function SubmitPage() {
   const user = await getUser();
   if (!user) redirect("/auth/sign-in");
-  const isPro = await getIsPro(user.id);
+
+  let isPro = false;
+  try {
+    isPro = await getIsPro(user.id);
+  } catch {
+    // Avoid throwing so the page always returns a valid RSC payload
+  }
 
   return (
     <div className="py-8 sm:py-12">

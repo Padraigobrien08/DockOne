@@ -9,7 +9,7 @@ export interface DigestData {
   trendingTags: { tag: string; count: number }[];
 }
 
-/** Data for "This week on DockOne": new projects, rising creators, graduations, rising apps, trending tags. */
+/** Data for "This week on DockOne": new projects, rising creators, rising apps, trending tags. */
 export async function getDigestData(): Promise<DigestData> {
   const supabase = await createClient();
   const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();

@@ -7,14 +7,16 @@ interface ReportsListProps {
   reports: ReportForAdmin[];
 }
 
+/** Fixed locale so server and client render the same string (avoids hydration mismatch). */
 function formatDate(iso: string): string {
   const d = new Date(iso);
-  return d.toLocaleDateString(undefined, {
+  return d.toLocaleDateString("en-GB", {
     year: "numeric",
     month: "short",
     day: "numeric",
     hour: "2-digit",
     minute: "2-digit",
+    hour12: false,
   });
 }
 

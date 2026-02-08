@@ -25,7 +25,7 @@ export function DigestSection({ digestOptedIn, hasEmail }: Props) {
     <section className="mt-8">
       <h2 className="text-lg font-medium text-zinc-900 dark:text-zinc-50">Weekly digest</h2>
       <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-        &quot;This week on DockOne&quot; — new projects, rising creators, graduations. One email per week.
+        &quot;This week on DockOne&quot; — new projects, rising creators. One email per week.
       </p>
       {!hasEmail ? (
         <p className="mt-4 text-sm text-amber-700 dark:text-amber-300">

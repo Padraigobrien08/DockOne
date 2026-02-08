@@ -13,17 +13,20 @@ interface AppAnalyticsSectionProps {
   analytics: AppAnalytics;
   /** Pro: show advanced analytics (7-day views). */
   isPro?: boolean;
+  /** Creator only: show conversion rate. Hidden from non-creators. */
+  showConversion?: boolean;
   className?: string;
 }
 
-/** Project signals for app owner: page views, clicks, conversion, feedback. Zero values shown as "New" to protect morale. */
+/** Muted numbers for subdued Activity section. */
 function formatSignal(value: number): string {
-  return value === 0 ? "New" : String(value);
+  return value === 0 ? "—" : String(value);
 }
 
 export function AppAnalyticsSection({
   analytics,
   isPro,
+  showConversion = false,
   className = "",
 }: AppAnalyticsSectionProps) {
   const {
@@ -40,68 +43,56 @@ export function AppAnalyticsSection({
     pageViews === 0 && demoClicks === 0 && repoClicks === 0 && voteCount === 0 && totalFeedback === 0;
 
   return (
-    <section className={className}>
-      {isNew && (
-        <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">Early signals</p>
-      )}
-      <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-800/50">
-          <p className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
-            {formatSignal(pageViews)}
-          </p>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">Page views</p>
-        </div>
-        <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-800/50">
-          <p className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
-            {formatSignal(demoClicks)}
-          </p>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">Demo / app clicks</p>
-        </div>
-        <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-800/50">
-          <p className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
-            {formatSignal(repoClicks)}
-          </p>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">Repo clicks</p>
-        </div>
-        <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-800/50">
-          <p className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
-            {pageViews > 0 ? `${voteConversionRate}%` : "—"}
-          </p>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            Interest conversion {voteCount === 0 ? "(no signals yet)" : `(${voteCount} interested)`}
-          </p>
-        </div>
-      </div>
-      {totalFeedback > 0 && (
-        <div className="mt-4">
-          <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Feedback breakdown</p>
-          <ul className="mt-2 flex flex-wrap gap-3 text-sm text-zinc-600 dark:text-zinc-400">
-            {(Object.entries(feedbackBreakdown) as [keyof AppAnalytics["feedbackBreakdown"], number][]).map(
-              ([kind, count]) =>
-                count > 0 ? (
-                  <li key={kind}>
-                    {FEEDBACK_LABELS[kind]}: <strong className="text-zinc-900 dark:text-zinc-50">{count}</strong>
-                  </li>
-                ) : null
+    <section className={className} aria-labelledby="activity-heading">
+      <h2
+        id="activity-heading"
+        className="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400"
+      >
+        Activity
+      </h2>
+      {isNew ? (
+        <p className="mt-3 text-xs text-zinc-500 dark:text-zinc-400">Activity will show here.</p>
+      ) : (
+        <>
+          <div className="mt-3 space-y-1.5 text-xs text-zinc-600 dark:text-zinc-300">
+            {voteCount >= 1 && <p>First interest received</p>}
+            {demoClicks >= 1 && <p>{demoClicks === 1 ? "First app open" : "App opened"}</p>}
+            {repoClicks >= 1 && <p>{repoClicks === 1 ? "First repo click" : "Repo clicked"}</p>}
+          </div>
+          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs text-zinc-500 dark:text-zinc-400">
+            <span>{formatSignal(pageViews)} views</span>
+            <span>{formatSignal(demoClicks)} app opens</span>
+            <span>{formatSignal(repoClicks)} repo clicks</span>
+            {showConversion && pageViews > 0 && (
+              <span>{voteConversionRate}% interest</span>
             )}
-          </ul>
-        </div>
+          </div>
+          {totalFeedback > 0 && (
+            <ul className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-xs text-zinc-500 dark:text-zinc-400">
+              {(Object.entries(feedbackBreakdown) as [keyof AppAnalytics["feedbackBreakdown"], number][]).map(
+                ([kind, count]) =>
+                  count > 0 ? (
+                    <li key={kind}>
+                      {FEEDBACK_LABELS[kind]}: {count}
+                    </li>
+                  ) : null
+              )}
+            </ul>
+          )}
+        </>
       )}
 
       {isPro && typeof pageViewsLast7Days === "number" && (
-        <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50/50 p-4 dark:border-emerald-800 dark:bg-emerald-950/20">
-          <p className="text-sm font-medium text-emerald-800 dark:text-emerald-200">Advanced signals (Pro)</p>
-          <p className="mt-1 text-2xl font-semibold text-emerald-900 dark:text-emerald-100">
-            {pageViewsLast7Days === 0 ? "New" : pageViewsLast7Days}
+        <div className="mt-4 rounded border border-zinc-200/80 bg-zinc-50/50 px-3 py-2 dark:border-zinc-700/80 dark:bg-zinc-800/30">
+          <p className="text-xs text-zinc-600 dark:text-zinc-400">
+            Last 7 days: {pageViewsLast7Days === 0 ? "—" : pageViewsLast7Days} views
           </p>
-          <p className="text-sm text-emerald-700 dark:text-emerald-300">Page views (last 7 days)</p>
         </div>
       )}
       {!isPro && (
-        <p className="mt-4 text-sm text-zinc-500 dark:text-zinc-400">
-          <span className="font-medium text-zinc-700 dark:text-zinc-300">Creator Pro</span> includes:
-          advanced project signals (time breakdowns), priority review queue, featured token (limited
-          use), profile and project branding, and unlisted projects (shareable private links).
+        <p className="mt-4 text-xs text-zinc-500 dark:text-zinc-400">
+          <span className="font-medium text-zinc-600 dark:text-zinc-300">Creator Pro</span> includes
+          advanced signals, priority review, featured token, and more.
         </p>
       )}
     </section>

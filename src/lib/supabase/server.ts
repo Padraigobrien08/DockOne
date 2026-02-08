@@ -73,12 +73,28 @@ export async function createClient() {
 
 /**
  * Get the current user in server code (Server Components, Server Actions, Route Handlers).
- * Returns null if not authenticated.
+ * Returns null if not authenticated or if auth fails (e.g. invalid/expired refresh token).
+ * On auth error we try to clear the session so the rest of the request (and next requests) use anon.
  */
 export async function getUser(): Promise<User | null> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  return user ?? null;
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
+    if (error) {
+      await supabase.auth.signOut({ scope: "local" });
+      return null;
+    }
+    return user ?? null;
+  } catch {
+    try {
+      const supabase = await createClient();
+      await supabase.auth.signOut({ scope: "local" });
+    } catch {
+      // ignore
+    }
+    return null;
+  }
 }

@@ -67,6 +67,31 @@ export interface AppOwner {
 
 export type AppVisibility = "public" | "unlisted";
 
+/** Optional: where the project runs (progressive enhancement). */
+export type AppRuntimeType = "browser" | "local" | "api" | "cli" | "hybrid";
+
+/** Optional: runtime/usage requirement (progressive enhancement). */
+export type AppRequirements =
+  | "none"
+  | "api_key_required"
+  | "local_install"
+  | "account_required";
+
+export const APP_RUNTIME_LABELS: Record<AppRuntimeType, string> = {
+  browser: "Browser",
+  local: "Local",
+  api: "API",
+  cli: "CLI",
+  hybrid: "Hybrid",
+};
+
+export const APP_REQUIREMENTS_LABELS: Record<AppRequirements, string> = {
+  none: "None",
+  api_key_required: "API key required",
+  local_install: "Local install",
+  account_required: "Account required",
+};
+
 /** Collection (staff or community). owner_id null = staff-only editable. */
 export interface Collection {
   id: string;
@@ -110,7 +135,9 @@ export interface App {
   name: string;
   tagline: string | null;
   description: string | null;
+  how_used: string | null;
   status: AppStatus;
+  moderationState?: AppStatus | null;
   lifecycle: AppLifecycle;
   visibility: AppVisibility;
   app_url: string | null;
@@ -120,6 +147,12 @@ export interface App {
   created_at: string;
   updated_at: string;
   owner_id: string;
+  whyThisExists?: string | null;
+  whatItDoes?: string | null;
+  whatItDoesNot?: string | null;
+  runtimeType?: AppRuntimeType | null;
+  requirements?: AppRequirements | null;
+  primaryTag?: string | null;
 }
 
 export interface AppWithOwner extends App {
@@ -141,13 +174,15 @@ export interface AppDetail {
   name: string;
   tagline: string | null;
   description: string | null;
+  /** Optional: how the creator actually uses it — first-person, real usage. */
+  how_used: string | null;
   status: AppStatus;
+  /** Internal only; do not display. Same as status, exposed for API clarity. */
+  moderationState?: AppStatus | null;
   visibility: AppVisibility;
   app_url: string | null;
   repo_url: string | null;
   demo_video_url: string | null;
-  /** Legacy: optional URL (column kept for existing data; no longer used in UI). */
-  graduated_url: string | null;
   rejection_reason: string | null;
   byok_required: boolean;
   created_at: string;
@@ -158,6 +193,18 @@ export interface AppDetail {
   vote_count: number;
   user_has_voted: boolean;
   lifecycle: AppLifecycle;
+  /** Progressive: why the creator built this. */
+  whyThisExists?: string | null;
+  /** Progressive: short structured "what it does". Prefer over description when present. */
+  whatItDoes?: string | null;
+  /** Progressive: what it does not do / out of scope. */
+  whatItDoesNot?: string | null;
+  /** Progressive: where it runs. */
+  runtimeType?: AppRuntimeType | null;
+  /** Progressive: runtime/usage requirement. */
+  requirements?: AppRequirements | null;
+  /** Progressive: single primary category/tag for display. */
+  primaryTag?: string | null;
 }
 
 export interface Creator {

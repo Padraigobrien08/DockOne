@@ -1,5 +1,6 @@
 -- Seed many approved projects so you can see the Projects page with a full list.
 -- Requires at least one profile (signed-up user). Idempotent: safe to run again (skips existing slugs).
+-- Each seed has name, tagline, app_url, and description so project detail pages have content.
 
 insert into public.apps (
   owner_id,
@@ -9,7 +10,9 @@ insert into public.apps (
   status,
   lifecycle,
   visibility,
-  byok_required
+  byok_required,
+  app_url,
+  description
 )
 select
   (select id from public.profiles order by created_at asc limit 1),
@@ -41,12 +44,38 @@ select
     'BYOK. Your keys, your data.', 'Uses your API key.', 'Bring your own key.',
     'Demo included.', 'Try it now.', 'WIP but usable.',
     'Actively maintained.', 'Seeking feedback.', 'Early stage.',
-    'Graduated to product.', 'Shipped elsewhere.', 'Moved on.'
+    'Archived for now.', 'Paused.', 'On hold.'
   ])[1 + (i % 21)],
   'approved'::app_status,
   (array['wip', 'looking_for_feedback', 'looking_for_users', 'dormant']::app_lifecycle[])[1 + (i % 4)],
   'public',
-  (i % 4 = 0)
+  (i % 4 = 0),
+  'https://example.com',
+  (array[
+    'A small tool in progress. Does one thing and does it simply.',
+    'Built to scratch an itch. Still using it day to day.',
+    'Runs locally. No backend. Fits in a README.',
+    'Wraps an API or script so you can use it without thinking.',
+    'Early stage — feedback welcome. Try it and say what works.',
+    'Focused on the 20% that does 80% of the work.',
+    'No product theatre. Just the useful part.',
+    'Dev utility: saves time on a repeated task.',
+    'Browser or VS Code. One command, done.',
+    'Integrates with Slack, Discord, or GitHub.',
+    'Local-first. Your data stays on your machine.',
+    'Experiment with RAG, prompts, or LLM pipelines.',
+    'Formats, converts, or transforms data. Simple and fast.',
+    'Manages env, secrets, or config. One place to look.',
+    'Generates docs, changelogs, or README from source.',
+    'Deploy, preview, or stage with minimal setup.',
+    'Feedback, uptime, or error tracking. Lightweight.',
+    'Analytics, events, or audit trail. No bloat.',
+    'Auth, OAuth, or magic links. Minimal flow.',
+    'Payments, checkout, or invoices. Stripe-friendly.',
+    'Digest, notifications, or inbox. Less noise.',
+    'Search, filter, or full-text. Fits your stack.',
+    'Export to Notion, Airtable, or Sheets. One-way or sync.'
+  ])[1 + (i % 22)]
 from generate_series(1, 50) i
 where exists (select 1 from public.profiles limit 1)
 on conflict (slug) do nothing;

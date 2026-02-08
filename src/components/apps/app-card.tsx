@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { getTagVariant } from "@/lib/tag-variants";
+import { getTagAccentStyles } from "@/lib/tag-accent";
 import { APP_LIFECYCLE_LABELS, APP_LIFECYCLE_CARD_CLASS, APP_LIFECYCLE_IMAGE_OVERLAY } from "@/types";
 import type { AppListItem, AppLifecycle, CreatorStats } from "@/types";
 
@@ -55,6 +56,8 @@ export function AppCard({ app, creatorStats, isBoosted, headingLevel = 2, overri
   const effectiveTagsStyle = tagsStyle ?? (context === "landing" ? "subtle" : "default");
 
   const momentumHint = overrideMomentumHint ?? getMomentumHint(app);
+  const effectiveTag = app.tags?.[0] ?? null;
+  const accentStyles = getTagAccentStyles(effectiveTag);
   const displayMomentumHint =
     context === "landing" && effectiveStatusPills === "minimal"
       ? momentumHint === "New this week"
@@ -76,11 +79,11 @@ export function AppCard({ app, creatorStats, isBoosted, headingLevel = 2, overri
             />
           ) : (
             <div
-              className="relative flex h-full w-full items-center justify-center overflow-hidden bg-gradient-to-br from-zinc-200 via-zinc-100 to-zinc-200 dark:from-zinc-800 dark:via-zinc-800/95 dark:to-zinc-900"
+              className={`relative flex h-full w-full items-center justify-center overflow-hidden ${accentStyles.coverGradientClass}`}
               aria-hidden
             >
               <span
-                className="select-none font-light tracking-tight text-zinc-300/50 dark:text-zinc-600/50"
+                className={`select-none font-light tracking-tight ${accentStyles.coverLetterClass}`}
                 style={{ fontSize: "clamp(3rem, 20vw, 5rem)" }}
                 aria-hidden
               >

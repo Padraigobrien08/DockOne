@@ -37,6 +37,15 @@ export const submitBasicsSchema = z.object({
     .or(z.literal("")),
   app_url: z.string().min(1, "App URL is required.").url("Enter a valid URL."),
   repo_url: z.string().url("Enter a valid URL.").optional().or(z.literal("")),
+  demo_video_url: z
+    .string()
+    .max(500, "Demo video URL must be at most 500 characters.")
+    .optional()
+    .or(z.literal(""))
+    .refine(
+      (s) => !s?.trim() || /^(https?:\/\/)?(www\.)?(youtube\.com\/(watch\?v=|embed\/)|youtu\.be\/)[\w-]+/.test(s?.trim() ?? ""),
+      "Enter a valid YouTube URL (e.g. youtube.com/watch?v=... or youtu.be/...)"
+    ),
   tags: tagsStringSchema,
   byok_required: z.boolean().default(false),
   lifecycle: lifecycleEnum.default("wip"),
@@ -47,6 +56,12 @@ export const submitFullSchema = submitBasicsSchema.extend({
   description: z
     .string()
     .max(10_000, "Description must be at most 10,000 characters.")
+    .optional()
+    .or(z.literal("")),
+  /** Optional: how the creator actually uses it — first-person, real usage. */
+  how_used: z
+    .string()
+    .max(5_000, "How this is used must be at most 5,000 characters.")
     .optional()
     .or(z.literal("")),
 });
@@ -60,8 +75,10 @@ export function submitFormFromFormData(formData: FormData): z.input<typeof submi
   const tagline = (formData.get("tagline") as string)?.trim() ?? "";
   const app_url = (formData.get("app_url") as string)?.trim() ?? "";
   const repo_url = (formData.get("repo_url") as string)?.trim() ?? "";
+  const demo_video_url = (formData.get("demo_video_url") as string)?.trim() ?? "";
   const tagsRaw = (formData.get("tags") as string)?.trim() ?? "";
   const description = (formData.get("description") as string)?.trim() ?? "";
+  const how_used = (formData.get("how_used") as string)?.trim() ?? "";
   const byok_required =
     formData.get("byok_required") === "on" || formData.get("byok_required") === "true";
   const lifecycleRaw = (formData.get("lifecycle") as string)?.trim() || "wip";
@@ -78,8 +95,10 @@ export function submitFormFromFormData(formData: FormData): z.input<typeof submi
     tagline: tagline || undefined,
     app_url: app_url || "",
     repo_url: repo_url || undefined,
+    demo_video_url: demo_video_url || undefined,
     tags: tagsRaw || undefined,
     description: description || undefined,
+    how_used: how_used || undefined,
     byok_required,
     lifecycle,
     visibility,

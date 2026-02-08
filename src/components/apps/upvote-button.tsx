@@ -37,15 +37,10 @@ export function UpvoteButton({ appId, slug, voteCount: initialCount, userHasVote
           : "border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
       }`}
       aria-pressed={initialVoted}
-      aria-label={initialVoted ? "Remove interest signal" : "Signal interest"}
-      title={initialVoted ? "Remove interest signal" : "Signal interest (bookmark-like)"}
+      aria-label={initialVoted ? "Remove your signal" : "Signal that this is useful to you"}
+      title={initialVoted ? "Remove your signal" : "Signal that this is useful to you"}
     >
-      <span>Signals interest</span>
-      {initialCount > 0 && (
-        <span className="text-zinc-500 dark:text-zinc-400" aria-label={`${initialCount} people interested`}>
-          {initialCount}
-        </span>
-      )}
+      <span>{initialVoted ? "You signaled" : "Useful to me"}</span>
     </button>
   );
 }
