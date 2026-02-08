@@ -108,8 +108,8 @@ export async function updateApp(_prev: EditState, formData: FormData): Promise<E
       what_it_does: what_it_does?.trim() || null,
       what_it_does_not: what_it_does_not?.trim() || null,
       why_this_exists: why_this_exists?.trim() || null,
-      runtime_type: runtime_type && runtime_type !== "" ? runtime_type : null,
-      requirements: requirements && requirements !== "" ? requirements : null,
+      runtime_type: runtime_type ?? null,
+      requirements: requirements ?? null,
       primary_tag: primary_tag?.trim() || null,
     })
     .eq("id", appId);
