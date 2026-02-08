@@ -1,15 +1,50 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { createClientAsync } from "@/lib/supabase/client";
 import { Container } from "@/components/ui/container";
 
+const RATE_LIMIT_COOLDOWN_SEC = 60;
+
+function friendlyError(message: string): string {
+  const m = message.toLowerCase();
+  if (m.includes("already used") || m.includes("token already used"))
+    return "That sign-in link was already used. Request a new link below, or go home — you may already be signed in.";
+  if (m.includes("rate limit") || m.includes("wait") || m.includes("seconds"))
+    return "Too many attempts. Please wait a minute before requesting another link.";
+  return message;
+}
+
+function isRateLimitError(message: string): boolean {
+  const m = message.toLowerCase();
+  return m.includes("rate limit") || m.includes("wait") || /\d+\s*seconds?/.test(m);
+}
+
 export default function SignInPage() {
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [cooldownSec, setCooldownSec] = useState(0);
+
+  const urlError = searchParams.get("error");
+  useEffect(() => {
+    if (urlError) {
+      setError(friendlyError(urlError));
+      if (isRateLimitError(urlError)) setCooldownSec(RATE_LIMIT_COOLDOWN_SEC);
+    }
+  }, [urlError]);
+
+  useEffect(() => {
+    if (cooldownSec <= 0) return;
+    const t = setInterval(() => {
+      setCooldownSec((s) => (s <= 1 ? 0 : s - 1));
+    }, 1000);
+    return () => clearInterval(t);
+  }, [cooldownSec]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -24,7 +59,8 @@ export default function SignInPage() {
     });
     setLoading(false);
     if (err) {
-      setError(err.message);
+      setError(friendlyError(err.message));
+      if (isRateLimitError(err.message)) setCooldownSec(RATE_LIMIT_COOLDOWN_SEC);
       return;
     }
     setSent(true);
@@ -69,10 +105,10 @@ export default function SignInPage() {
               {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || cooldownSec > 0}
                 className="w-full rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
               >
-                {loading ? "Sending…" : "Send magic link"}
+                {loading ? "Sending…" : cooldownSec > 0 ? `Wait ${cooldownSec}s` : "Send magic link"}
               </button>
             </form>
           )}

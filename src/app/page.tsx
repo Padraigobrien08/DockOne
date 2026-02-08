@@ -11,7 +11,12 @@ import { computeCreatorStatsMap } from "@/lib/creator-stats";
 
 const LANDING_PROJECTS_LIMIT = 6;
 
-export default async function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ auth_message?: string }>;
+}) {
+  const { auth_message } = await searchParams;
   const [allApps, boostMap] = await Promise.all([
     getApprovedApps(),
     getActiveBoosts(),
@@ -24,6 +29,11 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-zinc-950 text-zinc-100">
+      {auth_message === "link_used" && (
+        <div className="bg-amber-500/15 text-amber-200 border-b border-amber-500/30 px-4 py-2.5 text-center text-sm">
+          That sign-in link was already used. If you&apos;re signed in, you&apos;re all set — otherwise request a new link from the form below.
+        </div>
+      )}
       {/* 1. Hero: single column, centred text, no image */}
       <section aria-labelledby="hero-heading" className="relative overflow-hidden">
         {/* Aurora: slightly stronger gradient, centred */}

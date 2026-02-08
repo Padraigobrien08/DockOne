@@ -71,10 +71,22 @@ export async function createClient() {
   });
 }
 
+/** Errors that mean the session is invalid and we should clear it. Don't sign out on transient/rate-limit errors. */
+function isSessionInvalidError(message: string | undefined): boolean {
+  if (!message) return false;
+  const m = message.toLowerCase();
+  return (
+    m.includes("refresh_token") ||
+    (m.includes("session") && (m.includes("expired") || m.includes("invalid") || m.includes("not found"))) ||
+    m.includes("jwt expired") ||
+    m.includes("token has expired")
+  );
+}
+
 /**
  * Get the current user in server code (Server Components, Server Actions, Route Handlers).
  * Returns null if not authenticated or if auth fails (e.g. invalid/expired refresh token).
- * On auth error we try to clear the session so the rest of the request (and next requests) use anon.
+ * Only clears the session when the error indicates the session is invalid — not on rate limits or transient errors.
  */
 export async function getUser(): Promise<User | null> {
   try {
@@ -84,17 +96,14 @@ export async function getUser(): Promise<User | null> {
       error,
     } = await supabase.auth.getUser();
     if (error) {
-      await supabase.auth.signOut({ scope: "local" });
+      if (isSessionInvalidError(error.message)) {
+        await supabase.auth.signOut({ scope: "local" });
+      }
       return null;
     }
     return user ?? null;
   } catch {
-    try {
-      const supabase = await createClient();
-      await supabase.auth.signOut({ scope: "local" });
-    } catch {
-      // ignore
-    }
+    // Transient error (e.g. network) — don't sign out, just return null
     return null;
   }
 }

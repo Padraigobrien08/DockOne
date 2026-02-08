@@ -15,6 +15,11 @@ export async function GET(request: Request) {
     const supabase = await createClient();
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
     if (error) {
+      // Token/code already used (e.g. magic link clicked twice) — don't leave user on sign-in with error
+      const msg = (error.message || "").toLowerCase();
+      if (msg.includes("already used") || msg.includes("token already used")) {
+        return NextResponse.redirect(`${origin}/?auth_message=link_used`);
+      }
       return NextResponse.redirect(
         `${origin}/auth/sign-in?error=${encodeURIComponent(error.message)}`
       );
