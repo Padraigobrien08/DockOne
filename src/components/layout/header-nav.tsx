@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useState } from "react";
 import { SITE_NAME } from "@/lib/constants";
 import { SignOutButton } from "@/components/auth/sign-out-button";
-import { SignInWithGoogleButton } from "@/components/auth/sign-in-with-google-button";
 
 interface HeaderNavProps {
   isLoggedIn: boolean;
@@ -70,17 +69,12 @@ export function HeaderNav({ isLoggedIn }: HeaderNavProps) {
               <SignOutButton />
             </>
           ) : (
-            <>
-              <Link
-                href="/auth/sign-in"
-                className="text-sm leading-none text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-50 transition-colors"
-              >
-                Sign in
-              </Link>
-              <SignInWithGoogleButton className="text-sm leading-none text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-50 transition-colors">
-                Sign in with Google
-              </SignInWithGoogleButton>
-            </>
+            <Link
+              href="/auth/sign-in"
+              className="text-sm leading-none text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-50 transition-colors"
+            >
+              Sign in
+            </Link>
           )}
           <Link
             href="/apps"
@@ -153,21 +147,13 @@ export function HeaderNav({ isLoggedIn }: HeaderNavProps) {
               </span>
             </>
           ) : (
-            <>
-              <Link
-                href="/auth/sign-in"
-                onClick={() => setMobileOpen(false)}
-                className="px-1 py-2.5 text-sm text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-50"
-              >
-                Sign in
-              </Link>
-              <SignInWithGoogleButton
-                onClick={() => setMobileOpen(false)}
-                className="block w-full px-1 py-2.5 text-left text-sm text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-50"
-              >
-                Sign in with Google
-              </SignInWithGoogleButton>
-            </>
+            <Link
+              href="/auth/sign-in"
+              onClick={() => setMobileOpen(false)}
+              className="px-1 py-2.5 text-sm text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-50"
+            >
+              Sign in
+            </Link>
           )}
           <Link
             href="/settings"
