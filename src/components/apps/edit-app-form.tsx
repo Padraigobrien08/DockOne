@@ -1,20 +1,36 @@
 "use client";
 
-import { useActionState } from "react";
+import { useState, useActionState } from "react";
 import Link from "next/link";
 import { Container } from "@/components/ui/container";
 import { updateApp, type EditState } from "@/app/apps/[slug]/edit/actions";
-import {
-  APP_LIFECYCLE_LABELS,
-  APP_RUNTIME_LABELS,
-  APP_REQUIREMENTS_LABELS,
-  type AppLifecycle,
-  type AppDetail,
-} from "@/types";
+import { INTENT_TAGS, APP_RUNTIME_LABELS, APP_REQUIREMENTS_LABELS, type AppDetail } from "@/types";
 import type { AppVisibility } from "@/types";
 
 const SCREENSHOTS_MAX = 5;
 const ALLOWED_IMAGE_TYPES = "image/jpeg,image/png,image/webp";
+
+const INTENT_OPTIONS: { value: (typeof INTENT_TAGS)[number]; label: string }[] = [
+  { value: "feedback", label: "Looking for feedback" },
+  { value: "early-users", label: "Looking for early users" },
+];
+
+function parseTagsString(s: string): string[] {
+  return s
+    .trim()
+    .split(/[\s,]+/)
+    .map((t) => t.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+function toggleTagInString(tagsString: string, tag: string, add: boolean): string {
+  const arr = parseTagsString(tagsString);
+  if (add) {
+    if (arr.includes(tag)) return tagsString;
+    return [...arr, tag].slice(0, 10).join(", ");
+  }
+  return arr.filter((t) => t !== tag).join(", ");
+}
 
 interface EditAppFormProps {
   app: AppDetail;
@@ -23,6 +39,7 @@ interface EditAppFormProps {
 
 export function EditAppForm({ app, isPro }: EditAppFormProps) {
   const [state, formAction, isPending] = useActionState(updateApp, {} as EditState);
+  const [tags, setTags] = useState(() => (app.tags ?? []).join(", "));
 
   return (
     <div className="py-8 sm:py-12">
@@ -143,7 +160,8 @@ export function EditAppForm({ app, isPro }: EditAppFormProps) {
                 id="tags"
                 name="tags"
                 type="text"
-                defaultValue={app.tags.join(", ")}
+                value={tags}
+                onChange={(e) => setTags(e.target.value)}
                 className="mt-1.5 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-500 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-50"
                 placeholder="react, tool, cli (comma or space separated)"
               />
@@ -153,7 +171,33 @@ export function EditAppForm({ app, isPro }: EditAppFormProps) {
               <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Up to 10 tags.</p>
             </div>
 
-            {/* Lifecycle dropdown hidden pre-launch; value preserved via hidden input. */}
+            <div>
+              <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Intent (optional)</p>
+              <div className="mt-1.5 flex flex-wrap gap-3">
+                {INTENT_OPTIONS.map((opt) => {
+                  const checked = parseTagsString(tags).includes(opt.value);
+                  return (
+                    <label
+                      key={opt.value}
+                      className="flex cursor-pointer items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => setTags((prev) => toggleTagInString(prev, opt.value, !checked))}
+                        className="h-3.5 w-3.5 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-600 dark:bg-zinc-900"
+                      />
+                      <span>{opt.label}</span>
+                    </label>
+                  );
+                })}
+              </div>
+              <p className="mt-1 text-[11px] text-zinc-400 dark:text-zinc-500">
+                Adds or removes the matching tag. No separate field.
+              </p>
+            </div>
+
+            {/* Lifecycle preserved via hidden input; no dropdown in UI. */}
             <input type="hidden" name="lifecycle" value={app.lifecycle} />
             {isPro && (
               <div>
