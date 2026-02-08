@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { ensureProfile } from "@/lib/supabase/ensure-profile";
 
@@ -8,7 +8,7 @@ import { ensureProfile } from "@/lib/supabase/ensure-profile";
  * browser receives them; using cookies() from next/headers in a Route Handler
  * does not reliably attach cookies to a custom NextResponse.redirect().
  */
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
   const next = searchParams.get("next") ?? "/";
