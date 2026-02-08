@@ -14,7 +14,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const collection = await getCollectionBySlug(slug);
-  if (!collection) return {};
+  if (!collection || collection.owner_id) return {};
   return {
     title: collection.name,
     description:
@@ -30,6 +30,8 @@ export default async function CollectionDetailPage({
   const { slug } = await params;
   const collection = await getCollectionBySlug(slug);
   if (!collection) notFound();
+  // Pre-launch: only staff picks are surfaced; community collections return 404.
+  if (collection.owner_id) notFound();
 
   const [creatorStatsMap, boostMap] = await Promise.all([
     computeCreatorStatsMap(collection.apps),
