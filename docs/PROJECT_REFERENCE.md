@@ -1,39 +1,21 @@
 # Project reference — statuses, types, browse, detail, submit, edit
 
-Single place for the 6 core pieces: types/constants, project type/schema, browse page, project detail page, submit (step 1 + 2), and edit page.
+Single place for the 6 core pieces plus pre-launch behavior: types/constants, project type/schema, browse page, project detail page, submit (step 1 + 2), edit page, and collections.
 
 ---
 
-## 1. Types / constants (statuses, tags, lifecycle)
+## 1. Types / constants (statuses, tags, lifecycle, intent)
 
 **File:** `src/types/index.ts`
 
 - **Moderation status:** `AppStatus = "pending" | "approved" | "rejected"` (aligned with DB `app_status` enum).
-- **Lifecycle (creator intent):** `AppLifecycle = "wip" | "looking_for_feedback" | "looking_for_users" | "dormant"`.
-- **Constants:** `APP_LIFECYCLE_LABELS`, `APP_LIFECYCLE_CARD_CLASS`, `APP_LIFECYCLE_IMAGE_OVERLAY`, `APP_RUNTIME_LABELS`, `APP_REQUIREMENTS_LABELS`.
+- **Lifecycle (DB):** `AppLifecycle = "wip" | "looking_for_feedback" | "looking_for_users" | "dormant"`. DB still has four values; UI collapses to two.
+- **UI lifecycle:** `UiLifecycle = "active" | "archived"`. Helpers: `getUiLifecycle(lifecycle)`, `getUiLifecycleLabel(lifecycle)`, `getUiLifecycleCardClass(lifecycle)`, `getUiLifecycleImageOverlay(lifecycle)`. All “active-ish” DB states display as **Active**; `dormant` displays as **Archived**.
+- **Legacy (deprecated):** `APP_LIFECYCLE_LABELS` (collapsed to Active/Archived), `APP_LIFECYCLE_CARD_CLASS`, `APP_LIFECYCLE_IMAGE_OVERLAY` — use the getters above in UI.
+- **Intent tags (UI only):** `INTENT_TAGS = ["feedback", "early-users"] as const`. Recommended tags for creator intent; not an enum. Tags remain free-form in DB. Replaces “Seeking feedback” / “Looking for users” lifecycle intent in UI.
 - **Visibility:** `AppVisibility = "public" | "unlisted"`.
 - **Feedback:** `FeedbackKind = "useful" | "confusing" | "promising" | "needs_work"`.
-- **Tags:** Free-form strings; stored in `app_tags` table, no enum. Projects have `tags: string[]` (list/card/detail) and optional `primary_tag` (progressive).
-
-Relevant excerpt:
-
-```ts
-export type AppStatus = "pending" | "approved" | "rejected";
-
-export type AppLifecycle =
-  | "wip"
-  | "looking_for_feedback"
-  | "looking_for_users"
-  | "dormant";
-
-export const APP_LIFECYCLE_LABELS: Record<AppLifecycle, string> = {
-  wip: "Active",
-  looking_for_feedback: "Seeking feedback",
-  looking_for_users: "Looking for users",
-  dormant: "Archived",
-};
-// + APP_LIFECYCLE_CARD_CLASS, APP_LIFECYCLE_IMAGE_OVERLAY, APP_RUNTIME_LABELS, APP_REQUIREMENTS_LABELS
-```
+- **Tags:** Free-form strings in `app_tags`; projects have `tags: string[]` and optional `primary_tag`. Intent tags `feedback` / `early-users` are merged with free-form tags in submit and edit.
 
 ---
 
@@ -47,15 +29,10 @@ export const APP_LIFECYCLE_LABELS: Record<AppLifecycle, string> = {
 
 **DB schema (apps table), from migrations:**
 
-- **001_init.sql:** id, owner_id, slug, name, tagline, description, status (app_status enum: pending, approved, rejected), app_url, repo_url, demo_video_url, created_at, updated_at.
-- **005:** byok_required (boolean, default false).
-- **004:** rejection_reason (text).
-- **010:** lifecycle (app_lifecycle enum: wip, looking_for_feedback, looking_for_users, dormant) — see 021 for current enum after removals.
-- **014:** visibility (text, check in ('public','unlisted'), default 'public').
-- **022:** how_used (text).
-- **024:** why_this_exists, what_it_does, what_it_does_not, primary_tag (text); runtime_type (app_runtime_type), requirements (app_requirements) (enums as in 024).
+- **001_init.sql:** id, owner_id, slug, name, tagline, description, status (app_status enum), app_url, repo_url, demo_video_url, created_at, updated_at.
+- **005:** byok_required. **004:** rejection_reason. **010:** lifecycle (app_lifecycle enum). **014:** visibility. **022:** how_used. **024:** why_this_exists, what_it_does, what_it_does_not, primary_tag, runtime_type, requirements.
 
-Tags live in **app_tags(app_id, tag)**; media in **app_media(id, app_id, kind, url, sort_order)**.
+Tags: **app_tags(app_id, tag)**. Media: **app_media(id, app_id, kind, url, sort_order)**.
 
 ---
 
@@ -64,8 +41,11 @@ Tags live in **app_tags(app_id, tag)**; media in **app_media(id, app_id, kind, u
 **File:** `src/app/apps/page.tsx`
 
 - Server component. Fetches: `getApprovedApps()`, `getFeaturedApps()`, `getActiveBoosts()`; builds `creatorStatsMap` via `computeCreatorStatsMap(apps)`.
-- Renders: title “Projects”, short intro, link to “Staff picks” (/collections), copy “Search, filter by tag, or sort to find projects.”, optional Featured section (grid of AppCard), then **AppsList** with apps, creatorStatsMap, boostMap.
-- **AppsList** (`src/components/apps/apps-list.tsx`): search input, “Refine by” (Sort + tag pills only; lifecycle filter hidden pre-launch), grid of **AppCard**s.
+- Renders: title “Projects”, intro, link to “Staff picks” (/collections), “Search, filter by tag, or sort to find projects.”, optional Featured section, then **AppsList**.
+
+**AppsList** (`src/components/apps/apps-list.tsx`): **Refine by** = search input, sort dropdown, tag chips only (no lifecycle filter). Grid of **AppCard**s.
+
+**AppCard** (`src/components/apps/app-card.tsx`): Status pill uses `getUiLifecycleLabel` / `getUiLifecycleCardClass` / `getUiLifecycleImageOverlay` — displays only **Active** or **Archived**. If tags include `feedback` or `early-users`, shows subtle tag-style chips “Feedback” / “Early users” (INTENT_TAG_LABELS). No lifecycle filter in list.
 
 ---
 
@@ -73,8 +53,11 @@ Tags live in **app_tags(app_id, tag)**; media in **app_media(id, app_id, kind, u
 
 **File:** `src/app/apps/[slug]/page.tsx`
 
-- Server component. Loads app by slug (`getAppBySlug`), user, feedback counts, analytics (owner), featured/boost state.
-- Renders: back link, pending/rejection banners if applicable, BYOK/unlisted notices, **header** (name, tagline, Open app / View repo, metadata row with lifecycle pill, creator, “Edit project”, tags), **primary artifact** (image or placeholder + optional demo video), **At a glance** (what it does, where it runs, who it’s for), **More details** (expandable: what it does / doesn’t do / why it exists, runtime/requirements), **Send a signal** (FeedbackButtons, UpvoteButton, ReportButton), optional FeaturedButton/BoostButton (owner + Pro), **Activity** (owner-only, trend-style copy + counts; uses AppAnalyticsSection pattern elsewhere).
+- Server component. Loads app by slug (`getAppBySlug`), user, feedback counts, **Activity** data (owner), featured/boost state.
+- **Header:** name, tagline, Open app / View repo (TrackedLink), metadata row with **lifecycle pill** (getUiLifecycleLabel → “Active” or “Archived”), creator, “Edit project”, tags. If tags include `feedback` or `early-users`, muted **intent hint** below metadata: “Creator is looking for feedback.” / “Creator is looking for early users.” (or both).
+- **Primary artifact:** image or placeholder, optional demo video. **At a glance**, **More details** (expandable). **Send a signal** (FeedbackButtons, UpvoteButton, ReportButton).
+- **Featured/Boost:** Gated by `SHOW_PROMO_FEATURES = false` (pre-launch). No FeaturedButton/BoostButton or Pro accent on links when false.
+- **Activity:** Owner-only section; muted, observational counts (no conversion language or percentages). Trend-style copy (“First interest received”, “First app open”, etc.). Data pipeline unchanged; UI label is “Activity”.
 
 ---
 
@@ -82,10 +65,10 @@ Tags live in **app_tags(app_id, tag)**; media in **app_media(id, app_id, kind, u
 
 **File:** `src/components/submit/submit-form.tsx` (single component, two steps)
 
-- **Step 1 (Basics):** Form with client-side “Next: Description & media”. Fields: name*, tagline, project URL*, repo URL, tags (comma/space), lifecycle (hidden when `SHOW_LIFECYCLE_DROPDOWN` is false; value stays `wip`), visibility (public/unlisted, only if `isPro`), BYOK checkbox. Step 1 does not submit to server; it only advances to step 2.
-- **Step 2 (Description & media):** Form `action={formAction}` (submitApp). Hidden inputs pass through: name, tagline, app_url, repo_url, tags, byok_required, **lifecycle**, visibility, demo_video_url. Visible fields: description (Markdown), how_used, demo_video_url (optional), screenshots (file, up to 5), logo (optional). Buttons: Back, “Publish project”.
+- **Step 1 (Basics):** Client-side “Next: Description & media”. Fields: name*, tagline, project URL*, repo URL, **tags** (free-form input), **“What are you looking for?”** (optional) — checkboxes “Feedback” and “Early users” that add tags `feedback` / `early-users`; multi-select; merged with free-form tags (no duplicates, lowercase, trim). No lifecycle in form state. Visibility (public/unlisted) only if `isPro`. BYOK checkbox.
+- **Step 2 (Description & media):** Form `action={formAction}` (submitApp). Hidden inputs: name, tagline, app_url, repo_url, **tags** (value = `mergeIntentAndFreeFormTags(intentSelections, tags).join(", ")`), byok_required, **lifecycle = "wip"** (hardcoded; no lifecycle state), visibility, demo_video_url. Visible: description (Markdown), how_used, demo_video_url, screenshots (up to 5), logo. Buttons: Back, “Publish project”.
 
-Submit page wrapper: `src/app/submit/page.tsx` — gets user, `getIsPro(user.id)`, renders `<SubmitForm isPro={isPro} />`.
+Submit page: `src/app/submit/page.tsx` — gets user, `getIsPro(user.id)`, renders `<SubmitForm isPro={isPro} />`.
 
 ---
 
@@ -93,11 +76,35 @@ Submit page wrapper: `src/app/submit/page.tsx` — gets user, `getIsPro(user.id)
 
 **File (page):** `src/app/apps/[slug]/edit/page.tsx`
 
-- Server component. Requires auth; loads app by slug; ensures current user is owner; fetches `getIsPro(user.id)`; renders **EditAppForm** with `app` and `isPro`.
+- Server component. Auth required; loads app by slug; ensures current user is owner; fetches `getIsPro(user.id)`; renders **EditAppForm** with `app` and `isPro`.
 
 **File (form):** `src/components/apps/edit-app-form.tsx`
 
-- Single form, `action={formAction}` (updateApp). Fields: name*, tagline, app_url*, repo_url, demo_video_url, tags, **lifecycle** (hidden input only, value `app.lifecycle` — dropdown hidden pre-launch), visibility (select only if `isPro`), BYOK checkbox; then description, how_used, progressive fields (what it does, what it doesn’t do, why it exists, runtime_type, requirements, primary_tag); optional replace screenshots / replace logo. Submit button saves and redirects.
+- Single form, `action={formAction}` (updateApp). **Tags:** controlled input; value merged with intent toggles. **Intent (optional):** two checkboxes — “Looking for feedback”, “Looking for early users” — toggle tags `feedback` / `early-users` in the tags string (no separate DB field). **Lifecycle:** hidden input only, value `app.lifecycle` (preserved; no dropdown). Visibility (select only if `isPro`), BYOK; then description, how_used, progressive fields (what it does, what it doesn’t do, why it exists, runtime_type, requirements, primary_tag); replace screenshots/logo optional.
+
+---
+
+## 7. Collections (staff picks only)
+
+**Index:** `src/app/collections/page.tsx`
+
+- Fetches `getCollections()`; **pre-launch:** `collections = allCollections.filter((c) => !c.owner_id)` — only staff picks shown. Copy: “Staff picks. Projects worth exploring.” No “community collections” in UI; no create/edit community affordances.
+
+**Detail:** `src/app/collections/[slug]/page.tsx`
+
+- Loads collection by slug. **Pre-launch:** if `collection.owner_id` is set (community collection), `notFound()` — only staff picks are reachable. Metadata returns `{}` for community collections.
+
+Backend/schema unchanged; visibility and 404 are app-layer only.
+
+---
+
+## 8. Pre-launch / MVP behavior (summary)
+
+- **Lifecycle UI:** Only “Active” / “Archived” shown (getUiLifecycleLabel). No lifecycle filter on browse; submit lifecycle hardcoded to `wip`; edit preserves existing lifecycle via hidden input.
+- **Intent:** Expressed via tags `feedback` and `early-users` (INTENT_TAGS). Submit “What are you looking for?” and edit “Intent” toggles merge into tags. Cards and detail show intent chips/hint when those tags exist.
+- **Pro / monetisation:** `SHOW_PROMO_FEATURES = false` on detail page — no Featured/Boost buttons, no Pro accent on TrackedLinks.
+- **Activity:** Label “Activity” (not “Analytics”); no conversion language or percentages; counts muted and observational.
+- **Collections:** Staff picks only on index and detail; community collections 404; no UI to create or edit community collections.
 
 ---
 
@@ -105,9 +112,10 @@ Submit page wrapper: `src/app/submit/page.tsx` — gets user, `getIsPro(user.id)
 
 | # | What              | Primary path(s) |
 |---|-------------------|------------------|
-| 1 | Statuses/tags/types | `src/types/index.ts` |
-| 2 | Project type + DB  | `src/types/index.ts` (App, AppDetail, AppListItem); `supabase/migrations/001_init.sql` + 004, 005, 010, 014, 021, 022, 024 |
-| 3 | Browse page        | `src/app/apps/page.tsx`, `src/components/apps/apps-list.tsx` |
+| 1 | Statuses/tags/types / intent | `src/types/index.ts` |
+| 2 | Project type + DB  | `src/types/index.ts`; `supabase/migrations/` (001, 004, 005, 010, 014, 021, 022, 024) |
+| 3 | Browse page        | `src/app/apps/page.tsx`, `src/components/apps/apps-list.tsx`, `src/components/apps/app-card.tsx` |
 | 4 | Project detail     | `src/app/apps/[slug]/page.tsx` |
 | 5 | Submit step 1 & 2   | `src/components/submit/submit-form.tsx`, `src/app/submit/page.tsx` |
 | 6 | Edit page           | `src/app/apps/[slug]/edit/page.tsx`, `src/components/apps/edit-app-form.tsx` |
+| 7 | Collections        | `src/app/collections/page.tsx`, `src/app/collections/[slug]/page.tsx` |
