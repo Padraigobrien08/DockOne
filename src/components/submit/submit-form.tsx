@@ -317,6 +317,7 @@ export function SubmitForm({ isPro }: SubmitFormProps = {}) {
             <input type="hidden" name="tags" value={mergeIntentAndFreeFormTags(intentSelections, tags).join(", ")} />
             <input type="hidden" name="byok_required" value={byokRequired ? "on" : ""} />
             <input type="hidden" name="lifecycle" value="wip" />
+            {/* MVP: lifecycle always wip; no lifecycle state in form. Add Archived/other later if needed. */}
             <input type="hidden" name="visibility" value={visibility} />
             <input type="hidden" name="demo_video_url" value={demoVideoUrl} />
 
