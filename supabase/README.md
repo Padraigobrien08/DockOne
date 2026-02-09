@@ -39,6 +39,17 @@ With the Supabase CLI and local DB: after `supabase db reset` (which runs migrat
 
 ---
 
+## Clearing all projects (before MVP)
+
+To remove seed projects and any other apps so you can upload only your real projects:
+
+1. In **Supabase Dashboard** → **SQL Editor**, open `supabase/scripts/clear-all-apps.sql`, copy its contents, and run it.
+2. Optionally clear **Storage** → **app-media**: delete each folder (or leave orphaned files; they won’t appear in the app).
+
+Profiles, admins, and auth are unchanged; only apps and related data (tags, media rows, votes, etc.) are removed.
+
+---
+
 ## Post-migration
 
 - **Profiles** are not auto-created. Your app should create a row in `public.profiles` on first sign-in (e.g. in the auth callback or a “complete profile” flow), with `id = auth.uid()` and a unique `username`.

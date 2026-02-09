@@ -112,6 +112,7 @@ npm run dev
 - **Supabase** — Create a project, run all migrations in `supabase/migrations/`, and configure storage buckets (`app-media`, `avatars`) and auth. See **[supabase/README.md](supabase/README.md)** (or SETUP.md if present) for step-by-step setup.
 - **Auth** — Sign-in is magic link (email) and **Google**. Middleware refreshes the session on each request so you stay logged in across navigations and after the JWT would otherwise expire.
 - **Google sign-in** — To enable: Supabase Dashboard → **Authentication** → **Providers** → **Google**; add your OAuth Client ID and Secret from [Google Cloud Console](https://console.cloud.google.com/apis/credentials). In **Redirect URLs** add `https://your-domain.com/auth/callback` (and `http://localhost:3000/auth/callback` for local dev).
+- **New public URL** — After adding a production domain, follow **[docs/AUTH_PUBLIC_URL.md](docs/AUTH_PUBLIC_URL.md)** to get magic link and Google auth working again.
 
 ---
 
