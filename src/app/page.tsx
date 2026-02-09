@@ -5,6 +5,7 @@ import { AppCard } from "@/components/apps/app-card";
 import { HeroMagicLinkForm } from "@/components/landing/hero-magic-link-form";
 import { HeroStrip } from "@/components/landing/hero-strip";
 import { ThesisBlock, ThesisHighlight } from "@/components/landing/thesis-block";
+import { ContactSection } from "@/components/landing/contact-section";
 import { getApprovedApps } from "@/lib/apps";
 import { getActiveBoosts } from "@/lib/boosts";
 import { computeCreatorStatsMap } from "@/lib/creator-stats";
@@ -261,6 +262,9 @@ export default async function Home({
           </Container>
         </Section>
       </section>
+
+      {/* 6. Contact */}
+      <ContactSection />
     </div>
   );
 }

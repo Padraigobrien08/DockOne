@@ -53,6 +53,12 @@ export function HeaderNav({ isLoggedIn }: HeaderNavProps) {
         {/* Right: Sign in + CTA (desktop) — same baseline */}
         <div className="hidden shrink-0 items-baseline gap-5 md:flex">
           <Link
+            href="/contact"
+            className="text-sm leading-none text-zinc-500 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-50 transition-colors"
+          >
+            Contact me
+          </Link>
+          <Link
             href="/settings"
             className="text-sm leading-none text-zinc-500 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-50 transition-colors"
           >
@@ -155,6 +161,13 @@ export function HeaderNav({ isLoggedIn }: HeaderNavProps) {
               Sign in
             </Link>
           )}
+          <Link
+            href="/contact"
+            onClick={() => setMobileOpen(false)}
+            className="px-1 py-2.5 text-sm text-zinc-500 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-50"
+          >
+            Contact me
+          </Link>
           <Link
             href="/settings"
             onClick={() => setMobileOpen(false)}

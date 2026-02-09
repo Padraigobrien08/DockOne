@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { submitContactMessage } from "@/app/contact/actions";
+import { useActionState, useRef, useEffect } from "react";
+import { submitContactMessage, type SubmitContactMessageResult } from "@/lib/contact/actions";
 
 interface ContactSectionProps {
   twitterUrl?: string;
@@ -9,78 +9,31 @@ interface ContactSectionProps {
   githubUrl?: string;
 }
 
+const initialState: SubmitContactMessageResult = { ok: false };
+
 export function ContactSection({
   twitterUrl,
   productHuntUrl,
   githubUrl,
 }: ContactSectionProps) {
-  const [email, setEmail] = useState("");
-  const [message, setMessage] = useState("");
-  const [company, setCompany] = useState(""); // honeypot
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [state, formAction, isPending] = useActionState(submitContactMessage, initialState);
+  const formRef = useRef<HTMLFormElement>(null);
+  const messageTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   const hasLinks = twitterUrl || productHuntUrl || githubUrl;
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setError(null);
-    setSuccess(false);
-
-    // Honeypot check
-    if (company.trim()) {
-      setError("Invalid submission.");
-      return;
+  // Clear form on success
+  useEffect(() => {
+    if (state.ok && formRef.current) {
+      formRef.current.reset();
+      // Focus back to message textarea for accessibility
+      messageTextareaRef.current?.focus();
     }
-
-    const messageTrimmed = message.trim();
-    if (!messageTrimmed) {
-      setError("Message is required.");
-      return;
-    }
-
-    setLoading(true);
-    const result = await submitContactMessage({
-      email: email.trim() || null,
-      message: messageTrimmed,
-    });
-    setLoading(false);
-
-    if (result.error) {
-      setError(result.error);
-      return;
-    }
-
-    setSuccess(true);
-    setEmail("");
-    setMessage("");
-  }
-
-  if (success) {
-    return (
-      <section
-        aria-labelledby="contact-heading"
-        className="border-t border-zinc-800/50 bg-zinc-900/20"
-      >
-        <div className="mx-auto max-w-6xl px-6 py-12 md:px-8 md:py-16">
-          <div
-            role="status"
-            aria-live="polite"
-            className="mx-auto max-w-2xl rounded-lg border border-emerald-800/60 bg-emerald-950/30 px-5 py-4 text-sm text-emerald-200"
-          >
-            <p className="font-medium">Message sent.</p>
-            <p className="mt-1 text-emerald-300/90">
-              Thanks for reaching out. We&apos;ll get back to you soon.
-            </p>
-          </div>
-        </div>
-      </section>
-    );
-  }
+  }, [state.ok]);
 
   return (
     <section
+      id="contact"
       aria-labelledby="contact-heading"
       className="border-t border-zinc-800/50 bg-zinc-900/20"
     >
@@ -92,10 +45,12 @@ export function ContactSection({
               id="contact-heading"
               className="text-2xl font-semibold tracking-tight text-white md:text-3xl"
             >
-              Contact
+              Say hi
             </h2>
             <p className="mt-3 text-base leading-relaxed text-zinc-400 md:text-lg">
-              Questions, feedback, or a project you think should be here — send a note.
+              Questions, feedback, or a project that belongs here?
+              <br />
+              I&apos;m Padraig, and I&apos;d love to hear from you.
             </p>
             {hasLinks && (
               <div className="mt-6 flex flex-wrap items-center gap-4">
@@ -136,11 +91,23 @@ export function ContactSection({
           {/* Right column: form */}
           <div>
             <form
-              onSubmit={handleSubmit}
+              ref={formRef}
+              action={formAction}
               className="space-y-4"
               aria-label="Contact form"
               noValidate
             >
+              {/* Success message (inline) */}
+              {state.ok && (
+                <div
+                  role="status"
+                  aria-live="polite"
+                  className="rounded-lg border border-emerald-800/60 bg-emerald-950/30 px-4 py-3 text-sm text-emerald-200 transition-opacity"
+                >
+                  <p className="font-medium">Message sent — thanks.</p>
+                </div>
+              )}
+
               {/* Honeypot */}
               <label htmlFor="company" className="sr-only">
                 Company
@@ -149,8 +116,6 @@ export function ContactSection({
                 id="company"
                 name="company"
                 type="text"
-                value={company}
-                onChange={(e) => setCompany(e.target.value)}
                 tabIndex={-1}
                 autoComplete="off"
                 className="sr-only"
@@ -167,10 +132,8 @@ export function ContactSection({
                   name="email"
                   type="email"
                   autoComplete="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
                   placeholder="Email (optional)"
-                  disabled={loading}
+                  disabled={isPending}
                   className="w-full rounded-lg border border-zinc-700/70 bg-zinc-800/40 px-4 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:ring-offset-zinc-950 disabled:opacity-60"
                 />
               </div>
@@ -181,41 +144,58 @@ export function ContactSection({
                   Message
                 </label>
                 <textarea
+                  ref={messageTextareaRef}
                   id="contact-message"
                   name="message"
                   required
                   rows={5}
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
                   placeholder="Message"
-                  disabled={loading}
-                  aria-describedby={error ? "contact-error" : "contact-helper"}
-                  aria-invalid={!!error}
+                  disabled={isPending}
+                  aria-describedby={
+                    state.error
+                      ? "contact-error"
+                      : state.ok
+                        ? "contact-success"
+                        : "contact-helper"
+                  }
+                  aria-invalid={!!state.error}
                   className="w-full rounded-lg border border-zinc-700/70 bg-zinc-800/40 px-4 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:ring-offset-zinc-950 disabled:opacity-60 resize-y min-h-[120px]"
                 />
-                <p id="contact-helper" className="mt-1.5 text-xs text-zinc-500">
-                  No marketing. Just replies.
-                </p>
-                {error && (
+                {!state.ok && (
+                  <p id="contact-helper" className="mt-1.5 text-xs text-zinc-500">
+                    No spam, no marketing. Just real replies.
+                  </p>
+                )}
+                {state.error && (
                   <p
                     id="contact-error"
                     role="alert"
-                    className="mt-1.5 text-sm text-red-400"
+                    className="mt-1.5 text-sm text-red-400 transition-opacity"
                     aria-live="assertive"
                   >
-                    {error}
+                    {state.error}
                   </p>
                 )}
               </div>
 
-              {/* Submit */}
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full rounded-lg bg-violet-600 px-5 py-2.5 text-sm font-medium text-white shadow-lg shadow-violet-500/25 transition-colors hover:bg-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:ring-offset-zinc-950 disabled:opacity-60 disabled:pointer-events-none"
-              >
-                {loading ? "Sending…" : "Send"}
-              </button>
+              {/* Buttons: LinkedIn (left) and Send (right) */}
+              <div className="flex gap-3">
+                <a
+                  href="https://www.linkedin.com/in/padraigmobrien/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 rounded-lg bg-[#0077b5] px-5 py-2.5 text-center text-sm font-medium text-white transition-colors hover:bg-[#006399] focus:outline-none focus:ring-2 focus:ring-[#0077b5] focus:ring-offset-2 focus:ring-offset-zinc-950"
+                >
+                  Message me on LinkedIn
+                </a>
+                <button
+                  type="submit"
+                  disabled={isPending}
+                  className="flex-1 rounded-lg bg-violet-600 px-5 py-2.5 text-sm font-medium text-white shadow-lg shadow-violet-500/25 transition-colors hover:bg-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:ring-offset-zinc-950 disabled:opacity-60 disabled:pointer-events-none"
+                >
+                  {isPending ? "Sending…" : "Send"}
+                </button>
+              </div>
             </form>
           </div>
         </div>
